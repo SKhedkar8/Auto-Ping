@@ -3,36 +3,33 @@
 import React, { useEffect, useState } from 'react';
 import { usePathname, useRouter } from 'next/navigation';
 import {
-  BarChart3,
   Calendar,
   Car,
-  ChevronDown,
-  Clock,
-  Download,
   FileSpreadsheet,
-  History,
   LayoutDashboard,
-  LogOut,
   MapPin,
-  RefreshCw,
+  Moon,
   Shield,
-  Users,
-  Wrench
+  Sun,
 } from 'lucide-react';
 import { DEMO_CUSTOMER_USER, getClientSession, setClientSession } from '@/lib/auth';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const [isAdmin, setIsAdmin] = useState(true);
+  const [isDark, setIsDark] = useState(false);
 
+  // Persist & restore theme
   useEffect(() => {
-    const session = getClientSession();
-    // Allow admin preview
-    if (session && session.role !== 'ADMIN') {
-      // User is customer, but if visiting admin, offer quick switch or redirect
-    }
+    const saved = localStorage.getItem('admin-theme');
+    if (saved === 'dark') setIsDark(true);
   }, []);
+
+  const toggleTheme = () => {
+    const next = !isDark;
+    setIsDark(next);
+    localStorage.setItem('admin-theme', next ? 'dark' : 'light');
+  };
 
   const navItems = [
     { href: '/admin', label: 'Command Center', icon: LayoutDashboard },
@@ -41,33 +38,129 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
     { href: '/admin/reports', label: 'Reports & Export', icon: FileSpreadsheet },
   ];
 
+  /* ── CSS custom-property palette ── */
+  const t = isDark
+    ? {
+        '--abg':        '#0f1117',
+        '--asurface':   '#1a1d2e',
+        '--aborder':    '#2a2d3e',
+        '--atext':      '#e2e8f0',
+        '--amuted':     '#8892a4',
+        '--astrong':    '#f1f5f9',
+        '--anavbg':     '#12141f',
+        '--anavborder': '#1f2235',
+        '--anavact':    '#1e3a5f',
+        '--anavacttxt': '#60a5fa',
+        '--anavactbdr': '#2d5a9e',
+        '--anavhover':  '#1e2235',
+        '--abadge':     '#1e3a5f',
+        '--abadgetxt':  '#60a5fa',
+        '--abadgebdr':  '#2d5a9e',
+        '--alogo':      '#1e3a5f',
+        '--alogobdr':   '#2d5a9e',
+        '--alogotxt':   '#60a5fa',
+        '--abtn':       '#1e3a5f',
+        '--abtntxt':    '#93c5fd',
+        '--abtnbdr':    '#2d5a9e',
+        '--atoggle':    '#1e3a5f',
+        '--atogglebdr': '#2d5a9e',
+        '--atoggletxt': '#60a5fa',
+      }
+    : {
+        '--abg':        '#f8fafc',
+        '--asurface':   '#ffffff',
+        '--aborder':    '#e2e8f0',
+        '--atext':      '#334155',
+        '--amuted':     '#64748b',
+        '--astrong':    '#0f172a',
+        '--anavbg':     '#ffffff',
+        '--anavborder': '#e2e8f0',
+        '--anavact':    '#eff6ff',
+        '--anavacttxt': '#1d4ed8',
+        '--anavactbdr': '#bfdbfe',
+        '--anavhover':  '#f1f5f9',
+        '--abadge':     '#eff6ff',
+        '--abadgetxt':  '#1d4ed8',
+        '--abadgebdr':  '#bfdbfe',
+        '--alogo':      '#eff6ff',
+        '--alogobdr':   '#bfdbfe',
+        '--alogotxt':   '#2563eb',
+        '--abtn':       '#0f172a',
+        '--abtntxt':    '#ffffff',
+        '--abtnbdr':    'transparent',
+        '--atoggle':    '#f1f5f9',
+        '--atogglebdr': '#e2e8f0',
+        '--atoggletxt': '#64748b',
+      };
+
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 text-slate-900 font-sans">
-      {/* Admin Top Navbar */}
-      <header className="sticky top-0 z-40 w-full bg-white/95 backdrop-blur-md border-b border-slate-200/90 shadow-xs">
+    <div
+      className="min-h-screen flex flex-col font-sans"
+      style={{
+        ...(t as React.CSSProperties),
+        background: 'var(--abg)',
+        color: 'var(--atext)',
+        transition: 'background 0.3s ease, color 0.3s ease',
+      }}
+    >
+      {/* ── Admin Navbar ── */}
+      <header
+        className="sticky top-0 z-40 w-full backdrop-blur-md"
+        style={{
+          background: 'var(--anavbg)',
+          borderBottom: '1px solid var(--anavborder)',
+          transition: 'background 0.3s ease, border-color 0.3s ease',
+          boxShadow: isDark
+            ? '0 1px 0 0 rgba(255,255,255,0.04)'
+            : '0 1px 3px 0 rgba(0,0,0,0.06)',
+        }}
+      >
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+
+          {/* Left: Logo + Nav */}
           <div className="flex items-center gap-8">
             <a href="/admin" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-blue-50 border border-blue-200 text-blue-600 flex items-center justify-center font-bold shadow-xs">
+              <div
+                className="w-9 h-9 rounded-xl flex items-center justify-center font-bold"
+                style={{
+                  background: 'var(--alogo)',
+                  border: '1px solid var(--alogobdr)',
+                  color: 'var(--alogotxt)',
+                }}
+              >
                 <Shield className="w-5 h-5" />
               </div>
               <div className="flex flex-col">
                 <div className="flex items-center gap-1.5">
-                  <span className="font-black text-base tracking-tight text-slate-950">
-                    AutoPing <span className="text-blue-600">Admin</span>
+                  <span
+                    className="font-black text-base tracking-tight"
+                    style={{ color: 'var(--astrong)' }}
+                  >
+                    AutoPing{' '}
+                    <span style={{ color: 'var(--alogotxt)' }}>Admin</span>
                   </span>
-                  <span className="px-1.5 py-0.2 rounded text-[10px] font-extrabold bg-blue-50 text-blue-700 border border-blue-200">
+                  <span
+                    className="px-1.5 rounded text-[10px] font-extrabold"
+                    style={{
+                      background: 'var(--abadge)',
+                      color: 'var(--abadgetxt)',
+                      border: '1px solid var(--abadgebdr)',
+                    }}
+                  >
                     Console
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-medium tracking-wider">
+                <span
+                  className="text-[10px] font-medium tracking-wider"
+                  style={{ color: 'var(--amuted)' }}
+                >
                   Platform Operations
                 </span>
               </div>
             </a>
 
             {/* Nav links */}
-            <nav className="hidden md:flex items-center gap-1.5">
+            <nav className="hidden md:flex items-center gap-1">
               {navItems.map((item) => {
                 const Icon = item.icon;
                 const isActive = pathname === item.href;
@@ -75,11 +168,32 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                   <a
                     key={item.href}
                     href={item.href}
-                    className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs transition-all ${
+                    className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-semibold transition-all duration-150"
+                    style={
                       isActive
-                        ? 'bg-blue-50 text-blue-700 font-bold border border-blue-200/80 shadow-xs'
-                        : 'text-slate-600 hover:text-slate-950 hover:bg-slate-100 font-semibold'
-                    }`}
+                        ? {
+                            background: 'var(--anavact)',
+                            color: 'var(--anavacttxt)',
+                            border: '1px solid var(--anavactbdr)',
+                            fontWeight: 700,
+                          }
+                        : {
+                            color: 'var(--amuted)',
+                            border: '1px solid transparent',
+                          }
+                    }
+                    onMouseEnter={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLElement).style.background = 'var(--anavhover)';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--astrong)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (!isActive) {
+                        (e.currentTarget as HTMLElement).style.background = 'transparent';
+                        (e.currentTarget as HTMLElement).style.color = 'var(--amuted)';
+                      }
+                    }}
                   >
                     <Icon className="w-3.5 h-3.5" />
                     {item.label}
@@ -89,13 +203,40 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </nav>
           </div>
 
+          {/* Right: Theme toggle + Switch button */}
           <div className="flex items-center gap-3">
+            {/* 🌙 / ☀️ Toggle */}
+            <button
+              onClick={toggleTheme}
+              title={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
+              className="w-10 h-10 rounded-xl flex items-center justify-center transition-all duration-200 hover:scale-105 active:scale-95"
+              style={{
+                background: 'var(--atoggle)',
+                border: '1px solid var(--atogglebdr)',
+                color: 'var(--atoggletxt)',
+              }}
+            >
+              <div
+                style={{
+                  transition: 'transform 0.4s ease, opacity 0.3s ease',
+                  transform: isDark ? 'rotate(0deg)' : 'rotate(90deg)',
+                }}
+              >
+                {isDark ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+              </div>
+            </button>
+
             <button
               onClick={() => {
                 setClientSession(DEMO_CUSTOMER_USER);
                 router.push('/dashboard');
               }}
-              className="px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all"
+              className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all duration-150 hover:opacity-80"
+              style={{
+                background: 'var(--abtn)',
+                color: 'var(--abtntxt)',
+                border: '1px solid var(--abtnbdr)',
+              }}
             >
               <Car className="w-3.5 h-3.5" />
               Switch to Customer App
@@ -104,7 +245,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </div>
       </header>
 
-      {/* Admin Content Body */}
+      {/* Admin Content */}
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         {children}
       </main>
