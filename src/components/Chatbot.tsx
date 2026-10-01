@@ -23,7 +23,7 @@ interface ChatMessage {
   sender: 'bot' | 'user';
   text: string;
   timestamp: string;
-  chips?: { label: string; action: () => void }[];
+  chips?: { label: string; action: () => void | Promise<void> }[];
   card?: {
     type: 'vehicle_health' | 'booking_summary' | 'booking_success' | 'center_pick';
     data: any;
@@ -181,7 +181,7 @@ export default function Chatbot() {
         `   • Vehicle Support: ${c.supportedTypes ? c.supportedTypes.join(', ') : 'Cars & Two-Wheelers'}\n\n`;
     });
 
-    const chips = activeCenters.slice(0, 4).map((c) => ({
+    const chips: { label: string; action: () => void | Promise<void> }[] = activeCenters.slice(0, 4).map((c) => ({
       label: `⚡ Book at ${c.name.split(' ')[0]}`,
       action: () => startBookingWithCenter(c),
     }));

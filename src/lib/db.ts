@@ -608,7 +608,7 @@ export function createBooking(data: {
       id: data.slotId,
       centerId: data.centerId,
       date: data.serviceDate,
-      time: data.serviceTime,
+      startTime: data.serviceTime,
       capacity: 4,
       booked: 0,
       isBlocked: false,

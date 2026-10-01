@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useState } from 'react';
+import React, { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import confetti from 'canvas-confetti';
 import {
@@ -31,7 +31,7 @@ import Chatbot from '@/components/Chatbot';
 import { getClientSession } from '@/lib/auth';
 import { Booking, CenterType, ServiceCenter, ServiceType, Slot, Vehicle } from '@/lib/types';
 
-export default function BookServicePage() {
+function BookServicePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const preSelectedVehicleId = searchParams.get('vehicleId');
@@ -991,5 +991,13 @@ END:VCALENDAR`;
       <Chatbot />
       <Footer />
     </div>
+  );
+}
+
+export default function BookServicePage() {
+  return (
+    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0f0f13', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>Loading...</div>}>
+      <BookServicePageInner />
+    </Suspense>
   );
 }

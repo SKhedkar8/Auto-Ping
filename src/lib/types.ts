@@ -104,9 +104,11 @@ export interface ServiceCenter {
   lat: number;
   lng: number;
   phone: string;
+  contactPhone?: string;  // alias for display in chatbot
   websiteUrl?: string;
   openingHours: string;
   servicesOffered: string[];
+  supportedTypes?: string[]; // e.g. ['Cars', 'Two-Wheelers']
   rating: number;
   reviewCount: number;
   autoConfirm: boolean;
