@@ -1,0 +1,320 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    --bg-main: #F5F7FA;
+    --primary: #0B5CFF;
+    --primary-hover: #0047D4;
+    --secondary: #00C2FF;
+    --success: #22C55E;
+    --warning: #F59E0B;
+    --danger: #EF4444;
+    --text-main: #0F172A;
+    --text-muted: #64748B;
+    --card-border: rgba(226, 232, 240, 0.8);
+    --glass-bg: rgba(255, 255, 255, 0.82);
+    --glass-card-bg: rgba(255, 255, 255, 0.75);
+    --glass-border: rgba(255, 255, 255, 0.9);
+    --nav-bg: rgba(255, 255, 255, 0.85);
+    --input-bg: rgba(255, 255, 255, 0.9);
+    --scrollbar-color: rgba(148, 163, 184, 0.4);
+  }
+
+  .dark {
+    --bg-main: #080D1A;
+    --text-main: #E2E8F0;
+    --text-muted: #94A3B8;
+    --card-border: rgba(51, 65, 85, 0.8);
+    --glass-bg: rgba(15, 23, 42, 0.90);
+    --glass-card-bg: rgba(15, 23, 42, 0.85);
+    --glass-border: rgba(255, 255, 255, 0.08);
+    --nav-bg: rgba(8, 13, 26, 0.92);
+    --input-bg: rgba(15, 23, 42, 0.95);
+    --scrollbar-color: rgba(51, 65, 85, 0.7);
+  }
+
+  body {
+    background-color: var(--bg-main);
+    color: var(--text-main);
+    font-family: 'Plus Jakarta Sans', 'Inter', system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+    transition: background-color 0.3s ease, color 0.3s ease;
+  }
+}
+
+/* Glassmorphism Styles */
+.glass-panel {
+  background: var(--glass-bg);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 10px 30px -5px rgba(15, 23, 42, 0.05), 0 0 0 1px rgba(15, 23, 42, 0.03);
+}
+
+.glass-card {
+  background: var(--glass-card-bg);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+  border: 1px solid var(--glass-border);
+  box-shadow: 0 8px 24px -4px rgba(15, 23, 42, 0.06);
+  border-radius: 1.25rem;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.glass-card-hover:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 14px 34px -4px rgba(15, 23, 42, 0.1);
+  border-color: rgba(11, 92, 255, 0.25);
+}
+
+.glass-dropdown {
+  background: rgba(255, 255, 255, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 20px 40px -10px rgba(15, 23, 42, 0.12);
+}
+
+.dark .glass-dropdown {
+  background: rgba(15, 23, 42, 0.97);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 20px 40px -10px rgba(0, 0, 0, 0.4);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.88);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Gradients */
+.gradient-primary {
+  background: linear-gradient(135deg, #0B5CFF 0%, #00C2FF 100%);
+}
+
+.gradient-mesh {
+  background-color: var(--bg-main);
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(11, 92, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(0, 194, 255, 0.07) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(34, 197, 94, 0.05) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(245, 158, 11, 0.05) 0px, transparent 50%);
+}
+
+.dark .gradient-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(11, 92, 255, 0.12) 0px, transparent 50%),
+    radial-gradient(at 100% 0%, rgba(0, 194, 255, 0.08) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(34, 197, 94, 0.06) 0px, transparent 50%),
+    radial-gradient(at 0% 100%, rgba(245, 158, 11, 0.06) 0px, transparent 50%);
+}
+
+.gradient-dark-mesh {
+  background-image: 
+    radial-gradient(at 0% 0%, rgba(11, 92, 255, 0.15) 0px, transparent 50%),
+    radial-gradient(at 100% 100%, rgba(0, 194, 255, 0.1) 0px, transparent 50%);
+}
+
+/* Dark mode text overrides for glass cards */
+.dark .glass-card h1, .dark .glass-card h2, .dark .glass-card h3, .dark .glass-card h4 {
+  color: #E2E8F0;
+}
+.dark .glass-card p, .dark .glass-card span {
+  color: inherit;
+}
+
+/* ============= DASHBOARD BACKGROUND ANIMATIONS ============= */
+/* ============= DASHBOARD SERVICING BACKGROUND ANIMATIONS ============= */
+.dash-bg-canvas {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
+
+@keyframes floatUp {
+  0% { transform: translateY(105vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 0.35; }
+  90% { opacity: 0.35; }
+  100% { transform: translateY(-5vh) rotate(360deg); opacity: 0; }
+}
+
+@keyframes oilCanTilt {
+  0%, 100% { transform: rotate(-25deg); }
+  50% { transform: rotate(-45deg); }
+}
+
+@keyframes oilDropFall {
+  0% { transform: translate(0, 0) scale(0.6); opacity: 0; }
+  15% { opacity: 1; transform: translate(2px, 8px) scale(1); }
+  85% { opacity: 0.9; transform: translate(4px, 46px) scale(0.9); }
+  100% { transform: translate(5px, 56px) scale(0.4); opacity: 0; }
+}
+
+@keyframes oilRippleRing {
+  0% { transform: scale(0.2); opacity: 0.8; }
+  100% { transform: scale(2.2); opacity: 0; }
+}
+
+@keyframes tyreSpinRotate {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes impactWrenchPulse {
+  0%, 100% { transform: translate(0, 0) rotate(15deg); }
+  40% { transform: translate(-3px, 2px) rotate(10deg); }
+  50% { transform: translate(2px, -2px) rotate(18deg); }
+  60% { transform: translate(-2px, 1px) rotate(12deg); }
+}
+
+@keyframes gearRotateCW {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes gearRotateCCW {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(-360deg); }
+}
+
+@keyframes spannerWobble {
+  0%, 100% { transform: rotate(-10deg); }
+  50% { transform: rotate(15deg); }
+}
+
+@keyframes sparkFlash {
+  0%, 100% { opacity: 0.1; transform: scale(0.8); }
+  50% { opacity: 0.9; transform: scale(1.2); }
+}
+
+.anim-oil-can {
+  animation: oilCanTilt 4s ease-in-out infinite;
+  transform-origin: bottom left;
+}
+
+.anim-oil-drop-1 {
+  animation: oilDropFall 1.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite;
+}
+
+.anim-oil-drop-2 {
+  animation: oilDropFall 1.8s cubic-bezier(0.55, 0.055, 0.675, 0.19) infinite 0.9s;
+}
+
+.anim-oil-ripple {
+  animation: oilRippleRing 1.8s ease-out infinite 0.8s;
+  transform-origin: center;
+}
+
+.anim-tyre-spin {
+  animation: tyreSpinRotate 6s linear infinite;
+  transform-origin: center;
+}
+
+.anim-wrench-impact {
+  animation: impactWrenchPulse 2s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.anim-gear-cw {
+  animation: gearRotateCW 8s linear infinite;
+  transform-origin: center;
+}
+
+.anim-gear-ccw {
+  animation: gearRotateCCW 8s linear infinite;
+  transform-origin: center;
+}
+
+.anim-spanner {
+  animation: spannerWobble 3s ease-in-out infinite;
+  transform-origin: 20% 80%;
+}
+
+.anim-spark {
+  animation: sparkFlash 1.5s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.dash-icon-particle {
+  position: absolute;
+  animation: floatUp linear infinite;
+  opacity: 0;
+}
+
+.dash-icon-particle:nth-child(1) { left: 4%; animation-duration: 16s; animation-delay: 0s; }
+.dash-icon-particle:nth-child(2) { left: 16%; animation-duration: 19s; animation-delay: 2s; }
+.dash-icon-particle:nth-child(3) { left: 28%; animation-duration: 14s; animation-delay: 5s; }
+.dash-icon-particle:nth-child(4) { left: 42%; animation-duration: 21s; animation-delay: 1s; }
+.dash-icon-particle:nth-child(5) { left: 54%; animation-duration: 17s; animation-delay: 3.5s; }
+.dash-icon-particle:nth-child(6) { left: 66%; animation-duration: 13s; animation-delay: 7s; }
+.dash-icon-particle:nth-child(7) { left: 78%; animation-duration: 18s; animation-delay: 4s; }
+.dash-icon-particle:nth-child(8) { left: 88%; animation-duration: 22s; animation-delay: 0.8s; }
+.dash-icon-particle:nth-child(9) { left: 94%; animation-duration: 15s; animation-delay: 6s; }
+.dash-icon-particle:nth-child(10) { left: 10%; animation-duration: 20s; animation-delay: 9s; }
+
+/* ============= DARK MODE ADDITIONAL OVERRIDES ============= */
+.dark .text-slate-900 { color: #E2E8F0; }
+.dark .text-slate-800 { color: #CBD5E1; }
+.dark .text-slate-700 { color: #94A3B8; }
+.dark .text-slate-600 { color: #64748B; }
+.dark .text-slate-500 { color: #475569; }
+.dark .bg-white { background-color: #0F172A; }
+.dark .bg-white\/70 { background-color: rgba(15,23,42,0.7); }
+.dark .bg-white\/80 { background-color: rgba(15,23,42,0.8); }
+.dark .bg-white\/60 { background-color: rgba(15,23,42,0.6); }
+.dark .bg-slate-50 { background-color: #1E293B; }
+.dark .bg-slate-100 { background-color: #1E293B; }
+.dark .bg-slate-100\/80 { background-color: rgba(30,41,59,0.8); }
+.dark .bg-slate-100\/90 { background-color: rgba(30,41,59,0.9); }
+.dark .border-slate-200 { border-color: rgba(51,65,85,0.6); }
+.dark .border-slate-100 { border-color: rgba(51,65,85,0.4); }
+.dark .border-white { border-color: rgba(255,255,255,0.07); }
+.dark .border-white\/60 { border-color: rgba(255,255,255,0.07); }
+.dark input, .dark select, .dark textarea {
+  background-color: rgba(15,23,42,0.95);
+  color: #E2E8F0;
+  border-color: rgba(51,65,85,0.8);
+}
+.dark input::placeholder { color: #475569; }
+
+/* Animations */
+@keyframes pulseSubtle {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.85; transform: scale(1.02); }
+}
+
+.animate-pulse-subtle {
+  animation: pulseSubtle 3s infinite ease-in-out;
+}
+
+@keyframes bounceDot {
+  0%, 80%, 100% { transform: scale(0); }
+  40% { transform: scale(1); }
+}
+
+.dot-1 { animation: bounceDot 1.4s infinite ease-in-out both; }
+.dot-2 { animation: bounceDot 1.4s infinite ease-in-out both 0.2s; }
+.dot-3 { animation: bounceDot 1.4s infinite ease-in-out both 0.4s; }
+
+/* Custom scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-color);
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(100, 116, 139, 0.7);
+}
