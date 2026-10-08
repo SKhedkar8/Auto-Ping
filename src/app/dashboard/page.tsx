@@ -205,11 +205,11 @@ function getVehicleImage(vehicle: Vehicle): string {
   for (const [key, url] of Object.entries(MODEL_IMAGE_MAP)) {
     if (modelLower.includes(key)) return url;
   }
-  // Fallback by type
+  // Fallback by type — use user-uploaded default images
   if (vehicle.type === 'BIKE' || vehicle.type === 'SCOOTER') {
-    return 'https://images.unsplash.com/photo-1558981033-40a1ea4dbab5?w=600&auto=format&fit=crop&q=80';
+    return '/default-bike.png';
   }
-  return 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80';
+  return '/default-car.png';
 }
 
 export default function DashboardPage() {
@@ -408,7 +408,9 @@ export default function DashboardPage() {
                           alt={`${v.brandName} ${v.modelName}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
-                            (e.currentTarget as HTMLImageElement).src = 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80';
+                            const el = e.currentTarget as HTMLImageElement;
+                            // Use type-appropriate local default
+                            el.src = (v.type === 'BIKE' || v.type === 'SCOOTER') ? '/default-bike.png' : '/default-car.png';
                           }}
                         />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />

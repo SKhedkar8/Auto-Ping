@@ -517,9 +517,7 @@ export default function AddVehiclePage() {
                         src={
                           customImageUrl ||
                           selectedModel?.imageUrl ||
-                          (vehicleType === 'CAR'
-                            ? 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80'
-                            : 'https://images.unsplash.com/photo-1558981033-40a1ea4dbab5?w=600&auto=format&fit=crop&q=80')
+                          (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
                         }
                         alt="Vehicle Preview"
                         className="w-full h-full object-cover"
@@ -606,9 +604,7 @@ export default function AddVehiclePage() {
                     src={
                       customImageUrl ||
                       selectedModel?.imageUrl ||
-                      (vehicleType === 'CAR'
-                        ? 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=600&auto=format&fit=crop&q=80'
-                        : 'https://images.unsplash.com/photo-1558981033-40a1ea4dbab5?w=600&auto=format&fit=crop&q=80')
+                      (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
                     }
                     alt={`${selectedBrand?.name} ${selectedModel?.name}`}
                     className="w-full h-full object-cover"

@@ -372,9 +372,9 @@ export function getDatabase(): DatabaseSchema {
             v.imageUrl = m.imageUrl;
           } else if (!v.imageUrl) {
             if (v.type === 'BIKE' || v.type === 'SCOOTER') {
-              v.imageUrl = 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80';
+              v.imageUrl = '/default-bike.png';
             } else {
-              v.imageUrl = 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80';
+              v.imageUrl = '/default-car.png';
             }
           }
         }
@@ -461,6 +461,11 @@ export function createVehicle(vehicleData: Omit<Vehicle, 'id' | 'healthScore' | 
     );
     if (matched?.imageUrl) {
       finalImageUrl = matched.imageUrl;
+    } else {
+      // Use clean local default images instead of random Unsplash photos
+      finalImageUrl = (vehicleData.type === 'BIKE' || vehicleData.type === 'SCOOTER')
+        ? '/default-bike.png'
+        : '/default-car.png';
     }
   }
 
