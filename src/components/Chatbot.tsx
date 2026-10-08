@@ -598,14 +598,11 @@ export default function Chatbot() {
       <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 transition-colors"
-          aria-label="Open Auto Ping Assistant"
+          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-850 text-white shadow-xl shadow-black/20 border border-white/10 transition-all apple-btn"
+          aria-label="Open Chat Support"
         >
-          <div className="relative flex items-center justify-center w-5 h-5">
-            <Bot className="w-5 h-5" />
-            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-blue-600" />
-          </div>
-          <span className="text-xs font-semibold pr-1">Assistant</span>
+          <span className="text-sm">💬</span>
+          <span className="text-xs font-semibold pr-0.5">Chat Support</span>
         </button>
       </div>
 
@@ -620,11 +617,11 @@ export default function Chatbot() {
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-semibold text-xs text-slate-900 dark:text-white">AutoPing Copilot</h4>
+                  <h4 className="font-semibold text-xs text-slate-900 dark:text-white">AutoPing Chat Support</h4>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 </div>
                 <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Maintenance & Booking Assistant
+                  Instant Customer & Maintenance Support
                 </p>
               </div>
             </div>

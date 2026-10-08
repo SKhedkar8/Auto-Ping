@@ -22,6 +22,7 @@ import { clearClientSession, DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, getClientSessi
 import { Notification, User as UserType } from '@/lib/types';
 import { useDarkMode } from './DarkModeProvider';
 import RunningTicker from './RunningTicker';
+import AiCharacterAssistant from './character/AiCharacterAssistant';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -33,6 +34,13 @@ export default function Navbar() {
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+
+  useEffect(() => {
+    const handleOpenAi = () => setIsAiAssistantOpen(true);
+    window.addEventListener('open_ai_character_assistant', handleOpenAi);
+    return () => window.removeEventListener('open_ai_character_assistant', handleOpenAi);
+  }, []);
 
   useEffect(() => {
     const session = getClientSession();
@@ -135,6 +143,17 @@ export default function Navbar() {
                   </a>
                 );
               })}
+
+              {/* 🤖 AI Assistant Button */}
+              <button
+                type="button"
+                onClick={() => setIsAiAssistantOpen(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold bg-gradient-to-r from-[#0071E3]/15 to-[#34C759]/15 text-[#0071E3] dark:text-[#2997FF] hover:from-[#0071E3]/25 hover:to-[#34C759]/25 border border-[#0071E3]/30 transition-all duration-200 apple-btn shadow-xs ml-1"
+                title="Launch Talking Cars AI Assistant"
+              >
+                <span>🤖</span>
+                <span>AI Assistant</span>
+              </button>
             </nav>
           </div>
 
@@ -320,7 +339,23 @@ export default function Navbar() {
 
         {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-black/[0.06] dark:border-white/[0.06] bg-white/92 dark:bg-black/92 backdrop-blur-2xl px-4 pt-2 pb-4 space-y-0.5 apple-fade-in">
+          <div className="md:hidden border-t border-black/[0.06] dark:border-white/[0.06] bg-white/92 dark:bg-black/92 backdrop-blur-2xl px-4 pt-2 pb-4 space-y-1 apple-fade-in">
+            {/* 🤖 AI Assistant Mobile Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setIsAiAssistantOpen(true);
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-[14px] font-semibold bg-gradient-to-r from-[#0071E3]/15 to-[#34C759]/15 text-[#0071E3] dark:text-[#2997FF] border border-[#0071E3]/30 w-full mb-1 transition-all apple-btn"
+            >
+              <span className="text-base">🤖</span>
+              <span>AI Assistant</span>
+              <span className="ml-auto text-[10px] font-bold uppercase tracking-wider bg-[#0071E3] text-white px-2 py-0.5 rounded-full">
+                Interactive
+              </span>
+            </button>
+
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -379,6 +414,12 @@ export default function Navbar() {
           );
         })}
       </nav>
+
+      {/* 🤖 Interactive AI Character Assistant Modal */}
+      <AiCharacterAssistant
+        isOpen={isAiAssistantOpen}
+        onClose={() => setIsAiAssistantOpen(false)}
+      />
     </>
   );
 }
