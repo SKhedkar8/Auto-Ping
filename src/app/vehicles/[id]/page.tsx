@@ -18,6 +18,7 @@ import {
   Heart,
   History,
   Info,
+  Pencil,
   RefreshCw,
   ShieldCheck,
   Sparkles,
@@ -27,6 +28,8 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
+import EditVehicleModal from '@/components/EditVehicleModal';
+import ServiceBackground from '@/components/ServiceBackground';
 import { ServiceRecord, Vehicle } from '@/lib/types';
 
 export default function VehicleDetailPage() {
@@ -40,6 +43,7 @@ export default function VehicleDetailPage() {
 
   // KM update state
   const [showKmModal, setShowKmModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
   const [newKm, setNewKm] = useState<number>(0);
   const [kmError, setKmError] = useState('');
   const [isUpdatingKm, setIsUpdatingKm] = useState(false);
@@ -133,12 +137,13 @@ export default function VehicleDetailPage() {
   ];
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
+    <div className="relative min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 overflow-x-hidden">
+      <ServiceBackground />
       <Navbar />
 
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
         {/* Breadcrumb / Actions */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <a
             href="/vehicles"
             className="inline-flex items-center gap-1.5 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
@@ -146,39 +151,74 @@ export default function VehicleDetailPage() {
             <ArrowLeft className="w-4 h-4" /> Back to Vehicles
           </a>
 
-          <a
-            href={`/services/book?vehicleId=${vehicle.id}`}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
-          >
-            <Wrench className="w-3.5 h-3.5" />
-            Book Service
-          </a>
+          <div className="flex items-center gap-2.5">
+            <button
+              onClick={() => setShowEditModal(true)}
+              className="px-3.5 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 text-xs font-semibold shadow-xs flex items-center gap-1.5 transition-colors"
+              title="Edit Vehicle Details & Image"
+            >
+              <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
+              Edit Vehicle Details
+            </button>
+
+            <a
+              href={`/services/book?vehicleId=${vehicle.id}`}
+              className="px-4 py-2 rounded-lg bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-semibold shadow-xs flex items-center gap-2 transition-colors"
+            >
+              <Wrench className="w-3.5 h-3.5" />
+              Book Service
+            </a>
+          </div>
         </div>
 
         {/* HERO VEHICLE HEADER CARD */}
-        <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs mb-6">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
             <div className="flex items-center gap-4">
-              <div className="w-14 h-14 rounded-xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl border border-blue-100 dark:border-blue-800/50">
-                <Car className="w-7 h-7" />
-              </div>
+              {vehicle.imageUrl ? (
+                <div className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-700 shrink-0 shadow-sm group">
+                  <img
+                    src={vehicle.imageUrl}
+                    alt={`${vehicle.brandName} ${vehicle.modelName}`}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      (e.currentTarget as HTMLImageElement).src = '/default-car.png';
+                    }}
+                  />
+                  <button
+                    onClick={() => setShowEditModal(true)}
+                    title="Change Photo"
+                    className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs"
+                  >
+                    <Pencil className="w-4 h-4" />
+                  </button>
+                </div>
+              ) : (
+                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-2xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold text-xl border border-blue-100 dark:border-blue-800/50 shrink-0">
+                  <Car className="w-8 h-8" />
+                </div>
+              )}
+
               <div>
-                <div className="flex items-center gap-2.5">
+                <div className="flex flex-wrap items-center gap-2.5">
                   <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
                     {vehicle.brandName} {vehicle.modelName}
                   </h1>
-                  <span className="px-2 py-0.5 rounded text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 uppercase">
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-800 uppercase">
                     {vehicle.fuelType}
                   </span>
+                  <span className="px-2 py-0.5 rounded-full text-[11px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700 uppercase">
+                    {vehicle.type}
+                  </span>
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1.5">
                   Registration: <strong className="text-slate-700 dark:text-slate-200 font-mono">{vehicle.registrationNo}</strong> • Year: {vehicle.purchaseYear} • Class: {vehicle.vehicleClass.toUpperCase()}
                 </p>
               </div>
             </div>
 
             <div className="flex items-center gap-3">
-              <div className="p-3 px-4 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-right">
+              <div className="p-3 px-4 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-right">
                 <span className="text-[10px] uppercase font-semibold text-slate-500 dark:text-slate-400 block tracking-wider">
                   Current Odometer
                 </span>
@@ -187,14 +227,23 @@ export default function VehicleDetailPage() {
                 </span>
               </div>
 
-              <button
-                onClick={() => setShowKmModal(true)}
-                className="px-3.5 py-2.5 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
-                title="Update Current KM"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
-                Update KM
-              </button>
+              <div className="flex flex-col gap-1.5">
+                <button
+                  onClick={() => setShowKmModal(true)}
+                  className="px-3.5 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700/80 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold flex items-center gap-1.5 transition-colors shadow-xs"
+                  title="Update Current KM"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+                  Update KM
+                </button>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="px-3.5 py-1.5 rounded-lg bg-slate-50 dark:bg-slate-800/40 hover:bg-slate-100 dark:hover:bg-slate-800 border border-slate-200/80 dark:border-slate-700/80 text-[#0071E3] dark:text-[#2997FF] text-xs font-medium flex items-center gap-1.5 transition-colors"
+                >
+                  <Pencil className="w-3 h-3" />
+                  Edit Details
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -469,6 +518,19 @@ export default function VehicleDetailPage() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Edit Vehicle Modal */}
+      {showEditModal && vehicle && (
+        <EditVehicleModal
+          vehicle={vehicle}
+          isOpen={showEditModal}
+          onClose={() => setShowEditModal(false)}
+          onUpdated={(updated) => {
+            setVehicle(updated);
+            setNewKm(updated.currentKm);
+          }}
+        />
       )}
 
       <Chatbot />

@@ -252,3 +252,86 @@
   transform: translateY(-2px);
   box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
 }
+
+/* ══════════════════════════════════════════════
+   RUNNING TICKER / MARQUEE ANIMATION
+   ══════════════════════════════════════════════ */
+@keyframes runningTicker {
+  0% {
+    transform: translateX(0%);
+  }
+  100% {
+    transform: translateX(-50%);
+  }
+}
+.animate-running-ticker {
+  display: inline-flex;
+  animation: runningTicker 32s linear infinite;
+}
+
+/* ══════════════════════════════════════════════
+   SERVICING THEMED BACKGROUND ANIMATIONS
+   ══════════════════════════════════════════════ */
+@keyframes gearSpinSlow {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-gear-slow {
+  animation: gearSpinSlow 24s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes gearSpinReverse {
+  from {
+    transform: rotate(360deg);
+  }
+  to {
+    transform: rotate(0deg);
+  }
+}
+.animate-gear-reverse {
+  animation: gearSpinReverse 18s linear infinite;
+  transform-origin: center;
+}
+
+@keyframes floatServiceItem {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(-14px) rotate(4deg);
+  }
+}
+.animate-float-service {
+  animation: floatServiceItem 6s ease-in-out infinite;
+}
+
+@keyframes floatServiceItemAlt {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  50% {
+    transform: translateY(12px) rotate(-5deg);
+  }
+}
+.animate-float-service-alt {
+  animation: floatServiceItemAlt 7s ease-in-out infinite;
+}
+
+@keyframes pulseServiceGlow {
+  0%, 100% {
+    opacity: 0.15;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(1.08);
+  }
+}
+.animate-service-glow {
+  animation: pulseServiceGlow 8s ease-in-out infinite;
+}

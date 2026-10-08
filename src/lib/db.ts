@@ -522,6 +522,49 @@ export function updateVehicleKm(id: string, newKm: number): Vehicle | null {
   return vehicle;
 }
 
+export function updateVehicle(id: string, updates: Partial<Vehicle>): Vehicle | null {
+  const db = getDatabase();
+  const vehicle = db.vehicles.find((v) => v.id === id);
+  if (!vehicle) return null;
+
+  if (updates.brandName !== undefined) vehicle.brandName = updates.brandName;
+  if (updates.modelName !== undefined) vehicle.modelName = updates.modelName;
+  if (updates.registrationNo !== undefined) vehicle.registrationNo = updates.registrationNo;
+  if (updates.purchaseYear !== undefined) vehicle.purchaseYear = Number(updates.purchaseYear);
+  if (updates.fuelType !== undefined) vehicle.fuelType = updates.fuelType;
+  if (updates.type !== undefined) vehicle.type = updates.type;
+  if (updates.vehicleClass !== undefined) vehicle.vehicleClass = updates.vehicleClass;
+  if (updates.imageUrl !== undefined) vehicle.imageUrl = updates.imageUrl;
+  if (updates.lastServiceDate !== undefined) vehicle.lastServiceDate = updates.lastServiceDate;
+  if (updates.lastServiceKm !== undefined) vehicle.lastServiceKm = Number(updates.lastServiceKm);
+
+  if (updates.currentKm !== undefined) {
+    vehicle.currentKm = Number(updates.currentKm);
+  }
+
+  // Recalculate health
+  const health = calculateVehicleHealth({
+    vehicleType: vehicle.type,
+    currentKm: vehicle.currentKm,
+    purchaseYear: vehicle.purchaseYear,
+    lastServiceDate: vehicle.lastServiceDate,
+    lastServiceKm: vehicle.lastServiceKm,
+  });
+
+  vehicle.healthScore = health.healthScore;
+  vehicle.healthRating = health.healthRating;
+  vehicle.nextServiceKm = health.nextServiceKm;
+  vehicle.nextServiceDate = health.nextServiceDate;
+  vehicle.kmRemaining = health.kmRemaining;
+  vehicle.daysRemaining = health.daysRemaining;
+  vehicle.dueStatus = health.dueStatus;
+  vehicle.recommendedServices = health.recommendedServices;
+  vehicle.components = health.components;
+
+  saveDatabase(db);
+  return vehicle;
+}
+
 export function deleteVehicle(id: string): boolean {
   const db = getDatabase();
   const initialLen = db.vehicles.length;

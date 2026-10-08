@@ -20,15 +20,19 @@ import {
   Globe,
   Info,
   MapPin,
+  Music,
   Phone,
   Shield,
   Sparkles,
   Star,
+  Volume2,
   Wrench
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
+import ServiceBackground from '@/components/ServiceBackground';
+import { playCelebrationFanfare } from '@/lib/celebrationAudio';
 import { getClientSession } from '@/lib/auth';
 import { Booking, CenterType, ServiceCenter, ServiceType, Slot, Vehicle } from '@/lib/types';
 
@@ -72,6 +76,60 @@ function BookServicePageInner() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingResult, setBookingResult] = useState<Booking | null>(null);
   const [bookingError, setBookingError] = useState('');
+  const [isPlayingMusic, setIsPlayingMusic] = useState(false);
+
+  const triggerCelebration = () => {
+    setIsPlayingMusic(true);
+    try {
+      playCelebrationFanfare();
+    } catch {}
+
+    try {
+      // Primary center blast
+      confetti({
+        particleCount: 110,
+        spread: 80,
+        origin: { y: 0.55 },
+        colors: ['#0071E3', '#34C759', '#FF9500', '#FF2D55', '#AF52DE', '#5856D6'],
+      });
+
+      // Left angle burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 70,
+          angle: 60,
+          spread: 65,
+          origin: { x: 0.15, y: 0.65 },
+          colors: ['#34C759', '#0071E3', '#FFD60A'],
+        });
+      }, 250);
+
+      // Right angle burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 70,
+          angle: 120,
+          spread: 65,
+          origin: { x: 0.85, y: 0.65 },
+          colors: ['#FF2D55', '#AF52DE', '#0071E3', '#FF9500'],
+        });
+      }, 500);
+
+      // Grand celebration cascade
+      setTimeout(() => {
+        confetti({
+          particleCount: 90,
+          spread: 120,
+          origin: { y: 0.35 },
+          colors: ['#0071E3', '#34C759', '#FFD60A', '#FF9500'],
+        });
+      }, 850);
+    } catch {}
+
+    setTimeout(() => {
+      setIsPlayingMusic(false);
+    }, 4500);
+  };
 
   // Estimates
   const [costMin, setCostMin] = useState(3500);
@@ -223,7 +281,7 @@ function BookServicePageInner() {
       if (data.data) {
         setBookingResult(data.data);
         setStep(5);
-        try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch {}
+        triggerCelebration();
       } else {
         setBookingError(data.error || 'Failed to confirm booking. Slot may have been taken.');
       }
@@ -263,10 +321,11 @@ END:VCALENDAR`;
 
   /* ─────────────────────────── render ─────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#000000]">
+    <div className="relative min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#000000] overflow-x-hidden">
+      <ServiceBackground />
       <Navbar />
 
-      <main className="flex-1 pt-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
+      <main className="flex-1 pt-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full relative z-10">
 
         {/* ── Wizard header ── */}
         {step < 5 && (
@@ -867,23 +926,71 @@ END:VCALENDAR`;
             STEP 5 — SUCCESS (Apple confirmation receipt)
             ══════════════════════════════════════════════ */}
         {step === 5 && bookingResult && (
-          <div className="apple-scale-in max-w-md mx-auto text-center pt-4">
-            {/* Checkmark */}
-            <div className="w-[72px] h-[72px] rounded-full bg-[#34C759]/15 flex items-center justify-center mx-auto mb-5">
-              <div className="w-14 h-14 rounded-full bg-[#34C759] flex items-center justify-center shadow-xl shadow-[#34C759]/30">
-                <CheckCircle2 className="w-8 h-8 text-white" />
+          <div className="apple-scale-in max-w-lg mx-auto text-center pt-2">
+            {/* Celebration Icon with Bouncing Emojis */}
+            <div className="relative mb-5 inline-block mx-auto">
+              <span className="absolute -top-2 -right-3 text-3xl animate-bounce" role="img" aria-label="party">🎉</span>
+              <span className="absolute -bottom-1 -left-3 text-2xl animate-pulse" role="img" aria-label="sparkles">✨</span>
+              <div className="w-[84px] h-[84px] rounded-full bg-[#34C759]/15 flex items-center justify-center mx-auto">
+                <div className="w-16 h-16 rounded-full bg-[#34C759] flex items-center justify-center shadow-2xl shadow-[#34C759]/40 ring-4 ring-white dark:ring-[#161617]">
+                  <CheckCircle2 className="w-9 h-9 text-white stroke-[2.5]" />
+                </div>
               </div>
             </div>
 
-            <h2 className="text-[26px] sm:text-[30px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
-              Booking Confirmed
+            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#34C759]/10 text-[#34C759] font-semibold text-[11px] uppercase tracking-wider mb-2">
+              <Sparkles className="w-3.5 h-3.5" />
+              Slot Confirmed & Scheduled
+            </div>
+
+            <h2 className="text-[28px] sm:text-[32px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+              Booking Confirmed!
             </h2>
-            <p className="text-[14px] text-[#86868b] max-w-xs mx-auto mb-8 leading-relaxed">
+            <p className="text-[14px] text-[#86868b] max-w-sm mx-auto mb-6 leading-relaxed">
               Your appointment for{' '}
               <span className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{bookingResult.vehicleName}</span>
               {' '}is scheduled for{' '}
               <span className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{bookingResult.serviceDate} at {bookingResult.serviceTime}</span>.
             </p>
+
+            {/* Celebration Music Banner Card */}
+            <div className="mb-6 p-4 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.08] dark:border-white/[0.1] shadow-md flex items-center justify-between gap-3 text-left">
+              <div className="flex items-center gap-3">
+                <div className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                  isPlayingMusic
+                    ? 'bg-[#0071E3] text-white animate-pulse shadow-md shadow-[#0071E3]/30'
+                    : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#0071E3] dark:text-[#2997FF]'
+                }`}>
+                  <Music className="w-5 h-5" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <p className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+                      {isPlayingMusic ? 'Playing Victory Music 🎶' : 'Celebration Fanfare'}
+                    </p>
+                    {isPlayingMusic && (
+                      <span className="flex items-center gap-0.5 h-3">
+                        <span className="w-0.5 h-3 bg-[#0071E3] rounded-full animate-pulse" />
+                        <span className="w-0.5 h-2 bg-[#34C759] rounded-full animate-pulse" style={{ animationDelay: '0.15s' }} />
+                        <span className="w-0.5 h-3.5 bg-[#FF9500] rounded-full animate-pulse" style={{ animationDelay: '0.3s' }} />
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-[11px] text-[#86868b]">
+                    {isPlayingMusic ? 'Victory synth chime playing live' : 'Hear celebration music and confetti'}
+                  </p>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={triggerCelebration}
+                className="px-3.5 py-2 rounded-full bg-[#0071E3]/10 dark:bg-[#0071E3]/20 hover:bg-[#0071E3]/20 text-[12px] font-semibold text-[#0071E3] dark:text-[#2997FF] transition-all flex items-center gap-1.5 apple-btn shrink-0"
+              >
+                <Volume2 className="w-3.5 h-3.5" />
+                Replay 🎵
+              </button>
+            </div>
 
             {/* Booking code card */}
             <div className="mx-auto w-fit mb-8 px-8 py-5 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] shadow-lg">

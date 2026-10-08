@@ -9,6 +9,7 @@ import {
   Flame,
   Gauge,
   Heart,
+  Pencil,
   Plus,
   Trash2,
   Wrench
@@ -16,12 +17,15 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
+import EditVehicleModal from '@/components/EditVehicleModal';
+import ServiceBackground from '@/components/ServiceBackground';
 import { getClientSession } from '@/lib/auth';
 import { Vehicle } from '@/lib/types';
 
 export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     const user = getClientSession();
@@ -45,7 +49,8 @@ export default function VehiclesPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
+    <div className="relative min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 overflow-x-hidden">
+      <ServiceBackground />
       <Navbar />
 
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
@@ -126,14 +131,27 @@ export default function VehiclesPage() {
                       )}
                     </div>
 
-                    {/* Delete button */}
-                    <button
-                      onClick={(e) => handleDelete(v.id, e)}
-                      title="Remove Vehicle"
-                      className="absolute top-3 left-3 p-1.5 rounded-lg bg-black/40 hover:bg-rose-600 text-white transition-colors"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
+                    {/* Delete and Edit buttons */}
+                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                      <button
+                        onClick={(e) => handleDelete(v.id, e)}
+                        title="Remove Vehicle"
+                        className="p-1.5 rounded-lg bg-black/40 hover:bg-rose-600 text-white transition-colors"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setEditingVehicle(v);
+                        }}
+                        title="Edit Details & Image"
+                        className="p-1.5 rounded-lg bg-black/40 hover:bg-[#0071E3] text-white transition-colors"
+                      >
+                        <Pencil className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
 
                     {/* Name overlay */}
                     <div className="absolute bottom-3 left-4">
@@ -199,20 +217,28 @@ export default function VehiclesPage() {
                     </div>
 
                     {/* Actions */}
-                    <div className="flex items-center gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
+                      <button
+                        onClick={() => setEditingVehicle(v)}
+                        className="py-2 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                        title="Edit Vehicle Details & Image"
+                      >
+                        <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
+                        Edit
+                      </button>
                       <a
                         href={`/vehicles/${v.id}`}
                         className="flex-1 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 text-center transition-colors flex items-center justify-center gap-1.5"
                       >
                         <Heart className="w-3.5 h-3.5 text-rose-500" />
-                        Health & Timeline
+                        Health
                       </a>
                       <a
                         href={`/services/book?vehicleId=${v.id}`}
-                        className="flex-1 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium text-center transition-colors flex items-center justify-center gap-1.5 shadow-xs"
+                        className="flex-1 py-2 rounded-lg bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-medium text-center transition-colors flex items-center justify-center gap-1.5 shadow-xs"
                       >
                         <Wrench className="w-3.5 h-3.5" />
-                        Book Service
+                        Book
                       </a>
                     </div>
                   </div>
@@ -220,6 +246,19 @@ export default function VehiclesPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Edit Vehicle Modal */}
+        {editingVehicle && (
+          <EditVehicleModal
+            vehicle={editingVehicle}
+            isOpen={true}
+            onClose={() => setEditingVehicle(null)}
+            onUpdated={(updated) => {
+              setVehicles((prev) => prev.map((item) => (item.id === updated.id ? updated : item)));
+              setEditingVehicle(null);
+            }}
+          />
         )}
       </main>
 

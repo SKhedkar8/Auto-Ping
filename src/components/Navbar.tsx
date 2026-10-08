@@ -21,6 +21,7 @@ import {
 import { clearClientSession, DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, getClientSession, setClientSession } from '@/lib/auth';
 import { Notification, User as UserType } from '@/lib/types';
 import { useDarkMode } from './DarkModeProvider';
+import RunningTicker from './RunningTicker';
 
 export default function Navbar() {
   const pathname = usePathname();
@@ -93,6 +94,7 @@ export default function Navbar() {
 
   return (
     <>
+      <RunningTicker />
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           scrolled
