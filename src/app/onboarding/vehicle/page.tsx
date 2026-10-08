@@ -649,7 +649,7 @@ export default function AddVehiclePage() {
                 >
                   <ArrowLeft className="w-4 h-4" /> Edit Details
                 </button>
-                <button
+                <button 
                   type="button"
                   disabled={isSubmitting}
                   onClick={handleSaveVehicle}

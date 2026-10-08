@@ -755,7 +755,7 @@ export default function DashboardPage() {
         </div>
       )}
 
-      <Chatbot />
+      <Chatbot />      
       <Footer />
     </div>
   );

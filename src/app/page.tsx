@@ -42,7 +42,7 @@ export default function HomePage() {
                 </div>
 
                 <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight text-slate-900 leading-[1.12]">
-                  Never Miss a <span className="text-transparent bg-clip-text gradient-primary">Service.</span>
+                  Never Miss a <span className="gradient-text">Service.</span>
                 </h1>
 
                 <p className="text-base sm:text-lg text-slate-600 max-w-2xl mx-auto lg:mx-0 leading-relaxed font-normal">
