@@ -104,17 +104,17 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col gradient-mesh">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
       <Navbar />
 
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
         {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 tracking-tight">
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
               Service History Logs
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
               Verified records of parts replaced, service invoices, and odometer milestones.
             </p>
           </div>
@@ -122,9 +122,9 @@ export default function HistoryPage() {
           <div className="flex items-center gap-3">
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-xs flex items-center gap-1.5 transition-colors"
+              className="px-3.5 py-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 shadow-xs flex items-center gap-1.5 transition-colors"
             >
-              <Plus className="w-4 h-4 text-blue-600" />
+              <Plus className="w-4 h-4 text-blue-600 dark:text-blue-400" />
               Add Past Service Record
             </button>
           </div>
@@ -134,10 +134,10 @@ export default function HistoryPage() {
         <div className="flex items-center gap-2 overflow-x-auto pb-4 mb-6">
           <button
             onClick={() => handleVehicleFilterChange('all')}
-            className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition-all ${
+            className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${
               selectedVehicleId === 'all'
                 ? 'bg-blue-600 text-white shadow-xs'
-                : 'bg-white/80 border border-slate-200 text-slate-600 hover:bg-white'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
             }`}
           >
             All Vehicles
@@ -146,10 +146,10 @@ export default function HistoryPage() {
             <button
               key={v.id}
               onClick={() => handleVehicleFilterChange(v.id)}
-              className={`px-3.5 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition-all ${
+              className={`px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap transition-colors ${
                 selectedVehicleId === v.id
                   ? 'bg-blue-600 text-white shadow-xs'
-                  : 'bg-white/80 border border-slate-200 text-slate-600 hover:bg-white'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
               }`}
             >
               {v.brandName} {v.modelName} ({v.registrationNo})
@@ -159,53 +159,53 @@ export default function HistoryPage() {
 
         {/* History Timeline */}
         {records.length === 0 && !isLoading ? (
-          <div className="glass-card p-12 text-center max-w-md mx-auto my-12 border border-slate-200">
-            <History className="w-12 h-12 text-slate-300 mx-auto mb-3" />
-            <h3 className="font-bold text-slate-900 mb-1">No Service Records Found</h3>
-            <p className="text-xs text-slate-500 mb-6">
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-12 text-center max-w-md mx-auto my-12 border border-slate-200 dark:border-slate-800 shadow-xs">
+            <History className="w-10 h-10 text-slate-400 mx-auto mb-3" />
+            <h3 className="font-semibold text-sm text-slate-900 dark:text-white mb-1">No Service Records Found</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6">
               Completed bookings or manually added records will appear in this timeline.
             </p>
             <button
               onClick={() => setShowAddModal(true)}
-              className="px-4 py-2 rounded-xl gradient-primary text-white text-xs font-bold shadow-xs"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs transition-colors"
             >
               Add Older Service Record
             </button>
           </div>
         ) : (
-          <div className="relative pl-6 border-l-2 border-blue-200/80 space-y-6">
+          <div className="relative pl-6 border-l-2 border-slate-200 dark:border-slate-800 space-y-6">
             {records.map((rec) => (
               <div key={rec.id} className="relative">
                 {/* Node icon on line */}
-                <div className="absolute -left-[31px] top-1.5 w-4 h-4 rounded-full bg-blue-600 border-4 border-white shadow-xs" />
+                <div className="absolute -left-[31px] top-1.5 w-3.5 h-3.5 rounded-full bg-blue-600 border-2 border-white dark:border-slate-950" />
 
-                <div className="glass-card p-5 sm:p-6 border border-white">
+                <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs">
                   <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-3">
                     <div>
-                      <span className="text-xs font-bold text-blue-600 font-mono">
+                      <span className="text-xs font-medium text-blue-600 dark:text-blue-400 font-mono">
                         {rec.date} • {rec.km.toLocaleString()} KM
                       </span>
-                      <h3 className="font-extrabold text-base text-slate-900 mt-0.5">
+                      <h3 className="font-semibold text-base text-slate-900 dark:text-white mt-0.5">
                         {rec.centerName}
                       </h3>
                     </div>
 
                     <div className="text-left sm:text-right">
-                      <span className="inline-block px-3 py-1 rounded-lg bg-emerald-50 text-emerald-700 font-extrabold text-sm border border-emerald-100">
+                      <span className="inline-block px-2.5 py-1 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-400 font-bold text-sm border border-emerald-200 dark:border-emerald-800 font-mono">
                         ₹{rec.totalCost.toLocaleString()}
                       </span>
                     </div>
                   </div>
 
-                  <div className="p-3.5 rounded-xl bg-slate-50 border border-slate-100 mb-2">
-                    <span className="text-[10px] font-bold uppercase text-slate-400 block mb-1">
+                  <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/40 border border-slate-100 dark:border-slate-800 mb-2">
+                    <span className="text-[10px] font-semibold uppercase text-slate-400 block mb-1">
                       Services & Parts Replaced
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {rec.servicesDone.map((item, idx) => (
                         <span
                           key={idx}
-                          className="px-2.5 py-1 rounded-md bg-white border border-slate-200 text-xs font-semibold text-slate-800"
+                          className="px-2 py-0.5 rounded bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-700 dark:text-slate-300"
                         >
                           ✓ {item}
                         </span>
@@ -214,7 +214,7 @@ export default function HistoryPage() {
                   </div>
 
                   {rec.notes && (
-                    <p className="text-xs text-slate-500 italic mt-2">
+                    <p className="text-xs text-slate-500 dark:text-slate-400 italic mt-2">
                       Technician memo: &quot;{rec.notes}&quot;
                     </p>
                   )}
@@ -227,22 +227,22 @@ export default function HistoryPage() {
 
       {/* ADD PAST SERVICE MODAL */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-lg glass-dropdown rounded-3xl p-6 sm:p-8 shadow-2xl border border-white max-h-[90vh] overflow-y-auto">
-            <h3 className="font-extrabold text-base text-slate-900 mb-1">
+        <div className="fixed inset-0 z-50 bg-slate-950/50 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl p-6 shadow-xl border border-slate-200 dark:border-slate-800 max-h-[90vh] overflow-y-auto">
+            <h3 className="font-semibold text-base text-slate-900 dark:text-white mb-1">
               Add Past Service Record
             </h3>
-            <p className="text-xs text-slate-500 mb-5">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-5">
               Record a prior maintenance invoice to improve health calculation accuracy.
             </p>
 
             <form onSubmit={handleSavePastService} className="space-y-4">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Vehicle</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Vehicle</label>
                 <select
                   value={addForm.vehicleId}
                   onChange={(e) => setAddForm({ ...addForm, vehicleId: e.target.value })}
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 >
                   {vehicles.map((v) => (
@@ -255,43 +255,43 @@ export default function HistoryPage() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">Service Date</label>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Service Date</label>
                   <input
                     type="date"
                     value={addForm.date}
                     onChange={(e) => setAddForm({ ...addForm, date: e.target.value })}
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     required
                   />
                 </div>
 
                 <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">KM at Service</label>
+                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">KM at Service</label>
                   <input
                     type="number"
                     value={addForm.km}
                     onChange={(e) => setAddForm({ ...addForm, km: Number(e.target.value) })}
                     placeholder="e.g. 10000"
-                    className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Service Center Name</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Service Center Name</label>
                 <input
                   type="text"
                   value={addForm.centerName}
                   onChange={(e) => setAddForm({ ...addForm, centerName: e.target.value })}
                   placeholder="e.g. Authorized Hyundai Service, Shivaji Nagar"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">
                   Services Performed (comma separated)
                 </label>
                 <input
@@ -299,31 +299,31 @@ export default function HistoryPage() {
                   value={addForm.servicesDone}
                   onChange={(e) => setAddForm({ ...addForm, servicesDone: e.target.value })}
                   placeholder="Engine Oil, Brake Inspection, Wash"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Total Bill / Cost (₹)</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Total Bill / Cost (₹)</label>
                 <input
                   type="number"
                   value={addForm.totalCost}
                   onChange={(e) => setAddForm({ ...addForm, totalCost: Number(e.target.value) })}
                   placeholder="e.g. 4200"
-                  className="w-full bg-white border border-slate-200 rounded-xl px-3.5 py-2 text-xs text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Technician Notes (Optional)</label>
+                <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-1">Technician Notes (Optional)</label>
                 <textarea
                   value={addForm.notes}
                   onChange={(e) => setAddForm({ ...addForm, notes: e.target.value })}
                   placeholder="Details of inspection..."
                   rows={2}
-                  className="w-full bg-white border border-slate-200 rounded-xl p-2.5 text-xs text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg p-2.5 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                 />
               </div>
 
@@ -331,14 +331,14 @@ export default function HistoryPage() {
                 <button
                   type="button"
                   onClick={() => setShowAddModal(false)}
-                  className="px-4 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100"
+                  className="px-4 py-2 rounded-lg text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl gradient-primary text-white text-xs font-bold shadow-xs hover:opacity-95"
+                  className="px-5 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs transition-colors"
                 >
                   {isSaving ? 'Saving Record...' : 'Save to History'}
                 </button>

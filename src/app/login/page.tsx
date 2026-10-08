@@ -65,58 +65,58 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 gradient-mesh">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="w-full max-w-md">
         {/* Logo Header */}
         <div className="text-center mb-6">
-          <a href="/" className="inline-flex items-center gap-2.5 mb-3 group">
-            <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <Car className="w-6 h-6" />
+          <a href="/" className="inline-flex items-center gap-2 mb-2">
+            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <Car className="w-5 h-5" />
             </div>
-            <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-              Auto<span className="text-[#0B5CFF]">Ping</span>
+            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">
+              Auto<span className="text-blue-600 dark:text-blue-400">Ping</span>
             </span>
           </a>
-          <h2 className="text-xl font-bold text-slate-900">Welcome Back</h2>
-          <p className="text-xs text-slate-500 mt-1">Sign in to manage your vehicles & upcoming services</p>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Welcome Back</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Sign in to manage your vehicles &amp; upcoming services</p>
         </div>
 
         {/* Card */}
-        <div className="glass-card p-6 sm:p-8 border border-white shadow-xl relative">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs relative">
           {/* Quick Demo Autofill Notice */}
-          <div className="mb-5 p-3 rounded-xl bg-blue-50/90 border border-blue-200/60 flex items-center justify-between">
+          <div className="mb-5 p-3 rounded-lg bg-blue-50/70 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800/60 flex items-center justify-between">
             <div>
-              <p className="text-xs font-bold text-blue-900">Fast Demo Access</p>
-              <p className="text-[11px] text-blue-700">Pre-seeded with Creta & Classic 350</p>
+              <p className="text-xs font-bold text-blue-900 dark:text-blue-300">Fast Demo Access</p>
+              <p className="text-[11px] text-blue-700 dark:text-blue-400">Pre-seeded with Creta &amp; Classic 350</p>
             </div>
             <button
               type="button"
               onClick={handleDemoCustomer}
-              className="px-3 py-1.5 rounded-lg gradient-primary text-white text-xs font-bold shadow-xs hover:opacity-95 transition-opacity"
+              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors"
             >
-              1-Click Demo Login
+              1-Click Login
             </button>
           </div>
 
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-400 font-medium">
               {error}
             </div>
           )}
 
           <form onSubmit={handleLogin} className="space-y-4">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1.5">
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1.5">
                 Email or 10-Digit Mobile
               </label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
                   placeholder="e.g. shreyas@example.com or 9876543210"
-                  className="w-full bg-white/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
@@ -124,25 +124,25 @@ export default function LoginPage() {
 
             <div>
               <div className="flex items-center justify-between mb-1.5">
-                <label className="text-xs font-bold text-slate-700">Password</label>
-                <a href="/forgot-password" className="text-[11px] font-semibold text-blue-600 hover:underline">
+                <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Password</label>
+                <a href="/forgot-password" className="text-[11px] font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                   Forgot password?
                 </a>
               </div>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type={showPassword ? 'text' : 'password'}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="Enter your password"
-                  className="w-full bg-white/90 border border-slate-200 rounded-xl pl-10 pr-10 py-2.5 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500 focus:ring-1 focus:ring-blue-500"
+                  className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-9 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                   required
                 />
                 <button
                   type="button"
                   onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600"
+                  className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
                 >
                   {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
@@ -152,18 +152,18 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl gradient-primary text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-95 transition-opacity flex items-center justify-center gap-2 mt-2"
+              className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5 mt-2"
             >
               {isLoading ? 'Signing In...' : 'Sign In'}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>
 
           {/* Alternative options */}
-          <div className="mt-6 pt-5 border-t border-slate-100 space-y-3 text-center text-xs">
-            <p className="text-slate-600">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 space-y-2.5 text-center text-xs">
+            <p className="text-slate-600 dark:text-slate-400">
               Don&apos;t have an account?{' '}
-              <a href="/signup" className="font-bold text-blue-600 hover:underline">
+              <a href="/signup" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                 Create Account
               </a>
             </p>
@@ -171,7 +171,7 @@ export default function LoginPage() {
             <div>
               <a
                 href="/admin/login"
-                className="inline-flex items-center gap-1.5 text-slate-500 hover:text-slate-800 text-[11px] font-semibold"
+                className="inline-flex items-center gap-1.5 text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200 text-[11px] font-medium transition-colors"
               >
                 <Shield className="w-3.5 h-3.5 text-amber-500" />
                 Admin Command Center Login →

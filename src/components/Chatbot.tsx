@@ -594,38 +594,38 @@ export default function Chatbot() {
 
   return (
     <>
-      {/* Floating Trigger Button */}
-      <div className="fixed bottom-20 md:bottom-6 right-5 z-40">
+      {/* Floating Trigger Button - Clean Product Help Button */}
+      <div className="fixed bottom-6 right-6 z-40">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="group flex items-center gap-2.5 px-4 py-3 rounded-full gradient-primary text-white shadow-xl shadow-blue-500/30 hover:shadow-blue-500/50 hover:scale-105 active:scale-95 transition-all duration-200"
+          className="flex items-center gap-2.5 px-3.5 py-2.5 rounded-full bg-blue-600 hover:bg-blue-700 text-white shadow-lg shadow-blue-600/20 transition-colors"
           aria-label="Open Auto Ping Assistant"
         >
-          <div className="relative">
-            <Bot className="w-5 h-5 group-hover:rotate-12 transition-transform" />
-            <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-emerald-400 rounded-full border-2 border-white animate-pulse" />
+          <div className="relative flex items-center justify-center w-5 h-5">
+            <Bot className="w-5 h-5" />
+            <span className="absolute -top-0.5 -right-0.5 w-2 h-2 bg-emerald-400 rounded-full border border-blue-600" />
           </div>
-          <span className="font-bold text-xs tracking-wide">Auto Ping Assistant</span>
+          <span className="text-xs font-semibold pr-1">Assistant</span>
         </button>
       </div>
 
-      {/* Floating Chat Drawer Modal */}
+      {/* Floating Chat Drawer Modal - Clean SaaS Product Assistant */}
       {isOpen && (
-        <div className="fixed bottom-24 md:bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[420px] h-[550px] max-h-[80vh] z-50 glass-dark rounded-3xl flex flex-col overflow-hidden shadow-2xl border border-white/20 animate-in fade-in slide-in-from-bottom-5 duration-200">
+        <div className="fixed bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[390px] h-[560px] max-h-[80vh] z-50 rounded-xl flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
           {/* Header */}
-          <div className="p-4 bg-slate-900/80 border-b border-white/10 flex items-center justify-between text-white">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl gradient-primary flex items-center justify-center text-white shadow-sm">
-                <Bot className="w-5 h-5" />
+          <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
+            <div className="flex items-center gap-2.5">
+              <div className="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-950/80 text-blue-700 dark:text-blue-400 flex items-center justify-center">
+                <Bot className="w-4 h-4" />
               </div>
               <div>
                 <div className="flex items-center gap-1.5">
-                  <h4 className="font-bold text-sm">Auto Ping Assistant</h4>
-                  <span className="px-1.5 py-0.2 bg-emerald-500/20 text-emerald-300 text-[10px] font-semibold rounded">
-                    AI Guided
-                  </span>
+                  <h4 className="font-semibold text-xs text-slate-900 dark:text-white">AutoPing Copilot</h4>
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 </div>
-                <p className="text-[11px] text-slate-400">Quick booking & vehicle diagnostics</p>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Maintenance & Booking Assistant
+                </p>
               </div>
             </div>
 
@@ -633,68 +633,73 @@ export default function Chatbot() {
               <button
                 onClick={initMainMenu}
                 title="Restart Chat"
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <RotateCcw className="w-4 h-4" />
+                <RotateCcw className="w-3.5 h-3.5" />
               </button>
               <button
                 onClick={() => setIsOpen(false)}
-                className="p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-white/10 transition-colors"
+                title="Close Chat"
+                className="p-1.5 rounded-md text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
               >
-                <X className="w-4 h-4" />
+                <X className="w-3.5 h-3.5" />
               </button>
             </div>
           </div>
 
           {/* Messages Area */}
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-950/60 backdrop-blur-xl">
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 bg-slate-50 dark:bg-slate-950">
             {messages.map((m) => (
               <div
                 key={m.id}
                 className={`flex flex-col ${m.sender === 'user' ? 'items-end' : 'items-start'}`}
               >
+                {/* Message Bubble */}
                 <div
-                  className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 text-xs leading-relaxed shadow-sm ${
+                  className={`max-w-[85%] rounded-xl px-3.5 py-2 text-xs leading-relaxed ${
                     m.sender === 'user'
-                      ? 'bg-[#0B5CFF] text-white rounded-br-xs'
-                      : 'bg-slate-800/90 text-slate-200 border border-white/10 rounded-bl-xs'
+                      ? 'bg-blue-600 text-white rounded-tr-xs'
+                      : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-2xs'
                   }`}
                 >
-                  <p className="whitespace-pre-line">{m.text}</p>
+                  <p className="whitespace-pre-line text-xs">{m.text}</p>
                 </div>
 
                 {/* Card Attachments */}
                 {m.card?.type === 'booking_summary' && (
-                  <div className="mt-2 w-full bg-slate-900/90 border border-blue-500/30 rounded-2xl p-3 text-xs text-slate-200">
-                    <div className="flex items-center gap-2 text-blue-400 font-semibold mb-2">
-                      <Sparkles className="w-4 h-4" /> Booking Summary
+                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
+                    <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800 font-semibold text-xs text-slate-900 dark:text-white">
+                      <span>Booking Preview</span>
+                      <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
+                        Ready
+                      </span>
                     </div>
-                    <div className="space-y-1 text-[11px]">
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Vehicle:</span>
-                        <span className="font-semibold text-white">
+                    <div className="space-y-1.5 text-xs">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Vehicle:</span>
+                        <span className="font-semibold text-slate-900 dark:text-white">
                           {m.card.data.vehicle?.brandName} {m.card.data.vehicle?.modelName}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Service:</span>
-                        <span className="font-semibold text-white">{m.card.data.service}</span>
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Service:</span>
+                        <span className="font-medium text-slate-900 dark:text-white">{m.card.data.service}</span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Center:</span>
-                        <span className="font-semibold text-white truncate max-w-[180px]">
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Center:</span>
+                        <span className="font-medium text-slate-900 dark:text-white truncate max-w-[180px]">
                           {m.card.data.center?.name}
                         </span>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-slate-400">Schedule:</span>
-                        <span className="font-semibold text-white">
-                          {m.card.data.date} at {m.card.data.time}
+                      <div className="flex justify-between items-center">
+                        <span className="text-slate-500 dark:text-slate-400">Schedule:</span>
+                        <span className="font-medium text-blue-600 dark:text-blue-400">
+                          {m.card.data.date} • {m.card.data.time}
                         </span>
                       </div>
-                      <div className="flex justify-between pt-1 border-t border-white/10 text-emerald-400 font-bold">
-                        <span>Est. Cost:</span>
-                        <span>
+                      <div className="flex justify-between items-center pt-2 mt-1 border-t border-slate-100 dark:border-slate-800">
+                        <span className="text-slate-500 dark:text-slate-400">Est. Cost:</span>
+                        <span className="font-semibold text-slate-900 dark:text-white font-mono">
                           ₹{m.card.data.estMin} – ₹{m.card.data.estMax}
                         </span>
                       </div>
@@ -703,45 +708,51 @@ export default function Chatbot() {
                 )}
 
                 {m.card?.type === 'booking_success' && (
-                  <div className="mt-2 w-full bg-emerald-950/40 border border-emerald-500/40 rounded-2xl p-3 text-xs text-slate-200">
-                    <div className="flex items-center gap-2 text-emerald-400 font-bold mb-1">
-                      <CheckCircle2 className="w-4 h-4" /> Service Slot Confirmed!
+                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
+                    <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold mb-1.5 text-xs">
+                      <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                      <span>Service Slot Confirmed</span>
                     </div>
-                    <p className="text-[11px] text-slate-300">
-                      Booking ID: <span className="font-mono text-white font-bold">{m.card.data.bookingCode}</span>
-                    </p>
-                    <p className="text-[10px] text-slate-400 mt-1">
-                      Appointment is saved on your account. We will notify you 24 hours prior.
+                    <div className="p-2 bg-slate-50 dark:bg-slate-800 rounded border border-slate-200 dark:border-slate-700 my-2">
+                      <div className="text-[10px] text-slate-500 dark:text-slate-400 uppercase font-semibold">Booking ID</div>
+                      <div className="font-mono text-blue-600 dark:text-blue-400 font-bold text-xs mt-0.5">
+                        {m.card.data.bookingCode}
+                      </div>
+                    </div>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-relaxed">
+                      Appointment confirmed. Reminders will be sent before your slot.
                     </p>
                   </div>
                 )}
 
                 {m.card?.type === 'center_pick' && (
-                  <div className="mt-2 w-full space-y-2">
+                  <div className="mt-2.5 w-full space-y-2">
                     {m.card.data.map((c: ServiceCenter) => (
                       <div
                         key={c.id}
-                        className="bg-slate-900/90 border border-slate-700/80 rounded-2xl p-3 text-xs text-slate-200 shadow-sm"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
-                            <h5 className="font-extrabold text-sm text-white">{c.name}</h5>
-                            <p className="text-[11px] text-slate-400 flex items-center gap-1 mt-0.5">
-                              <MapPin className="w-3 h-3 text-blue-400 shrink-0" />
+                            <h5 className="font-semibold text-xs text-slate-900 dark:text-white">
+                              {c.name}
+                            </h5>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 mt-0.5">
+                              <MapPin className="w-3 h-3 text-slate-400 shrink-0" />
                               <span>{c.address}, {c.city}</span>
                             </p>
                           </div>
-                          <span className="px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 font-bold text-[10px] shrink-0">
-                            ⭐ {c.rating}
+                          <span className="text-[10px] font-semibold text-amber-600 shrink-0">
+                            ★ {c.rating}
                           </span>
                         </div>
-                        <div className="mt-2 pt-2 border-t border-white/10 flex items-center justify-between text-[11px]">
-                          <span className="text-slate-400">📞 {c.contactPhone}</span>
+                        <div className="mt-2 pt-2 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between text-[11px]">
+                          <span className="text-slate-400 font-mono">📞 {c.contactPhone}</span>
                           <button
                             onClick={() => startBookingWithCenter(c)}
-                            className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-500 text-white font-bold text-[10px] transition-colors"
+                            className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs transition-colors"
                           >
-                            Book Slot Here →
+                            Book Slot
                           </button>
                         </div>
                       </div>
@@ -749,14 +760,14 @@ export default function Chatbot() {
                   </div>
                 )}
 
-                {/* Chips */}
+                {/* Quick Action Chips */}
                 {m.chips && m.chips.length > 0 && (
                   <div className="flex flex-wrap gap-1.5 mt-2">
                     {m.chips.map((chip, i) => (
                       <button
                         key={i}
                         onClick={chip.action}
-                        className="px-3 py-1.5 rounded-full bg-slate-800 hover:bg-blue-600 text-slate-200 hover:text-white border border-white/15 text-[11px] font-medium transition-all duration-150 active:scale-95 shadow-xs"
+                        className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-colors"
                       >
                         {chip.label}
                       </button>
@@ -764,36 +775,36 @@ export default function Chatbot() {
                   </div>
                 )}
 
-                <span className="text-[9px] text-slate-500 mt-1 px-1">{m.timestamp}</span>
+                <span className="text-[9px] text-slate-400 mt-1 px-1 font-mono">{m.timestamp}</span>
               </div>
             ))}
 
             {isTyping && (
-              <div className="flex items-center gap-1.5 bg-slate-800/80 px-3.5 py-2.5 rounded-2xl w-fit text-slate-400 text-xs">
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot-1" />
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot-2" />
-                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 dot-3" />
+              <div className="flex items-center gap-1 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 px-3 py-2 rounded-xl rounded-tl-xs w-fit">
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse delay-150" />
+                <span className="w-1.5 h-1.5 rounded-full bg-slate-400 animate-pulse delay-300" />
               </div>
             )}
             <div ref={chatBottomRef} />
           </div>
 
           {/* Quick Input Bar */}
-          <div className="p-3 bg-slate-900 border-t border-white/10 flex items-center gap-2">
+          <div className="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
             <input
               type="text"
               value={inputText}
               onChange={(e) => setInputText(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
-              placeholder="Type message or question..."
-              className="flex-1 bg-slate-800/80 border border-white/10 rounded-xl px-3.5 py-2 text-xs text-white placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
+              placeholder="Ask AutoPing or choose a prompt..."
+              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
             />
             <button
               onClick={handleSendText}
-              className="p-2 rounded-xl gradient-primary text-white hover:opacity-90 transition-opacity"
+              className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors shrink-0"
               aria-label="Send"
             >
-              <Send className="w-4 h-4" />
+              <Send className="w-3.5 h-3.5" />
             </button>
           </div>
         </div>
@@ -801,3 +812,5 @@ export default function Chatbot() {
     </>
   );
 }
+
+

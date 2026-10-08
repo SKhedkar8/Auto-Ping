@@ -65,54 +65,54 @@ export default function SignupPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center p-4 gradient-mesh">
+    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100">
       <div className="w-full max-w-md">
         <div className="text-center mb-6">
-          <a href="/" className="inline-flex items-center gap-2.5 mb-3 group">
-            <div className="w-11 h-11 rounded-2xl gradient-primary flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-              <Car className="w-6 h-6" />
+          <a href="/" className="inline-flex items-center gap-2 mb-2">
+            <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center text-white shadow-xs">
+              <Car className="w-5 h-5" />
             </div>
-            <span className="font-extrabold text-2xl tracking-tight text-slate-900">
-              Auto<span className="text-[#0B5CFF]">Ping</span>
+            <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-white">
+              Auto<span className="text-blue-600 dark:text-blue-400">Ping</span>
             </span>
           </a>
-          <h2 className="text-xl font-bold text-slate-900">Create an Account</h2>
-          <p className="text-xs text-slate-500 mt-1">Start tracking maintenance and booking slots</p>
+          <h2 className="text-lg font-bold text-slate-900 dark:text-white">Create an Account</h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">Start tracking maintenance and booking slots</p>
         </div>
 
-        <div className="glass-card p-6 sm:p-8 border border-white shadow-xl">
+        <div className="bg-white dark:bg-slate-900 p-6 sm:p-7 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs">
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+            <div className="mb-4 p-3 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 text-xs text-rose-700 dark:text-rose-400 font-medium">
               {error}
             </div>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Full Name</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Full Name</label>
               <div className="relative">
-                <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <User className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="text"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                   placeholder="e.g. Shreyas Patil"
-                  className="w-full bg-white/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Email Address</label>
               <div className="relative">
-                <Mail className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="email"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                   placeholder="shreyas@example.com"
-                  className="w-full bg-white/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
@@ -120,29 +120,29 @@ export default function SignupPage() {
 
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Mobile (+91)</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Mobile (+91)</label>
                 <div className="relative">
-                  <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                  <Phone className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                   <input
                     type="tel"
                     value={formData.mobile}
                     onChange={(e) => setFormData({ ...formData, mobile: e.target.value })}
                     placeholder="9876543210"
                     maxLength={10}
-                    className="w-full bg-white/90 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                    className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                     required
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Preferred City</label>
+                <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Preferred City</label>
                 <div className="relative">
-                  <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-3" />
+                  <MapPin className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
                   <select
                     value={formData.preferredCity}
                     onChange={(e) => setFormData({ ...formData, preferredCity: e.target.value, city: e.target.value })}
-                    className="w-full bg-white/90 border border-slate-200 rounded-xl pl-8 pr-3 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                    className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden focus:border-blue-500"
                   >
                     <option value="Pune">Pune</option>
                     <option value="Mumbai">Mumbai</option>
@@ -154,15 +154,15 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">Password</label>
               <div className="relative">
-                <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                <Lock className="w-4 h-4 text-slate-400 absolute left-3 top-2.5" />
                 <input
                   type="password"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}
                   placeholder="Min 8 characters (letters + numbers)"
-                  className="w-full bg-white/90 border border-slate-200 rounded-xl pl-10 pr-4 py-2 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-9 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
@@ -171,16 +171,16 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full py-3 rounded-xl gradient-primary text-white font-bold text-xs shadow-md shadow-blue-500/20 hover:opacity-95 transition-opacity flex items-center justify-center gap-2 mt-4"
+              className="w-full py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs shadow-xs transition-colors flex items-center justify-center gap-1.5 mt-3"
             >
               {isLoading ? 'Creating Account...' : 'Continue to Add Vehicle'}
-              <ArrowRight className="w-4 h-4" />
+              <ArrowRight className="w-3.5 h-3.5" />
             </button>
           </form>
 
-          <div className="mt-5 pt-4 border-t border-slate-100 text-center text-xs text-slate-600">
+          <div className="mt-5 pt-4 border-t border-slate-100 dark:border-slate-800 text-center text-xs text-slate-600 dark:text-slate-400">
             Already have an account?{' '}
-            <a href="/login" className="font-bold text-blue-600 hover:underline">
+            <a href="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               Sign In
             </a>
           </div>

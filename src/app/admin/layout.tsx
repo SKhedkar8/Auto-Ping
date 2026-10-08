@@ -22,13 +22,21 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   // Persist & restore theme
   useEffect(() => {
     const saved = localStorage.getItem('admin-theme');
-    if (saved === 'dark') setIsDark(true);
+    if (saved === 'dark') {
+      setIsDark(true);
+      document.documentElement.classList.add('dark');
+    }
   }, []);
 
   const toggleTheme = () => {
     const next = !isDark;
     setIsDark(next);
     localStorage.setItem('admin-theme', next ? 'dark' : 'light');
+    if (next) {
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
   };
 
   const navItems = [
@@ -95,7 +103,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
 
   return (
     <div
-      className="min-h-screen flex flex-col font-sans"
+      className={`min-h-screen flex flex-col font-sans ${isDark ? 'dark' : ''}`}
       style={{
         ...(t as React.CSSProperties),
         background: 'var(--abg)',

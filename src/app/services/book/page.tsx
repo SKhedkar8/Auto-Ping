@@ -21,6 +21,7 @@ import {
   Info,
   MapPin,
   Phone,
+  Shield,
   Sparkles,
   Star,
   Wrench
@@ -31,6 +32,15 @@ import Chatbot from '@/components/Chatbot';
 import { getClientSession } from '@/lib/auth';
 import { Booking, CenterType, ServiceCenter, ServiceType, Slot, Vehicle } from '@/lib/types';
 
+/* ─────────────────────────── helpers ─────────────────────────── */
+const STEPS = [
+  { num: 1, label: 'Services', icon: Wrench },
+  { num: 2, label: 'Workshop', icon: MapPin },
+  { num: 3, label: 'Schedule', icon: CalendarIcon },
+  { num: 4, label: 'Confirm', icon: Shield },
+];
+
+/* ─────────────────────────── inner page ─────────────────────────── */
 function BookServicePageInner() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -40,44 +50,39 @@ function BookServicePageInner() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
 
-  // Step 1: Services & Notes
+  // Step 1
   const [catalogServices, setCatalogServices] = useState<ServiceType[]>([]);
   const [selectedServiceIds, setSelectedServiceIds] = useState<string[]>([]);
   const [specialNotes, setSpecialNotes] = useState('');
 
-  // Step 2: Center
+  // Step 2
   const [centerTab, setCenterTab] = useState<CenterType>('AUTHORIZED');
   const [centers, setCenters] = useState<ServiceCenter[]>([]);
   const [selectedCenter, setSelectedCenter] = useState<ServiceCenter | null>(null);
   const [centerDetailsModal, setCenterDetailsModal] = useState<ServiceCenter | null>(null);
 
-  // Step 3: Date & Slot
+  // Step 3
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [slots, setSlots] = useState<Slot[]>([]);
   const [selectedSlot, setSelectedSlot] = useState<Slot | null>(null);
   const [loadingSlots, setLoadingSlots] = useState(false);
 
-  // Step 4: Summary & Confirmation
+  // Step 4 / 5
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [bookingResult, setBookingResult] = useState<Booking | null>(null);
   const [bookingError, setBookingError] = useState('');
 
-  // Cost estimates
+  // Estimates
   const [costMin, setCostMin] = useState(3500);
   const [costMax, setCostMax] = useState(4800);
 
-  // Quick Chips for notes
   const quickChips = [
-    '🔧 Check engine noise',
-    '🛞 Check tyre condition',
-    '❄️ AC not cooling',
-    '🔋 Battery issue',
-    '🚨 Warning light',
-    '💧 Oil leak inspection',
+    '🔧 Engine noise', '🛞 Tyre check', '❄️ AC not cooling',
+    '🔋 Battery issue', '🚨 Warning light', '💧 Oil leak',
   ];
 
-  // Initial data loading
+  /* ── data loading ── */
   useEffect(() => {
     const user = getClientSession();
     fetch(`/api/vehicles?userId=${user?.id || 'user-customer-1'}`)
@@ -91,106 +96,91 @@ function BookServicePageInner() {
           setSelectedVehicle(matched || r.data[0]);
         }
       });
-
     fetch('/api/services')
       .then((r) => r.json())
       .then((r) => {
         if (r.data) {
           setCatalogServices(r.data);
-          // Preselect general service & oil change by default
           setSelectedServiceIds(['srv-general', 'srv-oil']);
         }
       });
   }, [preSelectedVehicleId]);
 
-  // Load service centers when center tab or vehicle changes
   useEffect(() => {
     if (!selectedVehicle) return;
-
     const brandParam = centerTab === 'AUTHORIZED' ? `&brand=${selectedVehicle.brandName}` : '';
     fetch(`/api/centers?tab=${centerTab}${brandParam}`)
       .then((r) => r.json())
       .then((r) => {
         if (r.data) {
           setCenters(r.data);
-          if (r.data.length > 0 && !selectedCenter) {
-            setSelectedCenter(r.data[0]);
-          }
+          if (r.data.length > 0 && !selectedCenter) setSelectedCenter(r.data[0]);
         }
       });
   }, [centerTab, selectedVehicle]);
 
-  // Dynamic cost recalculation
   useEffect(() => {
     if (!selectedVehicle || selectedServiceIds.length === 0) return;
-
-    const selectedBasePrices = catalogServices
+    const basePrices = catalogServices
       .filter((s) => selectedServiceIds.includes(s.id))
       .map((s) => s.basePrice);
-
-    if (selectedBasePrices.length === 0) return;
-
+    if (basePrices.length === 0) return;
     fetch('/api/estimate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        serviceBasePrices: selectedBasePrices,
+        serviceBasePrices: basePrices,
         vehicleClass: selectedVehicle.vehicleClass,
         centerType: selectedCenter?.type || centerTab,
       }),
     })
       .then((r) => r.json())
       .then((res) => {
-        if (res.data) {
-          setCostMin(res.data.minCost);
-          setCostMax(res.data.maxCost);
-        }
+        if (res.data) { setCostMin(res.data.minCost); setCostMax(res.data.maxCost); }
       })
       .catch(() => {});
   }, [selectedServiceIds, selectedVehicle, selectedCenter, centerTab, catalogServices]);
 
-  // Load slots when center and date change
   useEffect(() => {
     if (!selectedCenter || !selectedDate) return;
-
     setLoadingSlots(true);
     fetch(`/api/centers/${selectedCenter.id}/slots?date=${selectedDate}`)
       .then((r) => r.json())
       .then((r) => {
         if (r.data) {
           setSlots(r.data);
-          // Auto select first available slot
           const available = r.data.find((s: Slot) => !s.isBlocked && s.booked < s.capacity);
-          if (available) setSelectedSlot(available);
-          else setSelectedSlot(null);
+          setSelectedSlot(available || null);
         }
       })
       .catch(() => {})
       .finally(() => setLoadingSlots(false));
   }, [selectedCenter, selectedDate]);
 
-  // Toggle service selection
-  const toggleService = (id: string) => {
+  useEffect(() => {
+    if (!selectedDate) {
+      const tomorrow = new Date();
+      tomorrow.setDate(tomorrow.getDate() + 1);
+      setSelectedDate(tomorrow.toISOString().split('T')[0]);
+    }
+  }, []);
+
+  /* ── actions ── */
+  const toggleService = (id: string) =>
     setSelectedServiceIds((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+      prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
-  };
 
-  const handleChipClick = (chipText: string) => {
-    setSpecialNotes((prev) => (prev ? `${prev}, ${chipText}` : chipText));
-  };
+  const handleChipClick = (chip: string) =>
+    setSpecialNotes((prev) => (prev ? `${prev}, ${chip}` : chip));
 
-  // Calendar dates generation
   const generateCalendarDays = () => {
     const year = currentMonth.getFullYear();
     const month = currentMonth.getMonth();
     const firstDayIndex = new Date(year, month, 1).getDay();
     const totalDays = new Date(year, month + 1, 0).getDate();
-
     const days: { dateStr: string; dayNum: number; isPast: boolean }[] = [];
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
+    const today = new Date(); today.setHours(0, 0, 0, 0);
     for (let i = 1; i <= totalDays; i++) {
       const d = new Date(year, month, i);
       const isPast = d.getTime() < today.getTime();
@@ -200,30 +190,17 @@ function BookServicePageInner() {
     return { days, offset: firstDayIndex };
   };
 
-  // Default date selection if none selected
-  useEffect(() => {
-    if (!selectedDate) {
-      const tomorrow = new Date();
-      tomorrow.setDate(tomorrow.getDate() + 1);
-      setSelectedDate(tomorrow.toISOString().split('T')[0]);
-    }
-  }, []);
-
-  // Confirm booking
   const handleConfirmBooking = async () => {
     const user = getClientSession();
     if (!user || !selectedVehicle || !selectedCenter || !selectedSlot || !selectedDate) {
       setBookingError('Please complete all booking steps.');
       return;
     }
-
     setIsSubmitting(true);
     setBookingError('');
-
     const chosenServiceNames = catalogServices
       .filter((s) => selectedServiceIds.includes(s.id))
       .map((s) => s.name);
-
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
@@ -241,22 +218,12 @@ function BookServicePageInner() {
           estimatedCostMax: costMax,
         }),
       });
-
       const data = await res.json();
       setIsSubmitting(false);
-
       if (data.data) {
         setBookingResult(data.data);
-        setStep(5); // Success step
-
-        // Fire celebration confetti
-        try {
-          confetti({
-            particleCount: 80,
-            spread: 70,
-            origin: { y: 0.6 },
-          });
-        } catch {}
+        setStep(5);
+        try { confetti({ particleCount: 80, spread: 70, origin: { y: 0.6 } }); } catch {}
       } else {
         setBookingError(data.error || 'Failed to confirm booking. Slot may have been taken.');
       }
@@ -266,7 +233,6 @@ function BookServicePageInner() {
     }
   };
 
-  // Download iCal (.ics)
   const handleDownloadIcs = () => {
     if (!bookingResult) return;
     const dateFormatted = bookingResult.serviceDate.replace(/-/g, '');
@@ -282,7 +248,6 @@ LOCATION:${bookingResult.centerAddress}
 STATUS:CONFIRMED
 END:VEVENT
 END:VCALENDAR`;
-
     const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
     const url = window.URL.createObjectURL(blob);
     const link = document.createElement('a');
@@ -294,68 +259,95 @@ END:VCALENDAR`;
   };
 
   const { days, offset } = generateCalendarDays();
+  const selectedServices = catalogServices.filter((s) => selectedServiceIds.includes(s.id));
 
+  /* ─────────────────────────── render ─────────────────────────── */
   return (
-    <div className="min-h-screen flex flex-col gradient-mesh">
+    <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#000000]">
       <Navbar />
 
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto w-full">
-        {/* Wizard Header */}
-        <div className="mb-8 text-center">
-          <span className="text-xs font-bold text-blue-600 uppercase tracking-widest">
-            Direct Slot Reservation
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-slate-900 mt-1">
-            Book Vehicle Service
-          </h1>
-          <p className="text-xs text-slate-500 mt-1">
-            {selectedVehicle
-              ? `Booking for ${selectedVehicle.brandName} ${selectedVehicle.modelName} (${selectedVehicle.registrationNo})`
-              : 'Select vehicle, services, verified center, and exact time slot.'}
-          </p>
+      <main className="flex-1 pt-8 pb-24 px-4 sm:px-6 lg:px-8 max-w-4xl mx-auto w-full">
 
-          {/* Stepper Progress Bar */}
-          {step < 5 && (
-            <div className="max-w-xl mx-auto mt-6">
-              <div className="flex items-center justify-between text-xs font-bold text-slate-600 mb-2">
-                <span className={step >= 1 ? 'text-blue-600' : ''}>1. Services</span>
-                <span className={step >= 2 ? 'text-blue-600' : ''}>2. Service Center</span>
-                <span className={step >= 3 ? 'text-blue-600' : ''}>3. Date & Slot</span>
-                <span className={step >= 4 ? 'text-blue-600' : ''}>4. Summary</span>
-              </div>
-              <div className="w-full bg-slate-200 h-2 rounded-full overflow-hidden flex">
-                <div
-                  className="gradient-primary h-full transition-all duration-300"
-                  style={{ width: `${(step / 4) * 100}%` }}
-                />
-              </div>
-            </div>
-          )}
-        </div>
+        {/* ── Wizard header ── */}
+        {step < 5 && (
+          <div className="mb-10 text-center apple-fade-in">
+            <p className="text-[13px] font-medium text-[#0071E3] dark:text-[#2997FF] mb-2 tracking-wide uppercase">
+              Service Booking
+            </p>
+            <h1 className="text-[28px] sm:text-[34px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7] leading-tight mb-1">
+              Book Vehicle Service
+            </h1>
+            <p className="text-[15px] text-[#86868b] max-w-md mx-auto">
+              {selectedVehicle
+                ? `${selectedVehicle.brandName} ${selectedVehicle.modelName} · ${selectedVehicle.registrationNo}`
+                : 'Select vehicle, services, workshop, and time.'}
+            </p>
 
-        {bookingError && (
-          <div className="mb-6 p-4 rounded-2xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-semibold flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <AlertCircle className="w-4 h-4 text-rose-500" />
-              <span>{bookingError}</span>
+            {/* Apple-style step indicator */}
+            <div className="flex items-center justify-center gap-0 mt-8 max-w-xs mx-auto">
+              {STEPS.map((s, idx) => {
+                const isCurrent = step === s.num;
+                const isDone = step > s.num;
+                return (
+                  <React.Fragment key={s.num}>
+                    <div className="flex flex-col items-center gap-1.5">
+                      <div
+                        className={`w-8 h-8 rounded-full flex items-center justify-center text-[13px] font-semibold transition-all duration-300 ${
+                          isCurrent
+                            ? 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/30'
+                            : isDone
+                            ? 'bg-[#34C759] text-white'
+                            : 'bg-black/[0.06] dark:bg-white/[0.1] text-[#86868b]'
+                        }`}
+                      >
+                        {isDone ? <Check className="w-3.5 h-3.5 stroke-[2.5]" /> : s.num}
+                      </div>
+                      <span className={`text-[11px] font-medium hidden sm:block transition-colors duration-200 ${
+                        isCurrent ? 'text-[#0071E3] dark:text-[#2997FF]' : isDone ? 'text-[#34C759]' : 'text-[#86868b]'
+                      }`}>
+                        {s.label}
+                      </span>
+                    </div>
+                    {idx < STEPS.length - 1 && (
+                      <div className={`flex-1 h-px mx-2 mb-5 transition-all duration-300 ${isDone ? 'bg-[#34C759]' : 'bg-black/[0.1] dark:bg-white/[0.1]'}`} />
+                    )}
+                  </React.Fragment>
+                );
+              })}
             </div>
-            <button onClick={() => setBookingError('')} className="text-rose-500 hover:text-rose-700 font-bold">
-              ✕
-            </button>
           </div>
         )}
 
-        {/* STEP 1: CHOOSE SERVICES & SPECIAL REQUIREMENTS */}
+        {/* ── Error banner ── */}
+        {bookingError && (
+          <div className="mb-6 px-4 py-3.5 rounded-2xl bg-[#FF3B30]/[0.08] border border-[#FF3B30]/20 text-[13px] text-[#FF3B30] font-medium flex items-center justify-between apple-fade-in">
+            <div className="flex items-center gap-2.5">
+              <AlertCircle className="w-4 h-4 shrink-0" />
+              <span>{bookingError}</span>
+            </div>
+            <button onClick={() => setBookingError('')} className="opacity-60 hover:opacity-100 transition-opacity font-bold ml-3">✕</button>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════
+            STEP 1 — SERVICES (Apple Store Configurator)
+            ══════════════════════════════════════════════ */}
         {step === 1 && (
-          <div className="glass-card p-6 sm:p-8 border border-white shadow-xl animate-in fade-in duration-200">
-            {/* Vehicle Selector if multiple */}
+          <div className="apple-fade-in">
+            {/* Vehicle selector pill */}
             {vehicles.length > 1 && (
-              <div className="mb-6 p-4 rounded-2xl bg-slate-50 border border-slate-200/80 flex items-center justify-between">
-                <div>
-                  <span className="text-[11px] font-bold text-slate-400 uppercase">Selected Vehicle</span>
-                  <p className="text-xs font-bold text-slate-900">
-                    {selectedVehicle?.brandName} {selectedVehicle?.modelName} ({selectedVehicle?.registrationNo})
-                  </p>
+              <div className="mb-6 px-4 py-3 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-9 h-9 rounded-full bg-[#0071E3]/10 flex items-center justify-center">
+                    <Car className="w-4 h-4 text-[#0071E3]" />
+                  </div>
+                  <div>
+                    <p className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider">Your Vehicle</p>
+                    <p className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">
+                      {selectedVehicle?.brandName} {selectedVehicle?.modelName}
+                      <span className="ml-2 font-normal text-[#86868b] text-[12px]">{selectedVehicle?.registrationNo}</span>
+                    </p>
+                  </div>
                 </div>
                 <select
                   value={selectedVehicle?.id}
@@ -363,96 +355,103 @@ END:VCALENDAR`;
                     const found = vehicles.find((v) => v.id === e.target.value);
                     if (found) setSelectedVehicle(found);
                   }}
-                  className="text-xs font-semibold bg-white border border-slate-200 rounded-xl px-3 py-1.5 focus:outline-hidden"
+                  className="text-[13px] font-medium bg-black/[0.04] dark:bg-white/[0.06] border border-black/[0.08] dark:border-white/[0.1] rounded-xl px-3 py-1.5 text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30"
                 >
                   {vehicles.map((v) => (
                     <option key={v.id} value={v.id}>
-                      {v.brandName} {v.modelName}
+                      {v.brandName} {v.modelName} ({v.registrationNo})
                     </option>
                   ))}
                 </select>
               </div>
             )}
 
-            <div className="flex items-center justify-between mb-4">
+            {/* Section header */}
+            <div className="flex items-center justify-between mb-5">
               <div>
-                <h3 className="text-base font-bold text-slate-900">1. Select Services Required</h3>
-                <p className="text-xs text-slate-500">Pick any combination of maintenance packages.</p>
+                <h2 className="text-[20px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">Choose Services</h2>
+                <p className="text-[13px] text-[#86868b] mt-0.5">Select all services you need for this appointment.</p>
               </div>
-              <span className="text-xs font-extrabold text-blue-600 bg-blue-50 px-3 py-1 rounded-full">
-                {selectedServiceIds.length} Selected
-              </span>
+              {selectedServiceIds.length > 0 && (
+                <span className="px-3 py-1 rounded-full bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] text-[13px] font-semibold">
+                  {selectedServiceIds.length} selected
+                </span>
+              )}
             </div>
 
-            {/* Services Grid */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5 mb-8">
+            {/* Services grid — Apple product option cards */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
               {catalogServices.map((service) => {
                 const isSelected = selectedServiceIds.includes(service.id);
                 const isRecommended =
                   service.id === 'srv-general' ||
                   service.id === 'srv-oil' ||
                   (selectedVehicle?.dueStatus === 'DUE_SOON' && service.id === 'srv-brakes');
-
                 return (
                   <button
                     key={service.id}
                     type="button"
                     onClick={() => toggleService(service.id)}
-                    className={`p-4 rounded-2xl border text-left flex items-start justify-between gap-3 transition-all ${
+                    className={`group relative p-5 rounded-2xl text-left flex items-start justify-between gap-4 transition-all duration-200 cursor-pointer apple-btn ${
                       isSelected
-                        ? 'bg-blue-50/90 border-[#0B5CFF] shadow-sm ring-1 ring-blue-500/20'
-                        : 'bg-white/80 border-slate-200 hover:border-slate-300'
+                        ? 'bg-white dark:bg-[#161617] border-2 border-[#0071E3] shadow-md shadow-[#0071E3]/10'
+                        : 'bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] hover:border-[#0071E3]/40 hover:shadow-sm shadow-sm'
                     }`}
                   >
-                    <div className="flex items-start gap-3">
-                      <span className="text-2xl mt-0.5">{service.icon}</span>
-                      <div>
-                        <div className="flex items-center gap-2">
-                          <h4 className="font-bold text-xs text-slate-900">{service.name}</h4>
-                          {isRecommended && (
-                            <span className="px-2 py-0.2 rounded text-[10px] font-bold bg-amber-100 text-amber-800">
-                              Recommended
-                            </span>
-                          )}
-                        </div>
-                        <p className="text-[11px] text-slate-500 mt-1 line-clamp-2 leading-relaxed">
+                    {isRecommended && (
+                      <div className="absolute -top-2 left-4 px-2 py-0.5 rounded-full bg-[#FF9500] text-white text-[10px] font-semibold">
+                        Recommended
+                      </div>
+                    )}
+
+                    <div className="flex items-start gap-3.5 flex-1 min-w-0">
+                      <div className={`w-11 h-11 rounded-2xl flex items-center justify-center text-[22px] shrink-0 transition-all ${
+                        isSelected ? 'bg-[#0071E3]/10' : 'bg-[#F5F5F7] dark:bg-[#1C1C1E]'
+                      }`}>
+                        {service.icon}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7] truncate">
+                          {service.name}
+                        </h4>
+                        <p className="text-[12px] text-[#86868b] mt-1 line-clamp-2 leading-relaxed">
                           {service.description}
                         </p>
-                        <span className="inline-block mt-2 font-black text-xs text-slate-900">
-                          Approx. ₹{service.basePrice.toLocaleString()}
-                        </span>
+                        <p className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mt-2">
+                          ₹{service.basePrice.toLocaleString()}
+                          <span className="text-[11px] font-normal text-[#86868b] ml-1">est. base</span>
+                        </p>
                       </div>
                     </div>
 
-                    <div
-                      className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 mt-1 transition-colors ${
-                        isSelected ? 'bg-blue-600 text-white' : 'border border-slate-300 bg-white'
-                      }`}
-                    >
-                      {isSelected && <Check className="w-3.5 h-3.5" />}
+                    {/* Apple-style check circle */}
+                    <div className={`w-5 h-5 rounded-full shrink-0 mt-0.5 border-2 flex items-center justify-center transition-all duration-200 ${
+                      isSelected
+                        ? 'bg-[#0071E3] border-[#0071E3]'
+                        : 'border-[#86868b]/40 dark:border-white/20 bg-transparent'
+                    }`}>
+                      {isSelected && <Check className="w-3 h-3 text-white stroke-[3]" />}
                     </div>
                   </button>
                 );
               })}
             </div>
 
-            {/* Special Requirements Textarea with Quick-Add Chips */}
-            <div className="p-5 rounded-2xl bg-white/70 border border-slate-200">
-              <label className="block text-xs font-bold text-slate-700 mb-1">
-                Special Requirements or Observed Symptoms (Optional)
-              </label>
-              <p className="text-[11px] text-slate-400 mb-3">
-                Tap quick symptoms or describe noises, leaks, or cooling issues for the technicians:
-              </p>
+            {/* Symptoms notes card */}
+            <div className="p-5 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] mb-6 shadow-sm">
+              <h3 className="text-[14px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7] mb-1">
+                Describe Any Symptoms
+                <span className="text-[#86868b] font-normal ml-1 text-[13px]">(optional)</span>
+              </h3>
+              <p className="text-[12px] text-[#86868b] mb-3">Quick-tap common symptoms or type your own:</p>
 
-              {/* Quick Chips */}
-              <div className="flex flex-wrap gap-1.5 mb-3">
+              <div className="flex flex-wrap gap-2 mb-3">
                 {quickChips.map((chip) => (
                   <button
                     key={chip}
                     type="button"
                     onClick={() => handleChipClick(chip)}
-                    className="px-2.5 py-1 rounded-full bg-slate-100 hover:bg-blue-50 hover:text-blue-700 border border-slate-200 text-[11px] font-semibold text-slate-700 transition-colors"
+                    className="px-3 py-1.5 rounded-full bg-[#F5F5F7] dark:bg-[#1C1C1E] text-[#1d1d1f] dark:text-[#f5f5f7] border border-black/[0.06] dark:border-white/[0.1] text-[12px] font-medium hover:bg-[#0071E3]/10 hover:border-[#0071E3]/30 hover:text-[#0071E3] transition-all duration-150 apple-btn"
                   >
                     {chip}
                   </button>
@@ -462,57 +461,67 @@ END:VCALENDAR`;
               <textarea
                 value={specialNotes}
                 onChange={(e) => setSpecialNotes(e.target.value)}
-                placeholder="e.g. Please check unusual brake noise when braking at high speeds."
+                placeholder="e.g. Unusual squeak when braking at high speeds..."
                 maxLength={500}
                 rows={3}
-                className="w-full bg-white border border-slate-200 rounded-xl p-3 text-xs text-slate-900 focus:outline-hidden focus:border-blue-500"
+                className="w-full bg-[#F5F5F7] dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.1] rounded-xl p-3 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] placeholder-[#86868b] focus:outline-none focus:ring-2 focus:ring-[#0071E3]/30 resize-none"
               />
-              <span className="text-[10px] text-slate-400 text-right block mt-1">
-                {specialNotes.length} / 500 characters
-              </span>
+              <p className="text-right text-[11px] text-[#86868b] mt-1.5">{specialNotes.length} / 500</p>
             </div>
 
-            <div className="mt-8 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Estimated Service Total: <strong className="text-blue-600 text-sm">₹{costMin} – ₹{costMax}</strong>
-              </span>
-
-              <button
-                type="button"
-                disabled={selectedServiceIds.length === 0}
-                onClick={() => setStep(2)}
-                className="px-6 py-3 rounded-xl gradient-primary text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-40 flex items-center gap-2 hover:opacity-95"
-              >
-                Next: Choose Service Center
-                <ArrowRight className="w-4 h-4" />
-              </button>
+            {/* Floating summary tray — Apple Store configurator style */}
+            <div className="sticky bottom-20 md:bottom-6 z-30">
+              <div className="px-5 py-4 rounded-2xl bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-xl border border-black/[0.08] dark:border-white/[0.12] shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div>
+                  <p className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider">Estimated Total</p>
+                  <p className="text-[20px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
+                    ₹{costMin.toLocaleString()} – ₹{costMax.toLocaleString()}
+                  </p>
+                  {selectedServiceIds.length > 0 && (
+                    <p className="text-[12px] text-[#86868b] mt-0.5">
+                      {selectedServiceIds.length} service{selectedServiceIds.length > 1 ? 's' : ''} · pay at workshop
+                    </p>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  disabled={selectedServiceIds.length === 0}
+                  onClick={() => setStep(2)}
+                  className="w-full sm:w-auto px-7 py-3 rounded-full bg-[#0071E3] hover:bg-[#0077ED] active:bg-[#0062C4] text-white font-semibold text-[15px] disabled:opacity-40 flex items-center justify-center gap-2 transition-all duration-200 apple-btn shadow-lg shadow-[#0071E3]/25"
+                >
+                  Continue
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
             </div>
           </div>
         )}
 
-        {/* STEP 2: CHOOSE SERVICE CENTER (3 TABS) */}
+        {/* ══════════════════════════════════════════════
+            STEP 2 — WORKSHOP (Genius Bar / Store Locator)
+            ══════════════════════════════════════════════ */}
         {step === 2 && (
-          <div className="glass-card p-6 sm:p-8 border border-white shadow-xl animate-in fade-in duration-200">
-            <h3 className="text-base font-bold text-slate-900 mb-1">2. Choose Service Center</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              Compare certified partner workshops based on ratings, proximity, and parts authenticity.
-            </p>
+          <div className="apple-fade-in">
+            <div className="mb-6">
+              <h2 className="text-[20px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">Choose a Workshop</h2>
+              <p className="text-[13px] text-[#86868b] mt-0.5">Compare certified workshops by rating, proximity, and type.</p>
+            </div>
 
-            {/* 3 Tabs (Authorized, Multi-Brand, Local) */}
-            <div className="flex border-b border-slate-200 mb-6">
+            {/* Apple segmented control — 3 tabs */}
+            <div className="flex gap-0.5 p-1 rounded-xl bg-black/[0.06] dark:bg-white/[0.08] mb-6 w-fit">
               {[
-                { key: 'AUTHORIZED' as CenterType, label: `Authorized (${selectedVehicle?.brandName})` },
-                { key: 'MULTI_BRAND' as CenterType, label: 'Multi-Brand Certified' },
-                { key: 'LOCAL' as CenterType, label: 'Local Verified Garages' },
+                { key: 'AUTHORIZED' as CenterType, label: `${selectedVehicle?.brandName || 'Brand'} Authorized` },
+                { key: 'MULTI_BRAND' as CenterType, label: 'Multi-Brand' },
+                { key: 'LOCAL' as CenterType, label: 'Local Garages' },
               ].map((tab) => (
                 <button
                   key={tab.key}
                   type="button"
                   onClick={() => setCenterTab(tab.key)}
-                  className={`py-2.5 px-4 text-xs font-bold border-b-2 transition-all ${
+                  className={`px-4 py-2 rounded-[10px] text-[13px] font-medium transition-all duration-200 whitespace-nowrap apple-btn ${
                     centerTab === tab.key
-                      ? 'border-[#0B5CFF] text-[#0B5CFF]'
-                      : 'border-transparent text-slate-500 hover:text-slate-900'
+                      ? 'bg-white dark:bg-[#3A3A3C] shadow-sm text-[#1d1d1f] dark:text-[#f5f5f7]'
+                      : 'text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
                   }`}
                 >
                   {tab.label}
@@ -520,75 +529,71 @@ END:VCALENDAR`;
               ))}
             </div>
 
-            {/* Centers List */}
             {centers.length === 0 ? (
-              <div className="text-center py-12 glass-card border border-slate-100">
-                <MapPin className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                <h4 className="font-bold text-slate-700 text-xs">No Centers Available in this Category</h4>
-                <p className="text-[11px] text-slate-400 mt-1 mb-4">
-                  Try switching to the Multi-Brand tab for certified network workshops.
-                </p>
+              <div className="text-center py-16 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1]">
+                <MapPin className="w-10 h-10 text-[#86868b] mx-auto mb-3" />
+                <h4 className="font-semibold text-[15px] text-[#1d1d1f] dark:text-[#f5f5f7] mb-1">No Centers Available</h4>
+                <p className="text-[13px] text-[#86868b] mb-5">Try Multi-Brand for more options.</p>
                 <button
                   onClick={() => setCenterTab('MULTI_BRAND')}
-                  className="px-4 py-2 rounded-xl bg-blue-50 text-blue-600 text-xs font-bold"
+                  className="px-5 py-2.5 rounded-full bg-[#0071E3] text-white text-[13px] font-semibold apple-btn"
                 >
-                  Switch to Multi-Brand
+                  Show Multi-Brand
                 </button>
               </div>
             ) : (
-              <div className="space-y-3.5">
+              <div className="space-y-3">
                 {centers.map((center) => {
                   const isSelected = selectedCenter?.id === center.id;
-
                   return (
                     <div
                       key={center.id}
-                      className={`p-5 rounded-2xl border transition-all ${
+                      className={`p-5 rounded-2xl transition-all duration-200 shadow-sm ${
                         isSelected
-                          ? 'bg-blue-50/90 border-[#0B5CFF] shadow-sm ring-1 ring-blue-500/20'
-                          : 'bg-white/80 border-slate-200 hover:border-slate-300'
+                          ? 'bg-white dark:bg-[#161617] border-2 border-[#0071E3] shadow-md shadow-[#0071E3]/10'
+                          : 'bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] hover:border-[#0071E3]/40'
                       }`}
                     >
-                      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <h4 className="font-bold text-sm text-slate-900">{center.name}</h4>
-                            <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 text-slate-600">
+                      <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-2.5 mb-1.5">
+                            <h4 className="font-semibold text-[15px] text-[#1d1d1f] dark:text-[#f5f5f7]">{center.name}</h4>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-[#F5F5F7] dark:bg-[#1C1C1E] text-[#86868b]">
                               {center.type}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
-                            <MapPin className="w-3.5 h-3.5 text-slate-400" />
+                          <p className="text-[12px] text-[#86868b] flex items-center gap-1.5 mb-2.5">
+                            <MapPin className="w-3 h-3 shrink-0" />
                             {center.address}
                           </p>
-
-                          <div className="flex flex-wrap items-center gap-3 mt-3 text-xs text-slate-600">
-                            <span className="flex items-center gap-1 font-extrabold text-amber-600">
-                              <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
-                              {center.rating} ({center.reviewCount})
+                          <div className="flex flex-wrap items-center gap-2">
+                            <span className="flex items-center gap-1 text-[12px] font-semibold text-[#FF9500]">
+                              <Star className="w-3 h-3 fill-[#FF9500] text-[#FF9500]" />
+                              {center.rating}
+                              <span className="text-[#86868b] font-normal">({center.reviewCount})</span>
                             </span>
-                            <span>•</span>
-                            <span className="font-medium text-slate-600">📍 {center.distanceKm || 3.2} km away</span>
-                            <span>•</span>
-                            <span className="text-emerald-700 font-bold">🟢 Open Slots Available</span>
+                            <span className="w-1 h-1 rounded-full bg-[#86868b]/40" />
+                            <span className="text-[12px] text-[#86868b]">{center.distanceKm || 3.2} km</span>
+                            <span className="w-1 h-1 rounded-full bg-[#86868b]/40" />
+                            <span className="text-[12px] font-medium text-[#34C759]">Slots available</span>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2 sm:self-center">
+                        <div className="flex items-center gap-2 sm:flex-col sm:items-end sm:gap-2">
                           <button
                             type="button"
                             onClick={() => setCenterDetailsModal(center)}
-                            className="px-3 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 text-xs font-semibold"
+                            className="px-3.5 py-2 rounded-full bg-[#F5F5F7] dark:bg-[#1C1C1E] text-[#1d1d1f] dark:text-[#f5f5f7] text-[12px] font-medium hover:bg-black/[0.08] dark:hover:bg-white/[0.1] transition-colors apple-btn"
                           >
-                            View Details
+                            Details
                           </button>
                           <button
                             type="button"
                             onClick={() => setSelectedCenter(center)}
-                            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all ${
+                            className={`px-4 py-2 rounded-full text-[12px] font-semibold transition-all duration-200 apple-btn ${
                               isSelected
-                                ? 'bg-blue-600 text-white shadow-xs'
-                                : 'bg-white border border-slate-300 hover:bg-slate-50 text-slate-700'
+                                ? 'bg-[#0071E3] text-white shadow-md shadow-[#0071E3]/25'
+                                : 'bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] hover:bg-[#0071E3]/20'
                             }`}
                           >
                             {isSelected ? '✓ Selected' : 'Select'}
@@ -601,98 +606,85 @@ END:VCALENDAR`;
               </div>
             )}
 
+            {/* Navigation */}
             <div className="mt-8 flex items-center justify-between">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] text-[13px] font-medium hover:bg-black/[0.09] dark:hover:bg-white/[0.12] transition-all apple-btn"
               >
-                <ArrowLeft className="w-4 h-4" /> Back to Services
+                <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <button
                 type="button"
                 disabled={!selectedCenter}
                 onClick={() => setStep(3)}
-                className="px-6 py-3 rounded-xl gradient-primary text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-40 flex items-center gap-2 hover:opacity-95"
+                className="flex items-center gap-2 px-7 py-2.5 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold disabled:opacity-40 transition-all apple-btn shadow-lg shadow-[#0071E3]/20"
               >
-                Next: Pick Date & Time Slot
-                <ArrowRight className="w-4 h-4" />
+                Continue <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 3: DATE & TIME SLOT PICKER */}
+        {/* ══════════════════════════════════════════════
+            STEP 3 — SCHEDULE (iOS Calendar / Genius Bar slots)
+            ══════════════════════════════════════════════ */}
         {step === 3 && (
-          <div className="glass-card p-6 sm:p-8 border border-white shadow-xl animate-in fade-in duration-200">
-            <h3 className="text-base font-bold text-slate-900 mb-1">3. Select Date & Slot</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              Pick your preferred visit date and confirmed drop-off window.
-            </p>
+          <div className="apple-fade-in">
+            <div className="mb-6">
+              <h2 className="text-[20px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">Pick Date & Time</h2>
+              <p className="text-[13px] text-[#86868b] mt-0.5">Choose your preferred appointment date and drop-off window.</p>
+            </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
-              {/* Calendar Column */}
-              <div className="md:col-span-6 bg-white/80 p-5 rounded-2xl border border-slate-200">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Calendar */}
+              <div className="p-5 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h4 className="font-extrabold text-xs text-slate-900">
+                  <h4 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7]">
                     {currentMonth.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
                   </h4>
-                  <div className="flex items-center gap-1">
+                  <div className="flex items-center gap-0.5">
                     <button
                       type="button"
-                      onClick={() => {
-                        const m = new Date(currentMonth);
-                        m.setMonth(m.getMonth() - 1);
-                        setCurrentMonth(m);
-                      }}
-                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-600"
+                      onClick={() => { const m = new Date(currentMonth); m.setMonth(m.getMonth() - 1); setCurrentMonth(m); }}
+                      className="p-1.5 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors apple-btn"
                     >
                       <ChevronLeft className="w-4 h-4" />
                     </button>
                     <button
                       type="button"
-                      onClick={() => {
-                        const m = new Date(currentMonth);
-                        m.setMonth(m.getMonth() + 1);
-                        setCurrentMonth(m);
-                      }}
-                      className="p-1 rounded-lg hover:bg-slate-100 text-slate-600"
+                      onClick={() => { const m = new Date(currentMonth); m.setMonth(m.getMonth() + 1); setCurrentMonth(m); }}
+                      className="p-1.5 rounded-full hover:bg-black/[0.05] dark:hover:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] transition-colors apple-btn"
                     >
                       <ChevronRight className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
 
-                {/* Day names */}
-                <div className="grid grid-cols-7 text-center text-[10px] font-bold text-slate-400 mb-2">
-                  <span>Su</span>
-                  <span>Mo</span>
-                  <span>Tu</span>
-                  <span>We</span>
-                  <span>Th</span>
-                  <span>Fr</span>
-                  <span>Sa</span>
+                <div className="grid grid-cols-7 text-center text-[11px] font-semibold text-[#86868b] mb-2 gap-0">
+                  {['Su','Mo','Tu','We','Th','Fr','Sa'].map(d => <span key={d}>{d}</span>)}
                 </div>
 
-                {/* Calendar Days Grid */}
                 <div className="grid grid-cols-7 gap-1">
-                  {Array.from({ length: offset }).map((_, i) => (
-                    <div key={`empty-${i}`} />
-                  ))}
+                  {Array.from({ length: offset }).map((_, i) => <div key={`e${i}`} />)}
                   {days.map((item) => {
-                    const isSelected = selectedDate === item.dateStr;
+                    const isSel = selectedDate === item.dateStr;
+                    const isToday = item.dateStr === new Date().toISOString().split('T')[0];
                     return (
                       <button
                         key={item.dateStr}
                         type="button"
                         disabled={item.isPast}
                         onClick={() => setSelectedDate(item.dateStr)}
-                        className={`h-9 rounded-xl text-xs font-bold flex items-center justify-center transition-all ${
+                        className={`h-9 w-full rounded-full text-[13px] font-medium flex items-center justify-center transition-all duration-150 apple-btn ${
                           item.isPast
-                            ? 'text-slate-300 cursor-not-allowed'
-                            : isSelected
-                            ? 'bg-[#0B5CFF] text-white shadow-xs'
-                            : 'hover:bg-blue-50 text-slate-700'
+                            ? 'text-[#86868b]/40 cursor-not-allowed'
+                            : isSel
+                            ? 'bg-[#0071E3] text-white font-semibold shadow-md shadow-[#0071E3]/25'
+                            : isToday
+                            ? 'border-2 border-[#0071E3] text-[#0071E3] dark:text-[#2997FF]'
+                            : 'text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.05] dark:hover:bg-white/[0.08]'
                         }`}
                       >
                         {item.dayNum}
@@ -702,221 +694,218 @@ END:VCALENDAR`;
                 </div>
               </div>
 
-              {/* Slots Column */}
-              <div className="md:col-span-6 flex flex-col justify-between">
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-extrabold text-xs text-slate-900">
-                      Available Time Slots for {selectedDate}
-                    </h4>
-                    {loadingSlots && <span className="text-[10px] text-blue-600">Checking...</span>}
-                  </div>
-
-                  {slots.length === 0 ? (
-                    <div className="p-6 text-center text-xs text-slate-400 bg-white/60 rounded-2xl border border-slate-100">
-                      {loadingSlots ? 'Loading slots...' : 'Pick a date on the calendar to see slots.'}
-                    </div>
-                  ) : (
-                    <div className="grid grid-cols-2 gap-3">
-                      {slots.map((slot) => {
-                        const isSelected = selectedSlot?.id === slot.id;
-                        const isFull = slot.isBlocked || slot.booked >= slot.capacity;
-                        const onlyOneLeft = slot.capacity - slot.booked === 1;
-
-                        return (
-                          <button
-                            key={slot.id}
-                            type="button"
-                            disabled={isFull}
-                            onClick={() => setSelectedSlot(slot)}
-                            className={`p-3.5 rounded-xl border text-left transition-all ${
-                              isFull
-                                ? 'bg-slate-100 border-slate-200 text-slate-400 cursor-not-allowed opacity-60'
-                                : isSelected
-                                ? 'bg-blue-50/90 border-[#0B5CFF] ring-2 ring-blue-500/20 shadow-xs'
-                                : 'bg-white/90 border-slate-200 hover:border-slate-300'
-                            }`}
-                          >
-                            <div className="flex items-center justify-between mb-1">
-                              <span className="font-extrabold text-xs text-slate-900">{slot.startTime}</span>
-                              <Clock className="w-3.5 h-3.5 text-slate-400" />
-                            </div>
-
-                            {isFull ? (
-                              <span className="text-[10px] font-bold text-rose-500">Fully Booked</span>
-                            ) : onlyOneLeft ? (
-                              <span className="text-[10px] font-bold text-amber-600">Only 1 slot left!</span>
-                            ) : (
-                              <span className="text-[10px] font-medium text-emerald-600">Available</span>
-                            )}
-                          </button>
-                        );
-                      })}
-                    </div>
+              {/* Time slots */}
+              <div className="p-5 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] shadow-sm flex flex-col gap-4">
+                <div className="flex items-center justify-between">
+                  <h4 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7]">
+                    {selectedDate ? `Slots for ${selectedDate}` : 'Select a date'}
+                  </h4>
+                  {loadingSlots && (
+                    <span className="text-[12px] text-[#0071E3] dark:text-[#2997FF] font-medium">Loading…</span>
                   )}
                 </div>
 
-                <div className="mt-6 p-3 rounded-xl bg-blue-50/80 border border-blue-100 text-xs text-slate-600 flex items-center gap-2">
-                  <Info className="w-4 h-4 text-blue-600 shrink-0" />
-                  <span>Slots feature real-time capacity locks to prevent duplicate appointments.</span>
+                {slots.length === 0 ? (
+                  <div className="flex-1 flex items-center justify-center py-8 text-center">
+                    <div>
+                      <Clock className="w-8 h-8 text-[#86868b] mx-auto mb-2" />
+                      <p className="text-[13px] text-[#86868b]">
+                        {loadingSlots ? 'Loading time slots…' : 'Pick a date to see available slots.'}
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 gap-2.5 flex-1">
+                    {slots.map((slot) => {
+                      const isSel = selectedSlot?.id === slot.id;
+                      const isFull = slot.isBlocked || slot.booked >= slot.capacity;
+                      const onlyOne = slot.capacity - slot.booked === 1;
+                      return (
+                        <button
+                          key={slot.id}
+                          type="button"
+                          disabled={isFull}
+                          onClick={() => setSelectedSlot(slot)}
+                          className={`p-3.5 rounded-2xl border text-left transition-all duration-150 apple-btn ${
+                            isFull
+                              ? 'bg-[#F5F5F7] dark:bg-[#1C1C1E] border-black/[0.05] dark:border-white/[0.06] text-[#86868b]/60 cursor-not-allowed'
+                              : isSel
+                              ? 'bg-[#0071E3] border-[#0071E3] shadow-md shadow-[#0071E3]/20'
+                              : 'bg-[#F5F5F7] dark:bg-[#1C1C1E] border-black/[0.06] dark:border-white/[0.08] hover:border-[#0071E3]/40'
+                          }`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className={`font-semibold text-[13px] ${isSel ? 'text-white' : 'text-[#1d1d1f] dark:text-[#f5f5f7]'}`}>
+                              {slot.startTime}
+                            </span>
+                            <Clock className={`w-3.5 h-3.5 ${isSel ? 'text-white/70' : 'text-[#86868b]'}`} />
+                          </div>
+                          {isFull ? (
+                            <span className="text-[11px] font-medium text-[#FF3B30]">Full</span>
+                          ) : onlyOne ? (
+                            <span className={`text-[11px] font-medium ${isSel ? 'text-white/80' : 'text-[#FF9500]'}`}>1 slot left</span>
+                          ) : (
+                            <span className={`text-[11px] font-medium ${isSel ? 'text-white/80' : 'text-[#34C759]'}`}>Available</span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+
+                <div className="flex items-start gap-2 p-3 rounded-xl bg-[#0071E3]/[0.06] dark:bg-[#2997FF]/[0.06]">
+                  <Info className="w-3.5 h-3.5 text-[#0071E3] dark:text-[#2997FF] shrink-0 mt-0.5" />
+                  <p className="text-[11px] text-[#0071E3] dark:text-[#2997FF]">Slots are real-time locked to prevent double-booking.</p>
                 </div>
               </div>
             </div>
 
-            <div className="mt-8 flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(2)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-4 h-4" /> Back to Center
+            <div className="mt-6 flex items-center justify-between">
+              <button type="button" onClick={() => setStep(2)} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] text-[13px] font-medium hover:bg-black/[0.09] dark:hover:bg-white/[0.12] transition-all apple-btn">
+                <ArrowLeft className="w-4 h-4" /> Back
               </button>
-              <button
-                type="button"
-                disabled={!selectedSlot}
-                onClick={() => setStep(4)}
-                className="px-6 py-3 rounded-xl gradient-primary text-white font-bold text-xs shadow-md shadow-blue-500/20 disabled:opacity-40 flex items-center gap-2 hover:opacity-95"
-              >
-                Next: Review Summary
-                <ArrowRight className="w-4 h-4" />
+              <button type="button" disabled={!selectedSlot} onClick={() => setStep(4)} className="flex items-center gap-2 px-7 py-2.5 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold disabled:opacity-40 transition-all apple-btn shadow-lg shadow-[#0071E3]/20">
+                Review <ArrowRight className="w-4 h-4" />
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 4: SUMMARY & CONFIRMATION */}
+        {/* ══════════════════════════════════════════════
+            STEP 4 — CONFIRM (Apple order receipt)
+            ══════════════════════════════════════════════ */}
         {step === 4 && (
-          <div className="glass-card p-6 sm:p-8 border border-white shadow-xl animate-in fade-in duration-200">
-            <h3 className="text-base font-bold text-slate-900 mb-1">4. Review & Confirm Booking</h3>
-            <p className="text-xs text-slate-500 mb-6">
-              Check appointment information before confirming your reservation.
-            </p>
+          <div className="apple-fade-in max-w-xl mx-auto">
+            <div className="mb-6">
+              <h2 className="text-[20px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">Review & Confirm</h2>
+              <p className="text-[13px] text-[#86868b] mt-0.5">Check everything before locking your appointment.</p>
+            </div>
 
-            <div className="bg-white/80 rounded-2xl border border-slate-200 p-6 space-y-4 mb-6">
-              {/* Vehicle & Center Header */}
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-slate-100">
-                <div className="flex items-center gap-3">
-                  <div className="w-12 h-12 rounded-xl gradient-primary flex items-center justify-center text-white">
-                    <Car className="w-6 h-6" />
+            {/* Receipt card */}
+            <div className="rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] overflow-hidden shadow-md mb-6">
+              {/* Vehicle + center header */}
+              <div className="px-5 py-4 border-b border-black/[0.06] dark:border-white/[0.08]">
+                <div className="flex items-center gap-3 mb-3">
+                  <div className="w-10 h-10 rounded-2xl bg-[#0071E3]/10 flex items-center justify-center">
+                    <Car className="w-5 h-5 text-[#0071E3]" />
                   </div>
                   <div>
-                    <h4 className="font-extrabold text-sm text-slate-900">
+                    <h4 className="font-semibold text-[15px] text-[#1d1d1f] dark:text-[#f5f5f7]">
                       {selectedVehicle?.brandName} {selectedVehicle?.modelName}
                     </h4>
-                    <p className="text-xs text-slate-500">
-                      Reg: {selectedVehicle?.registrationNo} • Current: {selectedVehicle?.currentKm.toLocaleString()} KM
+                    <p className="text-[12px] text-[#86868b]">
+                      {selectedVehicle?.registrationNo} · {selectedVehicle?.currentKm.toLocaleString()} km
                     </p>
                   </div>
                 </div>
-
-                <div className="text-left sm:text-right">
-                  <span className="text-xs font-bold text-slate-900 block">{selectedCenter?.name}</span>
-                  <span className="text-[11px] text-slate-500 block">{selectedCenter?.address}</span>
+                <div className="flex items-center gap-1.5 text-[12px] text-[#86868b]">
+                  <MapPin className="w-3.5 h-3.5 shrink-0" />
+                  <span className="font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">{selectedCenter?.name}</span>
+                  · {selectedCenter?.address}
                 </div>
               </div>
 
-              {/* Schedule and cost */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-                <div className="p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-400 block text-[10px] font-semibold uppercase">Schedule</span>
-                  <span className="font-bold text-slate-900 text-sm">{selectedDate}</span>
-                  <p className="text-[11px] text-slate-500 mt-0.5">{selectedSlot?.startTime}</p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-400 block text-[10px] font-semibold uppercase">Estimated Cost</span>
-                  <span className="font-extrabold text-blue-700 text-sm">₹{costMin} – ₹{costMax}</span>
-                  <p className="text-[10px] text-slate-400 mt-0.5">Pay after service completion</p>
-                </div>
-
-                <div className="p-3 rounded-xl bg-slate-50">
-                  <span className="text-slate-400 block text-[10px] font-semibold uppercase">Center Type</span>
-                  <span className="font-bold text-slate-900 text-sm">{selectedCenter?.type}</span>
-                  <p className="text-[10px] text-slate-400 mt-0.5">⭐ {selectedCenter?.rating} Rating</p>
-                </div>
+              {/* Schedule + cost */}
+              <div className="grid grid-cols-3 divide-x divide-black/[0.06] dark:divide-white/[0.08]">
+                {[
+                  { label: 'Date', value: selectedDate, sub: selectedSlot?.startTime },
+                  { label: 'Estimate', value: `₹${costMin.toLocaleString()} – ₹${costMax.toLocaleString()}`, sub: 'Pay at workshop' },
+                  { label: 'Center', value: selectedCenter?.type || '', sub: `⭐ ${selectedCenter?.rating}` },
+                ].map((item) => (
+                  <div key={item.label} className="px-4 py-4">
+                    <p className="text-[10px] font-semibold text-[#86868b] uppercase tracking-wider mb-1">{item.label}</p>
+                    <p className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{item.value}</p>
+                    {item.sub && <p className="text-[11px] text-[#86868b] mt-0.5">{item.sub}</p>}
+                  </div>
+                ))}
               </div>
 
-              {/* Services List */}
-              <div className="pt-2">
-                <span className="text-xs font-bold text-slate-700 block mb-2">Booked Services:</span>
-                <ul className="space-y-1">
-                  {catalogServices
-                    .filter((s) => selectedServiceIds.includes(s.id))
-                    .map((s) => (
-                      <li key={s.id} className="text-xs text-slate-600 flex items-center gap-2">
-                        <Check className="w-3.5 h-3.5 text-emerald-500 shrink-0" />
-                        <span>{s.name} (~₹{s.basePrice})</span>
-                      </li>
-                    ))}
+              {/* Services list */}
+              <div className="px-5 py-4 border-t border-black/[0.06] dark:border-white/[0.08]">
+                <p className="text-[12px] font-semibold text-[#86868b] uppercase tracking-wider mb-3">Selected Services</p>
+                <ul className="space-y-2">
+                  {selectedServices.map((s) => (
+                    <li key={s.id} className="flex items-center justify-between text-[13px]">
+                      <span className="flex items-center gap-2 text-[#1d1d1f] dark:text-[#f5f5f7]">
+                        <Check className="w-3.5 h-3.5 text-[#34C759] shrink-0 stroke-[2.5]" />
+                        {s.name}
+                      </span>
+                      <span className="text-[#86868b] font-medium">~₹{s.basePrice.toLocaleString()}</span>
+                    </li>
+                  ))}
                 </ul>
               </div>
 
               {specialNotes && (
-                <div className="pt-2 border-t border-slate-100 text-xs">
-                  <span className="font-bold text-slate-700">Special Notes: </span>
-                  <span className="text-slate-600 italic">&quot;{specialNotes}&quot;</span>
+                <div className="px-5 py-3.5 border-t border-black/[0.06] dark:border-white/[0.08] bg-[#F5F5F7] dark:bg-[#0A0A0A]">
+                  <p className="text-[12px] text-[#1d1d1f] dark:text-[#f5f5f7]">
+                    <span className="font-semibold">Notes:</span>{' '}
+                    <span className="text-[#86868b] italic">"{specialNotes}"</span>
+                  </p>
                 </div>
               )}
             </div>
 
             <div className="flex items-center justify-between">
-              <button
-                type="button"
-                onClick={() => setStep(3)}
-                className="px-4 py-2.5 rounded-xl border border-slate-200 bg-white text-xs font-semibold text-slate-600 hover:bg-slate-50 flex items-center gap-1.5"
-              >
-                <ArrowLeft className="w-4 h-4" /> Change Time
+              <button type="button" onClick={() => setStep(3)} className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] text-[13px] font-medium hover:bg-black/[0.09] dark:hover:bg-white/[0.12] transition-all apple-btn">
+                <ArrowLeft className="w-4 h-4" /> Back
               </button>
               <button
                 type="button"
                 disabled={isSubmitting}
                 onClick={handleConfirmBooking}
-                className="px-7 py-3 rounded-xl gradient-primary text-white font-extrabold text-xs shadow-lg shadow-blue-500/25 flex items-center gap-2 hover:opacity-95"
+                className="flex items-center gap-2 px-8 py-3 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-[14px] font-semibold disabled:opacity-50 transition-all apple-btn shadow-xl shadow-[#0071E3]/25"
               >
-                {isSubmitting ? 'Locking Slot...' : 'Confirm Service Appointment'}
-                <Check className="w-4 h-4" />
+                {isSubmitting ? 'Locking Slot…' : 'Confirm Booking'}
+                <Check className="w-4 h-4 stroke-[2.5]" />
               </button>
             </div>
           </div>
         )}
 
-        {/* STEP 5: SUCCESS STATE WITH CELEBRATION */}
+        {/* ══════════════════════════════════════════════
+            STEP 5 — SUCCESS (Apple confirmation receipt)
+            ══════════════════════════════════════════════ */}
         {step === 5 && bookingResult && (
-          <div className="glass-card p-8 sm:p-12 border border-white shadow-2xl text-center max-w-2xl mx-auto animate-in zoom-in-95 duration-200">
-            <div className="w-20 h-20 rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center mx-auto mb-4 font-bold shadow-lg shadow-emerald-500/10">
-              <CheckCircle2 className="w-10 h-10" />
+          <div className="apple-scale-in max-w-md mx-auto text-center pt-4">
+            {/* Checkmark */}
+            <div className="w-[72px] h-[72px] rounded-full bg-[#34C759]/15 flex items-center justify-center mx-auto mb-5">
+              <div className="w-14 h-14 rounded-full bg-[#34C759] flex items-center justify-center shadow-xl shadow-[#34C759]/30">
+                <CheckCircle2 className="w-8 h-8 text-white" />
+              </div>
             </div>
 
-            <h2 className="text-2xl font-black text-slate-900 mb-1">Service Booked!</h2>
-            <p className="text-xs text-slate-600 max-w-md mx-auto mb-6">
-              Your {bookingResult.vehicleName} service is scheduled for{' '}
-              <strong className="text-slate-900">{bookingResult.serviceDate} • {bookingResult.serviceTime}</strong>.
+            <h2 className="text-[26px] sm:text-[30px] font-semibold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7] mb-2">
+              Booking Confirmed
+            </h2>
+            <p className="text-[14px] text-[#86868b] max-w-xs mx-auto mb-8 leading-relaxed">
+              Your appointment for{' '}
+              <span className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{bookingResult.vehicleName}</span>
+              {' '}is scheduled for{' '}
+              <span className="font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{bookingResult.serviceDate} at {bookingResult.serviceTime}</span>.
             </p>
 
-            {/* Booking Code Card */}
-            <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 inline-block mb-6">
-              <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block mb-0.5">
-                Official Booking Reference
-              </span>
-              <span className="font-mono text-xl font-black text-[#0B5CFF] tracking-wider">
+            {/* Booking code card */}
+            <div className="mx-auto w-fit mb-8 px-8 py-5 rounded-2xl bg-white dark:bg-[#161617] border border-black/[0.07] dark:border-white/[0.1] shadow-lg">
+              <p className="text-[11px] font-semibold uppercase tracking-[0.1em] text-[#86868b] mb-1">Booking Reference</p>
+              <p className="font-mono text-[22px] font-bold text-[#0071E3] dark:text-[#2997FF] tracking-wider">
                 {bookingResult.bookingCode}
-              </span>
+              </p>
             </div>
 
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
               <button
                 onClick={handleDownloadIcs}
-                className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-xs font-bold text-slate-700 shadow-xs flex items-center justify-center gap-2"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-6 py-2.5 rounded-full bg-[#F5F5F7] dark:bg-[#1C1C1E] border border-black/[0.08] dark:border-white/[0.12] text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] transition-all apple-btn"
               >
-                <Download className="w-4 h-4 text-blue-600" />
-                Add to Calendar (.ics)
+                <Download className="w-4 h-4 text-[#0071E3]" />
+                Add to Calendar
               </button>
-
               <a
                 href="/bookings"
-                className="w-full sm:w-auto px-6 py-2.5 rounded-xl gradient-primary text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:opacity-95 flex items-center justify-center gap-2"
+                className="w-full sm:w-auto flex items-center justify-center gap-2 px-7 py-2.5 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-[13px] font-semibold transition-all apple-btn shadow-lg shadow-[#0071E3]/25"
               >
-                View My Bookings
+                View Bookings
                 <ArrowRight className="w-4 h-4" />
               </a>
             </div>
@@ -924,64 +913,65 @@ END:VCALENDAR`;
         )}
       </main>
 
-      {/* CENTER DETAILS MODAL */}
+      {/* ── Center Details Modal ── */}
       {centerDetailsModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-lg glass-dropdown rounded-3xl p-6 shadow-2xl border border-white">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100 mb-4">
+        <div className="fixed inset-0 z-50 bg-black/40 backdrop-blur-sm flex items-end sm:items-center justify-center p-0 sm:p-4" onClick={() => setCenterDetailsModal(null)}>
+          <div
+            className="w-full sm:max-w-lg bg-white dark:bg-[#1c1c1e] sm:rounded-3xl rounded-t-3xl p-6 shadow-2xl apple-scale-in border border-black/[0.06] dark:border-white/[0.1]"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-start justify-between mb-4">
               <div>
-                <h3 className="font-extrabold text-base text-slate-900">{centerDetailsModal.name}</h3>
-                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-blue-100 text-blue-700">
+                <h3 className="font-semibold text-[17px] text-[#1d1d1f] dark:text-[#f5f5f7]">{centerDetailsModal.name}</h3>
+                <span className="inline-block mt-1 px-2.5 py-0.5 rounded-full text-[11px] font-medium bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]">
                   {centerDetailsModal.type}
                 </span>
               </div>
               <button
                 onClick={() => setCenterDetailsModal(null)}
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600"
+                className="p-2 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] apple-btn"
               >
-                ✕
+                <X className="w-4 h-4" />
               </button>
             </div>
 
-            <div className="space-y-3 text-xs text-slate-600">
-              <p><strong>Address:</strong> {centerDetailsModal.address}, {centerDetailsModal.city}</p>
-              <p><strong>Phone:</strong> {centerDetailsModal.phone}</p>
-              <p><strong>Hours:</strong> {centerDetailsModal.openingHours}</p>
-              <p><strong>Supported Brands:</strong> {centerDetailsModal.brandsSupported.join(', ') || 'All multi-brand models'}</p>
+            <div className="space-y-3 text-[13px]">
+              <div className="flex items-start gap-2.5 text-[#86868b]">
+                <MapPin className="w-4 h-4 shrink-0 mt-0.5 text-[#0071E3]" />
+                <span className="text-[#1d1d1f] dark:text-[#f5f5f7]">{centerDetailsModal.address}, {centerDetailsModal.city}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-[#86868b]">
+                <Phone className="w-4 h-4 shrink-0 text-[#34C759]" />
+                <span className="text-[#1d1d1f] dark:text-[#f5f5f7]">{centerDetailsModal.phone}</span>
+              </div>
+              <div className="flex items-center gap-2.5 text-[#86868b]">
+                <Clock className="w-4 h-4 shrink-0 text-[#FF9500]" />
+                <span className="text-[#1d1d1f] dark:text-[#f5f5f7]">{centerDetailsModal.openingHours}</span>
+              </div>
               <div>
-                <strong className="block mb-1">Services Offered:</strong>
-                <div className="flex flex-wrap gap-1">
+                <p className="text-[11px] font-semibold text-[#86868b] uppercase tracking-wider mb-2 mt-1">Services Offered</p>
+                <div className="flex flex-wrap gap-1.5">
                   {centerDetailsModal.servicesOffered.map((s) => (
-                    <span key={s} className="px-2 py-0.5 rounded-md bg-slate-100 text-[10px] font-semibold text-slate-700">
+                    <span key={s} className="px-2.5 py-1 rounded-full bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[11px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
                       {s}
                     </span>
                   ))}
                 </div>
               </div>
               {centerDetailsModal.websiteUrl && (
-                <div className="pt-2">
-                  <a
-                    href={centerDetailsModal.websiteUrl}
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-blue-600 font-bold hover:underline flex items-center gap-1"
-                  >
-                    <Globe className="w-3.5 h-3.5" /> Visit Center Website
-                  </a>
-                </div>
+                <a href={centerDetailsModal.websiteUrl} target="_blank" rel="noreferrer" className="flex items-center gap-1.5 text-[#0071E3] dark:text-[#2997FF] font-medium hover:opacity-80 transition-opacity">
+                  <Globe className="w-3.5 h-3.5" /> Visit Website
+                </a>
               )}
             </div>
 
-            <div className="mt-6 flex justify-end">
+            <div className="mt-5">
               <button
                 type="button"
-                onClick={() => {
-                  setSelectedCenter(centerDetailsModal);
-                  setCenterDetailsModal(null);
-                }}
-                className="px-4 py-2 rounded-xl gradient-primary text-white text-xs font-bold"
+                onClick={() => { setSelectedCenter(centerDetailsModal); setCenterDetailsModal(null); }}
+                className="w-full py-3 rounded-full bg-[#0071E3] hover:bg-[#0077ED] text-white text-[14px] font-semibold transition-all apple-btn shadow-lg shadow-[#0071E3]/25"
               >
-                Select this Center
+                Select This Workshop
               </button>
             </div>
           </div>
@@ -994,9 +984,23 @@ END:VCALENDAR`;
   );
 }
 
+/* ── need X icon locally ── */
+function X({ className }: { className?: string }) {
+  return (
+    <svg className={className} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <line x1="18" y1="6" x2="6" y2="18" />
+      <line x1="6" y1="6" x2="18" y2="18" />
+    </svg>
+  );
+}
+
 export default function BookServicePage() {
   return (
-    <Suspense fallback={<div style={{ minHeight: '100vh', background: '#0f0f13', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>Loading...</div>}>
+    <Suspense fallback={
+      <div style={{ minHeight: '100vh', background: '#F5F5F7', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1d1d1f' }}>
+        Loading…
+      </div>
+    }>
       <BookServicePageInner />
     </Suspense>
   );

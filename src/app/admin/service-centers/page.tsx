@@ -110,13 +110,13 @@ export default function AdminServiceCentersPage() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-black text-slate-950">Service Centers Registry</h1>
-          <p className="text-xs text-slate-500 font-medium mt-0.5">
+          <h1 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white tracking-tight">Service Centers Registry</h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 font-medium mt-0.5">
             Manage authorized, multi-brand, and local partner garages with slot capacity.
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2.5">
           <div className="relative">
             <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
             <input
@@ -124,14 +124,14 @@ export default function AdminServiceCentersPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search centers or cities..."
-              className="bg-white border border-slate-200 rounded-xl pl-8 pr-3 py-1.5 text-xs text-slate-900 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 shadow-xs"
+              className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg pl-8 pr-3 py-1.5 text-xs text-slate-900 dark:text-slate-100 placeholder-slate-400 focus:outline-hidden focus:border-blue-500 shadow-xs"
             />
           </div>
           <button
             onClick={() => { setEditingCenter(emptyCenter); setShowModal(true); }}
-            className="px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-1.5 shadow-sm"
+            className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
           >
-            <Plus className="w-4 h-4" />
+            <Plus className="w-3.5 h-3.5" />
             Add Center
           </button>
         </div>
@@ -142,27 +142,29 @@ export default function AdminServiceCentersPage() {
         {filtered.map((center) => (
           <div
             key={center.id}
-            className={`bg-white p-5 rounded-2xl border transition-all shadow-xs ${
-              center.isActive ? 'border-slate-200/90' : 'border-rose-300 opacity-75 bg-rose-50/20'
+            className={`p-5 rounded-xl border transition-colors shadow-xs ${
+              center.isActive
+                ? 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800'
+                : 'bg-rose-50/20 dark:bg-rose-950/20 border-rose-200 dark:border-rose-900/60 opacity-80'
             }`}
           >
-            <div className="flex items-start justify-between gap-3 mb-3">
+            <div className="flex items-start justify-between gap-3 mb-2.5">
               <div>
                 <div className="flex items-center gap-2 mb-1">
-                  <h3 className="font-extrabold text-sm text-slate-950">{center.name}</h3>
+                  <h3 className="font-bold text-sm text-slate-900 dark:text-white">{center.name}</h3>
                   <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                    className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                       center.type === 'AUTHORIZED'
-                        ? 'bg-amber-50 text-amber-700 border border-amber-200'
+                        ? 'bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-800'
                         : center.type === 'MULTI_BRAND'
-                        ? 'bg-blue-50 text-blue-700 border border-blue-200'
-                        : 'bg-slate-100 text-slate-700 border border-slate-200'
+                        ? 'bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800'
+                        : 'bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
                     }`}
                   >
                     {center.type}
                   </span>
                 </div>
-                <div className="flex items-center gap-1.5 text-xs text-slate-500">
+                <div className="flex items-center gap-1.5 text-xs text-slate-500 dark:text-slate-400">
                   <MapPin className="w-3.5 h-3.5" />
                   <span>{center.address}, {center.city}</span>
                 </div>
@@ -171,50 +173,50 @@ export default function AdminServiceCentersPage() {
               <button
                 onClick={() => handleToggleActive(center)}
                 title={center.isActive ? 'Deactivate' : 'Activate'}
-                className={`p-1.5 rounded-lg transition-colors ${
+                className={`p-1 rounded-lg transition-colors ${
                   center.isActive
-                    ? 'text-emerald-600 hover:bg-emerald-50'
-                    : 'text-rose-600 hover:bg-rose-50'
+                    ? 'text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-950/30'
+                    : 'text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30'
                 }`}
               >
                 {center.isActive
-                  ? <ToggleRight className="w-6 h-6" />
-                  : <ToggleLeft className="w-6 h-6" />}
+                  ? <ToggleRight className="w-5 h-5" />
+                  : <ToggleLeft className="w-5 h-5" />}
               </button>
             </div>
 
-            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 mb-3">
-              <span className="flex items-center gap-1 font-bold text-amber-700">
+            <div className="flex flex-wrap items-center gap-3 text-xs text-slate-600 dark:text-slate-400 mb-3">
+              <span className="flex items-center gap-1 font-semibold text-amber-700 dark:text-amber-400">
                 <Star className="w-3.5 h-3.5 fill-amber-500 text-amber-500" />
                 {center.rating} ({center.reviewCount || 120})
               </span>
               <span>•</span>
               {center.phone && (
-                <span className="flex items-center gap-1 text-slate-600">
+                <span className="flex items-center gap-1 text-slate-600 dark:text-slate-400">
                   <Phone className="w-3 h-3" />
                   {center.phone}
                 </span>
               )}
               <span>•</span>
-              <span className="text-slate-500">{center.openingHours}</span>
+              <span className="text-slate-500 dark:text-slate-400">{center.openingHours}</span>
             </div>
 
             <div className="flex flex-wrap gap-1.5 mb-3">
               {center.servicesOffered.slice(0, 4).map((svc) => (
                 <span
                   key={svc}
-                  className="px-2 py-0.5 rounded-md bg-slate-50 text-[10px] text-slate-700 border border-slate-200 font-medium"
+                  className="px-2 py-0.5 rounded-md bg-slate-50 dark:bg-slate-800 text-[10px] text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 font-medium"
                 >
                   {svc}
                 </span>
               ))}
             </div>
 
-            <div className="flex items-center justify-between text-[11px] text-slate-500 border-t border-slate-100 pt-3">
+            <div className="flex items-center justify-between text-[11px] text-slate-500 dark:text-slate-400 border-t border-slate-100 dark:border-slate-800 pt-2.5">
               <span>
                 Supported: {center.brandsSupported.length > 0 ? center.brandsSupported.join(', ') : 'All Brands'}
               </span>
-              <span className={`font-bold ${center.isActive ? 'text-emerald-700' : 'text-rose-600'}`}>
+              <span className={`font-semibold ${center.isActive ? 'text-emerald-600 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`}>
                 {center.isActive ? '● Active' : '● Inactive'}
               </span>
             </div>
@@ -224,30 +226,30 @@ export default function AdminServiceCentersPage() {
 
       {/* ADD CENTER MODAL */}
       {showModal && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-xs flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-lg bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-2xl max-h-[90vh] overflow-y-auto">
-            <h3 className="font-black text-base text-slate-950 mb-5">Add New Service Center</h3>
+        <div className="fixed inset-0 z-50 bg-black/50 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 shadow-xl max-h-[90vh] overflow-y-auto">
+            <h3 className="font-bold text-sm text-slate-900 dark:text-white mb-4">Add New Service Center</h3>
 
-            <form onSubmit={handleSaveCenter} className="space-y-4 text-xs">
+            <form onSubmit={handleSaveCenter} className="space-y-3.5 text-xs">
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Center Name</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Center Name</label>
                 <input
                   type="text"
                   value={editingCenter.name}
                   onChange={(e) => setEditingCenter({ ...editingCenter, name: e.target.value })}
                   placeholder="e.g. Hyundai Authorized - Baner"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Type</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Type</label>
                   <select
                     value={editingCenter.type}
                     onChange={(e) => setEditingCenter({ ...editingCenter, type: e.target.value as any })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden"
                   >
                     <option value="AUTHORIZED">Authorized OEM</option>
                     <option value="MULTI_BRAND">Multi-Brand</option>
@@ -255,11 +257,11 @@ export default function AdminServiceCentersPage() {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">City</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">City</label>
                   <select
                     value={editingCenter.city}
                     onChange={(e) => setEditingCenter({ ...editingCenter, city: e.target.value })}
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden"
                   >
                     <option>Pune</option>
                     <option>Mumbai</option>
@@ -270,48 +272,48 @@ export default function AdminServiceCentersPage() {
               </div>
 
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Full Address</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Full Address</label>
                 <input
                   type="text"
                   value={editingCenter.address}
                   onChange={(e) => setEditingCenter({ ...editingCenter, address: e.target.value })}
                   placeholder="Street, Locality, City"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500"
                   required
                 />
               </div>
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Phone Number</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Phone Number</label>
                   <input
                     type="text"
                     value={editingCenter.phone}
                     onChange={(e) => setEditingCenter({ ...editingCenter, phone: e.target.value })}
                     placeholder="+91 XX XXXX XXXX"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden"
                   />
                 </div>
                 <div>
-                  <label className="block text-slate-700 font-bold mb-1">Rating (1-5)</label>
+                  <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Rating (1-5)</label>
                   <input
                     type="number"
                     value={editingCenter.rating}
                     onChange={(e) => setEditingCenter({ ...editingCenter, rating: Number(e.target.value) })}
                     min="1" max="5" step="0.1"
-                    className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden"
+                    className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block text-slate-700 font-bold mb-1">Opening Hours</label>
+                <label className="block text-slate-700 dark:text-slate-300 font-semibold mb-1">Opening Hours</label>
                 <input
                   type="text"
                   value={editingCenter.openingHours}
                   onChange={(e) => setEditingCenter({ ...editingCenter, openingHours: e.target.value })}
                   placeholder="Mon - Sat: 9:00 AM - 7:00 PM"
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-slate-900 focus:outline-hidden"
+                  className="w-full bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-slate-900 dark:text-white focus:outline-hidden"
                 />
               </div>
 
@@ -323,24 +325,24 @@ export default function AdminServiceCentersPage() {
                     onChange={(e) => setEditingCenter({ ...editingCenter, autoConfirm: e.target.checked })}
                     className="w-4 h-4 text-blue-600 rounded focus:ring-0"
                   />
-                  <span className="text-slate-700 font-semibold">Auto-Confirm Bookings</span>
+                  <span className="text-slate-700 dark:text-slate-300 font-semibold">Auto-Confirm Bookings</span>
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-2 pt-4 border-t border-slate-100">
+              <div className="flex items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setShowModal(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 hover:text-slate-950 text-xs font-semibold"
+                  className="px-3.5 py-1.5 rounded-lg text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-semibold transition-colors"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold flex items-center gap-2 shadow-md shadow-blue-500/20"
+                  className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors"
                 >
-                  <Save className="w-4 h-4" />
+                  <Save className="w-3.5 h-3.5" />
                   {isSaving ? 'Saving...' : 'Add to Registry'}
                 </button>
               </div>

@@ -31,26 +31,27 @@ export default function Navbar() {
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
     const session = getClientSession();
     setCurrentUser(session);
-
-    const handleSessionChange = () => {
-      setCurrentUser(getClientSession());
-    };
+    const handleSessionChange = () => setCurrentUser(getClientSession());
     window.addEventListener('autoping_session_change', handleSessionChange);
-
     return () => window.removeEventListener('autoping_session_change', handleSessionChange);
+  }, []);
+
+  useEffect(() => {
+    const onScroll = () => setScrolled(window.scrollY > 8);
+    window.addEventListener('scroll', onScroll, { passive: true });
+    return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
   useEffect(() => {
     if (currentUser) {
       fetch(`/api/notifications?userId=${currentUser.id}`)
         .then((res) => res.json())
-        .then((res) => {
-          if (res.data) setNotifications(res.data);
-        })
+        .then((res) => { if (res.data) setNotifications(res.data); })
         .catch(() => {});
     }
   }, [currentUser]);
@@ -77,45 +78,43 @@ export default function Navbar() {
     { href: '/history', label: 'History', icon: History },
   ];
 
-  // Avatar element: photo or initials
   const AvatarEl = () =>
     currentUser?.photoUrl ? (
       <img
         src={currentUser.photoUrl}
         alt={currentUser.name}
-        className="w-7 h-7 rounded-lg object-cover border border-slate-200 dark:border-slate-700"
+        className="w-7 h-7 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/20"
       />
     ) : (
-      <div className="w-7 h-7 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-xs">
+      <div className="w-7 h-7 rounded-full bg-[#0071E3] text-white flex items-center justify-center font-semibold text-xs">
         {currentUser?.name?.charAt(0) || 'U'}
       </div>
     );
 
   return (
     <>
-      <header className="sticky top-0 z-40 w-full glass-panel border-b border-white/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <header
+        className={`sticky top-0 z-40 w-full transition-all duration-300 ${
+          scrolled
+            ? 'bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] shadow-sm'
+            : 'bg-white/70 dark:bg-black/70 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.05]'
+        }`}
+        style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)', backdropFilter: 'blur(20px) saturate(180%)' }}
+      >
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[52px] flex items-center justify-between">
           {/* Logo */}
           <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2.5 group">
-              <div className="w-10 h-10 rounded-xl gradient-primary flex items-center justify-center text-white shadow-md shadow-blue-500/20 group-hover:scale-105 transition-transform">
-                <Car className="w-5 h-5" />
+            <a href="/" className="flex items-center gap-2">
+              <div className="w-7 h-7 rounded-[8px] bg-[#0071E3] flex items-center justify-center">
+                <Car className="w-3.5 h-3.5 text-white" />
               </div>
-              <div className="flex flex-col">
-                <div className="flex items-center gap-1.5">
-                  <span className="font-extrabold text-xl tracking-tight text-slate-900 dark:text-slate-100">
-                    Auto<span className="text-[#0B5CFF]">Ping</span>
-                  </span>
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                </div>
-                <span className="text-[10px] font-semibold text-slate-500 tracking-wider uppercase -mt-0.5">
-                  Never Miss a Service
-                </span>
-              </div>
+              <span className="font-semibold text-[15px] tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
+                Auto<span className="text-[#0071E3]">Ping</span>
+              </span>
             </a>
 
-            {/* Desktop Navigation Links */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Desktop nav links */}
+            <nav className="hidden md:flex items-center gap-0.5">
               {navLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
@@ -123,13 +122,13 @@ export default function Navbar() {
                   <a
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-sm font-medium transition-all ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 ${
                       isActive
-                        ? 'bg-blue-600/10 text-[#0B5CFF] font-semibold shadow-xs'
-                        : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100 hover:bg-slate-100/70 dark:hover:bg-slate-800/70'
+                        ? 'bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]'
+                        : 'text-[#1d1d1f]/70 dark:text-[#f5f5f7]/60 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] hover:bg-black/[0.05] dark:hover:bg-white/[0.06]'
                     }`}
                   >
-                    <Icon className={`w-4 h-4 ${isActive ? 'text-[#0B5CFF]' : 'text-slate-400'}`} />
+                    <Icon className={`w-[14px] h-[14px] ${isActive ? 'text-[#0071E3] dark:text-[#2997FF]' : ''}`} />
                     {link.label}
                   </a>
                 );
@@ -137,119 +136,103 @@ export default function Navbar() {
             </nav>
           </div>
 
-          {/* Right Actions */}
-          <div className="flex items-center gap-2">
-            {/* Quick Demo switcher */}
-            <div className="hidden lg:flex items-center bg-slate-100/90 dark:bg-slate-800/90 p-1 rounded-xl border border-slate-200/60 dark:border-slate-700/60 text-xs">
+          {/* Right actions */}
+          <div className="flex items-center gap-1.5">
+            {/* Demo role switcher — Apple segmented pill */}
+            <div className="hidden lg:flex items-center gap-0.5 bg-black/[0.06] dark:bg-white/[0.08] p-0.5 rounded-full text-[12px]">
               <button
-                onClick={() => {
-                  setClientSession(DEMO_CUSTOMER_USER);
-                  router.push('/dashboard');
-                }}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
+                onClick={() => { setClientSession(DEMO_CUSTOMER_USER); router.push('/dashboard'); }}
+                className={`px-3 py-1 rounded-full transition-all duration-200 font-medium ${
                   currentUser?.role === 'CUSTOMER'
-                    ? 'bg-white dark:bg-slate-700 shadow-xs text-blue-600 font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                    ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#0071E3] dark:text-[#2997FF]'
+                    : 'text-[#1d1d1f]/60 dark:text-[#f5f5f7]/50 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
                 }`}
               >
                 Customer
               </button>
               <button
-                onClick={() => {
-                  setClientSession(DEMO_ADMIN_USER);
-                  router.push('/admin');
-                }}
-                className={`px-2.5 py-1 rounded-lg transition-all flex items-center gap-1 ${
+                onClick={() => { setClientSession(DEMO_ADMIN_USER); router.push('/admin'); }}
+                className={`px-3 py-1 rounded-full transition-all duration-200 font-medium flex items-center gap-1 ${
                   currentUser?.role === 'ADMIN'
-                    ? 'bg-slate-900 text-white shadow-xs font-semibold'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-slate-100'
+                    ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#1d1d1f] dark:text-[#f5f5f7]'
+                    : 'text-[#1d1d1f]/60 dark:text-[#f5f5f7]/50 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
                 }`}
               >
-                <Shield className="w-3 h-3 text-amber-400" />
+                <Shield className="w-[11px] h-[11px] text-[#FF9500]" />
                 Admin
               </button>
             </div>
 
-            {/* Dark Mode Toggle */}
+            {/* Dark mode toggle */}
             <button
               onClick={toggle}
-              aria-label={isDark ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-              className="p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-xs transition-all"
+              aria-label={isDark ? 'Light Mode' : 'Dark Mode'}
+              className="p-2 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] text-[#1d1d1f] dark:text-[#f5f5f7] transition-all duration-200 apple-btn"
             >
-              {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4 text-slate-600" />}
+              {isDark
+                ? <Sun className="w-[15px] h-[15px] text-[#FF9500]" />
+                : <Moon className="w-[15px] h-[15px] text-[#1d1d1f]/70" />
+              }
             </button>
 
-            {/* Notifications Bell */}
+            {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => setShowNotifMenu(!showNotifMenu)}
+                onClick={() => { setShowNotifMenu(!showNotifMenu); setShowUserMenu(false); }}
                 aria-label="Notifications"
-                className="relative p-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 border border-slate-200/60 dark:border-slate-700/60 shadow-xs transition-all"
+                className="relative p-2 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] text-[#1d1d1f] dark:text-[#f5f5f7] transition-all duration-200 apple-btn"
               >
-                <Bell className="w-4 h-4" />
+                <Bell className="w-[15px] h-[15px]" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-rose-500 text-white text-[11px] font-bold rounded-full flex items-center justify-center animate-bounce shadow-xs">
+                  <span className="absolute -top-0.5 -right-0.5 w-[16px] h-[16px] bg-[#FF3B30] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
-              {/* Notification Dropdown */}
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2 w-80 sm:w-96 rounded-2xl glass-dropdown p-4 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3 mb-2">
+                <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.1] shadow-2xl z-50 apple-scale-in overflow-hidden">
+                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-bold text-slate-900 dark:text-slate-100 text-sm">Notifications</h4>
+                      <h4 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7]">Notifications</h4>
                       {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-100 text-blue-700">
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]">
                           {unreadCount} new
                         </span>
                       )}
                     </div>
                     {unreadCount > 0 && (
-                      <button
-                        onClick={handleMarkAllRead}
-                        className="text-xs font-medium text-blue-600 hover:underline"
-                      >
-                        Mark all as read
+                      <button onClick={handleMarkAllRead} className="text-[12px] font-medium text-[#0071E3] dark:text-[#2997FF] hover:opacity-80 transition-opacity">
+                        Mark all read
                       </button>
                     )}
                   </div>
 
-                  <div className="max-h-72 overflow-y-auto space-y-2 py-1">
+                  <div className="max-h-72 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="text-center py-6 text-slate-400 text-xs">
-                        No notifications yet.
-                      </div>
+                      <div className="text-center py-8 text-[#86868b] text-[13px]">No notifications yet.</div>
                     ) : (
                       notifications.slice(0, 5).map((notif) => (
                         <div
                           key={notif.id}
-                          className={`p-3 rounded-xl transition-all ${
-                            notif.isRead ? 'bg-slate-50/70 dark:bg-slate-800/50' : 'bg-blue-50/80 border border-blue-100 dark:bg-blue-900/20 dark:border-blue-800'
+                          className={`px-4 py-3 border-b border-black/[0.04] dark:border-white/[0.05] last:border-0 transition-colors ${
+                            notif.isRead ? '' : 'bg-[#0071E3]/[0.04] dark:bg-[#2997FF]/[0.06]'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h5 className="font-semibold text-xs text-slate-900 dark:text-slate-100">{notif.title}</h5>
-                            <span className="text-[10px] text-slate-400 whitespace-nowrap">
-                              {new Date(notif.createdAt).toLocaleDateString('en-IN', {
-                                month: 'short',
-                                day: 'numeric',
-                              })}
+                            <h5 className="font-medium text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7]">{notif.title}</h5>
+                            <span className="text-[11px] text-[#86868b] whitespace-nowrap shrink-0">
+                              {new Date(notif.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                             </span>
                           </div>
-                          <p className="text-xs text-slate-600 dark:text-slate-400 mt-1 line-clamp-2">{notif.message}</p>
+                          <p className="text-[12px] text-[#86868b] mt-0.5 line-clamp-2">{notif.message}</p>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <div className="pt-2 border-t border-slate-100 dark:border-slate-700 text-center">
-                    <a
-                      href="/notifications"
-                      onClick={() => setShowNotifMenu(false)}
-                      className="text-xs font-semibold text-blue-600 hover:text-blue-700"
-                    >
+                  <div className="px-4 py-3 border-t border-black/[0.06] dark:border-white/[0.08] text-center">
+                    <a href="/notifications" onClick={() => setShowNotifMenu(false)} className="text-[13px] font-medium text-[#0071E3] dark:text-[#2997FF] hover:opacity-80 transition-opacity">
                       View all notifications →
                     </a>
                   </div>
@@ -257,79 +240,64 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Profile Dropdown */}
+            {/* Profile */}
             <div className="relative">
               <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 p-1.5 pl-2.5 rounded-xl bg-white/80 dark:bg-slate-800/80 hover:bg-white dark:hover:bg-slate-700 border border-slate-200/60 dark:border-slate-700/60 shadow-xs transition-all"
+                onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifMenu(false); }}
+                className="flex items-center gap-1.5 p-1 pr-2.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] border border-transparent transition-all duration-200 apple-btn"
               >
                 <AvatarEl />
-                <span className="hidden sm:block text-xs font-semibold text-slate-800 dark:text-slate-200">
+                <span className="hidden sm:block text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
                   {currentUser?.name?.split(' ')[0] || 'Account'}
                 </span>
-                <ChevronDown className="w-3.5 h-3.5 text-slate-400" />
+                <ChevronDown className="w-3 h-3 text-[#86868b]" />
               </button>
 
               {showUserMenu && (
-                <div className="absolute right-0 mt-2 w-56 rounded-2xl glass-dropdown p-2 shadow-xl z-50 animate-in fade-in zoom-in-95 duration-150">
-                  <div className="px-3 py-2 border-b border-slate-100 dark:border-slate-700 mb-1">
-                    <div className="flex items-center gap-2 mb-1">
+                <div className="absolute right-0 mt-2.5 w-56 rounded-2xl bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.1] shadow-2xl z-50 apple-scale-in overflow-hidden">
+                  <div className="px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
+                    <div className="flex items-center gap-2.5">
                       {currentUser?.photoUrl ? (
-                        <img src={currentUser.photoUrl} alt={currentUser.name} className="w-8 h-8 rounded-lg object-cover border border-slate-200" />
+                        <img src={currentUser.photoUrl} alt={currentUser.name} className="w-9 h-9 rounded-full object-cover ring-1 ring-black/10" />
                       ) : (
-                        <div className="w-8 h-8 rounded-lg bg-blue-600 text-white flex items-center justify-center font-bold text-sm">
+                        <div className="w-9 h-9 rounded-full bg-[#0071E3] text-white flex items-center justify-center font-semibold text-sm">
                           {currentUser?.name?.charAt(0) || 'U'}
                         </div>
                       )}
                       <div>
-                        <p className="text-xs font-bold text-slate-900 dark:text-slate-100">{currentUser?.name}</p>
-                        <p className="text-[11px] text-slate-500 truncate">{currentUser?.email}</p>
+                        <p className="text-[13px] font-semibold text-[#1d1d1f] dark:text-[#f5f5f7]">{currentUser?.name}</p>
+                        <p className="text-[11px] text-[#86868b] truncate">{currentUser?.email}</p>
                       </div>
                     </div>
-                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-100 text-blue-700">
-                      {currentUser?.role === 'ADMIN' ? 'Platform Administrator' : 'Vehicle Owner'}
+                    <span className="inline-block mt-2 px-2 py-0.5 rounded-full text-[10px] font-medium bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]">
+                      {currentUser?.role === 'ADMIN' ? 'Administrator' : 'Vehicle Owner'}
                     </span>
                   </div>
 
-                  <a
-                    href="/profile"
-                    onClick={() => setShowUserMenu(false)}
-                    className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-all"
-                  >
-                    <User className="w-3.5 h-3.5 text-slate-400" />
-                    Profile & Preferences
-                  </a>
-
-                  {currentUser?.role === 'ADMIN' ? (
-                    <a
-                      href="/admin"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-amber-700 hover:bg-amber-50 dark:hover:bg-amber-900/20 transition-all"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-amber-500" />
-                      Admin Command Center
+                  <div className="py-1">
+                    <a href="/profile" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                      <User className="w-3.5 h-3.5 text-[#86868b]" />
+                      Profile & Preferences
                     </a>
-                  ) : (
-                    <a
-                      href="/admin/login"
-                      onClick={() => setShowUserMenu(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-slate-700 dark:text-slate-300 hover:bg-slate-100/80 dark:hover:bg-slate-800 transition-all"
-                    >
-                      <Shield className="w-3.5 h-3.5 text-slate-400" />
-                      Admin Login
-                    </a>
-                  )}
+                    {currentUser?.role === 'ADMIN' ? (
+                      <a href="/admin" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#FF9500] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                        <Shield className="w-3.5 h-3.5 text-[#FF9500]" />
+                        Admin Center
+                      </a>
+                    ) : (
+                      <a href="/admin/login" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                        <Shield className="w-3.5 h-3.5 text-[#86868b]" />
+                        Admin Login
+                      </a>
+                    )}
+                  </div>
 
-                  <div className="border-t border-slate-100 dark:border-slate-700 mt-1 pt-1">
+                  <div className="border-t border-black/[0.06] dark:border-white/[0.08] py-1">
                     <button
-                      onClick={() => {
-                        clearClientSession();
-                        setShowUserMenu(false);
-                        router.push('/login');
-                      }}
-                      className="w-full flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-900/20 transition-all"
+                      onClick={() => { clearClientSession(); setShowUserMenu(false); router.push('/login'); }}
+                      className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#FF3B30] hover:bg-[#FF3B30]/[0.05] transition-colors"
                     >
-                      <LogOut className="w-3.5 h-3.5 text-rose-500" />
+                      <LogOut className="w-3.5 h-3.5" />
                       Sign Out
                     </button>
                   </div>
@@ -337,20 +305,20 @@ export default function Navbar() {
               )}
             </div>
 
-            {/* Mobile menu trigger */}
+            {/* Mobile menu toggle */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-2 rounded-xl bg-white/80 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300"
+              className="md:hidden p-2 rounded-full bg-black/[0.05] dark:bg-white/[0.08] text-[#1d1d1f] dark:text-[#f5f5f7] apple-btn"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+              {mobileMenuOpen ? <X className="w-4 h-4" /> : <Menu className="w-4 h-4" />}
             </button>
           </div>
         </div>
 
-        {/* Mobile menu dropdown */}
+        {/* Mobile dropdown */}
         {mobileMenuOpen && (
-          <div className="md:hidden border-t border-slate-200/60 dark:border-slate-700/60 bg-white/95 dark:bg-slate-900/95 backdrop-blur-lg px-4 pt-3 pb-5 space-y-1 shadow-lg animate-in slide-in-from-top-2 duration-150">
+          <div className="md:hidden border-t border-black/[0.06] dark:border-white/[0.06] bg-white/92 dark:bg-black/92 backdrop-blur-2xl px-4 pt-2 pb-4 space-y-0.5 apple-fade-in">
             {navLinks.map((link) => {
               const Icon = link.icon;
               const isActive = pathname === link.href;
@@ -359,10 +327,10 @@ export default function Navbar() {
                   key={link.href}
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
-                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium ${
+                  className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-[14px] font-medium transition-colors ${
                     isActive
-                      ? 'bg-blue-50 dark:bg-blue-900/30 text-blue-600 font-semibold'
-                      : 'text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      ? 'bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]'
+                      : 'text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.05] dark:hover:bg-white/[0.06]'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -370,18 +338,18 @@ export default function Navbar() {
                 </a>
               );
             })}
-            <div className="pt-2 border-t border-slate-100 dark:border-slate-700 flex items-center gap-2">
+            <div className="pt-2 border-t border-black/[0.06] dark:border-white/[0.06] flex items-center gap-2 mt-1">
               <button
                 onClick={() => { toggle(); setMobileMenuOpen(false); }}
-                className="flex-1 flex items-center justify-center gap-2 py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl"
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] bg-black/[0.05] dark:bg-white/[0.08] rounded-xl"
               >
-                {isDark ? <Sun className="w-4 h-4 text-amber-400" /> : <Moon className="w-4 h-4" />}
+                {isDark ? <Sun className="w-4 h-4 text-[#FF9500]" /> : <Moon className="w-4 h-4" />}
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </button>
               <a
                 href="/admin"
                 onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2 text-xs font-semibold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 rounded-xl"
+                className="flex-1 text-center py-2.5 text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] bg-black/[0.05] dark:bg-white/[0.08] rounded-xl"
               >
                 Go to Admin
               </a>
@@ -390,8 +358,8 @@ export default function Navbar() {
         )}
       </header>
 
-      {/* Mobile Bottom Navigation Bar */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/90 dark:bg-slate-900/95 backdrop-blur-md border-t border-slate-200/80 dark:border-slate-700/80 px-2 py-1.5 flex justify-around items-center">
+      {/* Mobile bottom nav bar — iOS tab bar style */}
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-white/85 dark:bg-black/85 backdrop-blur-xl border-t border-black/[0.06] dark:border-white/[0.08] px-2 py-1 flex justify-around items-center safe-area-inset-bottom">
         {navLinks.slice(0, 5).map((link) => {
           const Icon = link.icon;
           const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
@@ -399,12 +367,12 @@ export default function Navbar() {
             <a
               key={link.href}
               href={link.href}
-              className={`flex flex-col items-center justify-center py-1 px-2.5 rounded-xl transition-all ${
-                isActive ? 'text-[#0B5CFF] font-semibold' : 'text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300'
+              className={`flex flex-col items-center justify-center py-1.5 px-2 rounded-xl transition-all duration-200 min-w-[52px] ${
+                isActive ? 'text-[#0071E3] dark:text-[#2997FF]' : 'text-[#86868b] hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
               }`}
             >
               <Icon className="w-5 h-5 mb-0.5" />
-              <span className="text-[10px]">{link.label}</span>
+              <span className="text-[10px] font-medium">{link.label}</span>
             </a>
           );
         })}

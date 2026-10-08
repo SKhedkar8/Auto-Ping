@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from 'react';
 import {
-  AlertTriangle,
+  AlertCircle,
   ArrowRight,
   Bell,
   Calendar,
@@ -12,7 +12,7 @@ import {
   Clock,
   Droplets,
   ExternalLink,
-  Flame,
+  Fuel,
   Gauge,
   Heart,
   History,
@@ -20,9 +20,9 @@ import {
   MapPin,
   Plus,
   RefreshCw,
-  Sparkles,
+  ShieldCheck,
   Wrench,
-  XCircle
+  X
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -30,102 +30,7 @@ import Chatbot from '@/components/Chatbot';
 import { getClientSession } from '@/lib/auth';
 import { Booking, User, Vehicle } from '@/lib/types';
 
-// Floating service background particles
-const DASH_PARTICLES = [
-  { icon: '🛢️', label: 'Oil Change', size: 28 },
-  { icon: '🔧', label: 'Wrench', size: 22 },
-  { icon: '🛞', label: 'Tyre', size: 30 },
-  { icon: '⚙️', label: 'Gear', size: 24 },
-  { icon: '🔩', label: 'Bolt', size: 20 },
-  { icon: '🪛', label: 'Screwdriver', size: 24 },
-  { icon: '⛽', label: 'Fuel', size: 22 },
-  { icon: '🔋', label: 'Battery', size: 26 },
-  { icon: '🚗', label: 'Car', size: 30 },
-  { icon: '💨', label: 'AC', size: 22 },
-];
-
-function DashboardBackground() {
-  return (
-    <div className="dash-bg-canvas" aria-hidden="true">
-      {/* STATION 1: Oil Change Animated Station (Top Right Background) */}
-      <div className="hidden lg:flex flex-col items-center absolute top-24 right-12 opacity-25 dark:opacity-20 pointer-events-none select-none">
-        <div className="relative w-36 h-36">
-          {/* Tilted Oil Can pouring */}
-          <div className="absolute top-2 left-6 text-4xl anim-oil-can">
-            🛢️
-          </div>
-          {/* Dripping Amber Oil Drops */}
-          <div className="absolute top-12 left-14 text-amber-500 text-sm anim-oil-drop-1">
-            💧
-          </div>
-          <div className="absolute top-12 left-14 text-amber-600 text-xs anim-oil-drop-2">
-            💧
-          </div>
-          {/* Oil Catch Tray / Basin */}
-          <div className="absolute bottom-4 left-8 w-16 h-4 bg-slate-400/40 dark:bg-slate-600/40 rounded-b-xl border border-slate-400/30 flex items-center justify-center overflow-hidden">
-            <div className="w-8 h-8 rounded-full border border-amber-500/60 anim-oil-ripple" />
-          </div>
-          <div className="absolute -bottom-1 left-4 w-24 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Oil Service
-          </div>
-        </div>
-      </div>
-
-      {/* STATION 2: Tyre Change Animated Station (Bottom Left Background) */}
-      <div className="hidden lg:flex flex-col items-center absolute bottom-28 left-10 opacity-25 dark:opacity-20 pointer-events-none select-none">
-        <div className="relative w-36 h-36 flex items-center justify-center">
-          {/* Spinning Tyre */}
-          <div className="text-5xl anim-tyre-spin">
-            🛞
-          </div>
-          {/* Impact Lug Wrench Tool */}
-          <div className="absolute top-3 right-4 text-3xl anim-wrench-impact">
-            🔧
-          </div>
-          {/* Spark Burst from tightening */}
-          <div className="absolute top-8 right-8 text-amber-400 text-sm anim-spark">
-            ✨
-          </div>
-          <div className="absolute -bottom-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Tyre & Wheel
-          </div>
-        </div>
-      </div>
-
-      {/* STATION 3: Mechanical Transmission Tuning (Mid Right Background) */}
-      <div className="hidden xl:flex flex-col items-center absolute top-[52%] right-8 opacity-20 dark:opacity-15 pointer-events-none select-none">
-        <div className="relative w-32 h-32 flex items-center justify-center">
-          <div className="absolute text-4xl anim-gear-cw -top-1 left-3 text-blue-500/50">
-            ⚙️
-          </div>
-          <div className="absolute text-3xl anim-gear-ccw top-7 right-4 text-slate-500/50">
-            ⚙️
-          </div>
-          <div className="absolute bottom-2 left-6 text-2xl anim-spanner text-slate-400/60">
-            🛠️
-          </div>
-          <div className="absolute -bottom-1 text-center text-[10px] font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
-            Inspection
-          </div>
-        </div>
-      </div>
-
-      {/* Floating particles rising upward */}
-      {DASH_PARTICLES.map((p, i) => (
-        <div
-          key={i}
-          className="dash-icon-particle select-none"
-          style={{ fontSize: p.size }}
-          aria-hidden="true"
-        >
-          {p.icon}
-        </div>
-      ))}
-    </div>
-  );
-}
-
-// Vehicle image map for known models with accurate, verified images
+// Vehicle image map for known models
 const MODEL_IMAGE_MAP: Record<string, string> = {
   // Cars
   'creta': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
@@ -140,63 +45,22 @@ const MODEL_IMAGE_MAP: Record<string, string> = {
   'safari': 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
   'altroz': 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
   'tiago': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
-  'curvv': 'https://images.unsplash.com/photo-1563720223185-11003d516935?w=800&auto=format&fit=crop&q=80',
   'swift': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
   'baleno': 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&auto=format&fit=crop&q=80',
   'brezza': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
   'grand vitara': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
-  'fronx': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&auto=format&fit=crop&q=80',
-  'dzire': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
-  'ertiga': 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
-  'jimny': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
-  'wagonr': 'https://images.unsplash.com/photo-1541899481282-d53bffe3c35d?w=800&auto=format&fit=crop&q=80',
   'thar': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
   'xuv700': 'https://images.unsplash.com/photo-1503376780353-7e6692767b70?w=800&auto=format&fit=crop&q=80',
   'scorpio': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
-  'bolero': 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
-  'xuv 3xo': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'fortuner': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
-  'innova': 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
-  'hyryder': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'glanza': 'https://images.unsplash.com/photo-1619767886558-efdc259cde1a?w=800&auto=format&fit=crop&q=80',
-  'seltos': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'sonet': 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?w=800&auto=format&fit=crop&q=80',
-  'carens': 'https://images.unsplash.com/photo-1519641471654-76ce0107ad1b?w=800&auto=format&fit=crop&q=80',
-  'hector': 'https://images.unsplash.com/photo-1533473359331-0135ef1b58bf?w=800&auto=format&fit=crop&q=80',
-  'astor': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
   'city': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&auto=format&fit=crop&q=80',
-  'elevate': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'amaze': 'https://images.unsplash.com/photo-1549399542-7e3f8b79c341?w=800&auto=format&fit=crop&q=80',
-  'taigun': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'virtus': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&auto=format&fit=crop&q=80',
-  'kushaq': 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80',
-  'slavia': 'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?w=800&auto=format&fit=crop&q=80',
 
   // Bikes & Scooters
   'classic 350': 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80',
   'hunter': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
   'bullet': 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80',
-  'meteor': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
-  'himalayan': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'splendor': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
-  'xpulse': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
   'activa': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'shine': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
   'jupiter': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'ntorq': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'apache': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'raider': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
   'pulsar': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'access': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'r15': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'mt-15': 'https://images.unsplash.com/photo-1558981806-ec527fa84c39?w=800&auto=format&fit=crop&q=80',
-  'duke': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'rc 390': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
-  'ninja': 'https://images.unsplash.com/photo-1568772585407-9361f9bf3a87?w=800&auto=format&fit=crop&q=80',
-  'speed 400': 'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=800&auto=format&fit=crop&q=80',
-  'ather': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'ola': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
-  'vespa': 'https://images.unsplash.com/photo-1596706060010-8501e913a89e?w=800&auto=format&fit=crop&q=80',
 };
 
 function getVehicleImage(vehicle: Vehicle): string {
@@ -205,7 +69,6 @@ function getVehicleImage(vehicle: Vehicle): string {
   for (const [key, url] of Object.entries(MODEL_IMAGE_MAP)) {
     if (modelLower.includes(key)) return url;
   }
-  // Fallback by type — use user-uploaded default images
   if (vehicle.type === 'BIKE' || vehicle.type === 'SCOOTER') {
     return '/default-bike.png';
   }
@@ -230,7 +93,6 @@ export default function DashboardPage() {
     const session = getClientSession();
     setUser(session);
 
-    // Determine greeting
     const hour = new Date().getHours();
     if (hour < 12) setTimeGreeting('Good morning');
     else if (hour < 17) setTimeGreeting('Good afternoon');
@@ -301,84 +163,81 @@ export default function DashboardPage() {
   const userName = user?.name ? user.name.split(' ')[0] : 'Motorist';
 
   return (
-    <div className="min-h-screen flex flex-col gradient-mesh relative">
-      {/* Animated background */}
-      <DashboardBackground />
-
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950">
       <Navbar />
 
-      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full relative z-10">
-        {/* Welcome Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
+      <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
+        {/* Page Header */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8 pb-6 border-b border-slate-200 dark:border-slate-800">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-950 tracking-tight">
-              {timeGreeting}, {userName} 👋
+            <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+              {timeGreeting}, {userName}
             </h1>
-            <p className="text-xs sm:text-sm text-slate-600 font-semibold mt-1">
-              Your vehicle telemetry is analyzed and synchronized with manufacturer guidelines.
+            <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+              Vehicle telemetry status and scheduled maintenance intervals.
             </p>
           </div>
 
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5">
             <a
               href="/onboarding/vehicle"
-              className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-xs flex items-center gap-1.5 transition-all"
+              className="px-3.5 py-2 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-300 shadow-xs inline-flex items-center gap-1.5 transition-colors"
             >
-              <Plus className="w-4 h-4 text-blue-600" />
+              <Plus className="w-3.5 h-3.5 text-slate-500" />
               Add Vehicle
             </a>
             <a
               href="/services/book"
-              className="px-5 py-2.5 rounded-xl gradient-primary text-white text-xs font-bold shadow-md shadow-blue-500/20 hover:opacity-95 transition-opacity flex items-center gap-1.5"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs transition-colors inline-flex items-center gap-1.5"
             >
-              <Wrench className="w-4 h-4" />
+              <Wrench className="w-3.5 h-3.5" />
               Book Service
             </a>
           </div>
         </div>
 
-        {/* Loading skeleton */}
+        {/* Loading state */}
         {isLoading && (
           <div className="space-y-4">
             {[1, 2, 3].map((i) => (
-              <div key={i} className="glass-card p-6 border border-white animate-pulse">
-                <div className="h-4 bg-slate-200 dark:bg-slate-700 rounded-full w-1/3 mb-3"></div>
-                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded-full w-2/3"></div>
+              <div key={i} className="bg-white dark:bg-slate-900 rounded-xl p-6 border border-slate-200 dark:border-slate-800 animate-pulse">
+                <div className="h-4 bg-slate-200 dark:bg-slate-800 rounded w-1/4 mb-3" />
+                <div className="h-3 bg-slate-100 dark:bg-slate-800 rounded w-1/2" />
               </div>
             ))}
           </div>
         )}
 
-        {/* Empty State if no vehicles */}
+        {/* Empty State */}
         {!isLoading && vehicles.length === 0 && (
-          <div className="glass-card p-12 text-center max-w-xl mx-auto my-12 border border-white dark:border-slate-700">
-            <div className="w-16 h-16 rounded-3xl bg-blue-50 dark:bg-blue-900/30 text-blue-600 flex items-center justify-center mx-auto mb-4 font-bold shadow-inner">
-              <Car className="w-8 h-8" />
+          <div className="bg-white dark:bg-slate-900 rounded-xl p-12 text-center max-w-lg mx-auto my-12 border border-slate-200 dark:border-slate-800 shadow-sm">
+            <div className="w-12 h-12 rounded-lg bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center mx-auto mb-4">
+              <Car className="w-6 h-6" />
             </div>
-            <h3 className="text-lg font-bold text-slate-900 dark:text-slate-100 mb-2">No Vehicles Registered Yet</h3>
-            <p className="text-xs text-slate-500 mb-6 leading-relaxed">
-              Add your car or motorcycle to start receiving intelligent service alerts, component wear diagnostics, and 1-click slot booking.
+            <h3 className="text-base font-bold text-slate-900 dark:text-slate-100 mb-1">No Vehicles Registered</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 leading-relaxed">
+              Register your vehicle to track maintenance intervals, monitor component wear, and schedule service appointments.
             </p>
             <a
               href="/onboarding/vehicle"
-              className="px-6 py-3 rounded-xl gradient-primary text-white text-xs font-bold shadow-md hover:opacity-95 inline-flex items-center gap-2"
+              className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs inline-flex items-center gap-1.5"
             >
-              <Plus className="w-4 h-4" />
+              <Plus className="w-3.5 h-3.5" />
               Add Your First Vehicle
             </a>
           </div>
         )}
 
         {/* Loaded State */}
-        {selectedVehicle && (
+        {!isLoading && selectedVehicle && (
           <div className="space-y-8">
-            {/* VEHICLES CAROUSEL / SWITCHER */}
+            {/* Vehicle Selector Tabs */}
             <div>
               <div className="flex items-center justify-between mb-3">
-                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500">
+                <span className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
                   Registered Vehicles ({vehicles.length})
-                </h3>
-                <span className="text-[11px] text-slate-400">Click to switch telemetry view</span>
+                </span>
+                <span className="text-xs text-slate-400">Select to view telemetry</span>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -391,60 +250,58 @@ export default function DashboardPage() {
                   return (
                     <button
                       key={v.id}
+                      type="button"
                       onClick={() => {
                         setSelectedVehicle(v);
                         setNewKmInput(v.currentKm);
                       }}
-                      className={`p-0 rounded-2xl text-left transition-all relative overflow-hidden border ${
+                      className={`text-left rounded-xl border transition-all overflow-hidden bg-white dark:bg-slate-900 cursor-pointer ${
                         isSelected
-                          ? 'glass-card border-blue-500 ring-2 ring-blue-500/20 shadow-md'
-                          : 'bg-white/70 dark:bg-slate-800/60 hover:bg-white dark:hover:bg-slate-700 border-slate-200/80 dark:border-slate-700/80 shadow-xs'
+                          ? 'border-blue-600 ring-2 ring-blue-600/20 shadow-sm'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
                       }`}
                     >
-                      {/* Vehicle Image Banner */}
-                      <div className="relative h-28 overflow-hidden rounded-t-2xl">
+                      <div className="relative h-28 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                         <img
                           src={vehicleImg}
                           alt={`${v.brandName} ${v.modelName}`}
                           className="w-full h-full object-cover"
                           onError={(e) => {
                             const el = e.currentTarget as HTMLImageElement;
-                            // Use type-appropriate local default
                             el.src = (v.type === 'BIKE' || v.type === 'SCOOTER') ? '/default-bike.png' : '/default-car.png';
                           }}
                         />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-                        {/* Status badge over image */}
                         <div className="absolute top-2 right-2">
                           {isOverdue ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-rose-500 text-white flex items-center gap-1 shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" /> Overdue
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-600 text-white">
+                              Overdue
                             </span>
                           ) : isDueSoon ? (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-500 text-white flex items-center gap-1 shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping" /> Due in {v.daysRemaining}d
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-amber-500 text-white">
+                              Due in {v.daysRemaining}d
                             </span>
                           ) : (
-                            <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500 text-white flex items-center gap-1 shadow-sm">
-                              <span className="w-1.5 h-1.5 rounded-full bg-white" /> Good
+                            <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-600 text-white">
+                              Good
                             </span>
                           )}
                         </div>
-                        {/* Vehicle name on image */}
-                        <div className="absolute bottom-2 left-3">
-                          <h4 className="font-extrabold text-sm text-white drop-shadow">
-                            {v.brandName} {v.modelName}
-                          </h4>
-                          <p className="text-[10px] text-white/80 font-mono">
-                            {v.registrationNo} • {v.purchaseYear}
-                          </p>
-                        </div>
                       </div>
 
-                      {/* Bottom metrics */}
-                      <div className="px-4 py-3 flex items-center justify-between text-xs text-slate-600 dark:text-slate-400">
-                        <span>Odometer: <strong className="text-slate-900 dark:text-slate-100">{v.currentKm.toLocaleString()} KM</strong></span>
-                        <span>Health: <strong className="text-emerald-600">{v.healthScore}%</strong></span>
+                      <div className="p-3">
+                        <div className="flex items-start justify-between gap-2">
+                          <div>
+                            <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                              {v.brandName} {v.modelName}
+                            </h4>
+                            <p className="text-xs text-slate-500 font-mono mt-0.5">
+                              {v.registrationNo} • {v.purchaseYear}
+                            </p>
+                          </div>
+                          <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 font-mono">
+                            {v.currentKm.toLocaleString()} KM
+                          </span>
+                        </div>
                       </div>
                     </button>
                   );
@@ -452,250 +309,296 @@ export default function DashboardPage() {
               </div>
             </div>
 
-            {/* STAT CARDS (5 Core metrics) */}
+            {/* Active Vehicle Specifications Strip */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="flex flex-wrap items-center gap-3 text-xs">
+                <span className="font-mono font-bold text-slate-900 dark:text-slate-100 bg-slate-100 dark:bg-slate-800 px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700">
+                  {selectedVehicle.registrationNo}
+                </span>
+                <span className="text-slate-700 dark:text-slate-300 font-medium">
+                  {selectedVehicle.brandName} {selectedVehicle.modelName}
+                </span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-500">{selectedVehicle.fuelType}</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-500 capitalize">{selectedVehicle.vehicleClass}</span>
+                <span className="text-slate-400">•</span>
+                <span className="text-slate-500">Year {selectedVehicle.purchaseYear}</span>
+              </div>
+
+              <div className="flex items-center gap-3 shrink-0">
+                <span className="text-xs text-slate-600 dark:text-slate-400">
+                  Odometer: <strong className="text-slate-900 dark:text-slate-100 font-mono">{selectedVehicle.currentKm.toLocaleString()} KM</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setShowKmModal(true)}
+                  className="px-3 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors inline-flex items-center gap-1.5"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-slate-500" />
+                  Update KM
+                </button>
+              </div>
+            </div>
+
+            {/* 5 Core KPI Metrics Cards */}
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
               {/* Card 1: Next Service */}
-              <div className="bg-white/95 rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md transition-all">
-                <div className="flex items-center gap-2 text-slate-700 mb-2">
-                  <Clock className="w-4 h-4 text-blue-600" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Next Service</span>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mb-1.5">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <span>Next Service</span>
                 </div>
-                <div className="text-2xl font-black text-slate-950">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
                   {selectedVehicle.daysRemaining < 0
                     ? `${Math.abs(selectedVehicle.daysRemaining)}d ago`
                     : `${selectedVehicle.daysRemaining} days`}
                 </div>
-                <p className="text-xs font-semibold text-slate-600 mt-1">
-                  Target: <span className="text-slate-900 font-bold">{selectedVehicle.nextServiceDate}</span>
+                <p className="text-xs text-slate-500 mt-1">
+                  Target: <span className="text-slate-700 dark:text-slate-300 font-medium">{selectedVehicle.nextServiceDate}</span>
                 </p>
               </div>
 
-              {/* Card 2: Service KM */}
-              <div className="bg-white/95 rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md transition-all">
-                <div className="flex items-center gap-2 text-slate-700 mb-2">
-                  <Gauge className="w-4 h-4 text-cyan-600" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Service KM</span>
+              {/* Card 2: Distance Remaining */}
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mb-1.5">
+                  <Gauge className="w-4 h-4 text-slate-400" />
+                  <span>Distance to Service</span>
                 </div>
-                <div className="text-2xl font-black text-slate-950">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
                   {selectedVehicle.kmRemaining.toLocaleString()}
-                  <span className="text-xs font-bold text-slate-600 ml-1">KM left</span>
+                  <span className="text-xs font-normal text-slate-500 ml-1">KM</span>
                 </div>
-                <p className="text-xs font-semibold text-slate-600 mt-1">
-                  At <span className="text-slate-900 font-bold">{selectedVehicle.nextServiceKm.toLocaleString()} KM</span> milestone
+                <p className="text-xs text-slate-500 mt-1">
+                  At <span className="text-slate-700 dark:text-slate-300 font-medium font-mono">{selectedVehicle.nextServiceKm.toLocaleString()} KM</span>
                 </p>
               </div>
 
               {/* Card 3: Estimated Cost */}
-              <div className="bg-white/95 rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md transition-all">
-                <div className="flex items-center gap-2 text-slate-700 mb-2">
-                  <Wrench className="w-4 h-4 text-amber-500" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Estimated Cost</span>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mb-1.5">
+                  <Wrench className="w-4 h-4 text-slate-400" />
+                  <span>Estimated Cost</span>
                 </div>
-                <div className="text-2xl font-black text-slate-950">
+                <div className="text-2xl font-bold text-slate-900 dark:text-slate-100">
                   ₹3,500 – ₹4,800
                 </div>
-                <p className="text-xs font-semibold text-slate-600 mt-1">Based on class & parts</p>
+                <p className="text-xs text-slate-500 mt-1">Standard periodic service</p>
               </div>
 
-              {/* Card 4: Vehicle Health */}
-              <div className="bg-white/95 rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md transition-all">
-                <div className="flex items-center gap-2 text-slate-700 mb-2">
-                  <Heart className="w-4 h-4 text-rose-500 fill-rose-500/20" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Health Score</span>
+              {/* Card 4: Health Score */}
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mb-1.5">
+                  <Heart className="w-4 h-4 text-slate-400" />
+                  <span>Health Score</span>
                 </div>
                 <div className="flex items-baseline gap-2">
-                  <span className="text-2xl font-black text-emerald-700">
+                  <span className="text-2xl font-bold text-slate-900 dark:text-slate-100 font-mono">
                     {selectedVehicle.healthScore}%
                   </span>
-                  <span className="text-xs font-extrabold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                  <span className="text-xs font-medium text-emerald-600 dark:text-emerald-400">
                     {selectedVehicle.healthRating}
                   </span>
                 </div>
-                <div className="w-full bg-slate-200 h-2 rounded-full mt-2.5 overflow-hidden">
+                <div className="w-full bg-slate-100 dark:bg-slate-800 h-1.5 rounded-full mt-2 overflow-hidden">
                   <div
-                    className="gradient-primary h-full rounded-full"
+                    className="bg-emerald-600 h-full rounded-full"
                     style={{ width: `${selectedVehicle.healthScore}%` }}
                   />
                 </div>
               </div>
 
               {/* Card 5: Last Service */}
-              <div className="bg-white/95 rounded-2xl p-4 border border-slate-200/90 shadow-xs hover:shadow-md transition-all">
-                <div className="flex items-center gap-2 text-slate-700 mb-2">
-                  <History className="w-4 h-4 text-purple-600" />
-                  <span className="text-[11px] font-extrabold uppercase tracking-wider text-slate-700">Last Service</span>
+              <div className="bg-white dark:bg-slate-900 rounded-xl p-4 border border-slate-200 dark:border-slate-800 shadow-xs">
+                <div className="flex items-center gap-2 text-slate-500 text-xs font-medium mb-1.5">
+                  <History className="w-4 h-4 text-slate-400" />
+                  <span>Last Service</span>
                 </div>
-                <div className="text-base font-black text-slate-950 truncate">
+                <div className="text-base font-bold text-slate-900 dark:text-slate-100 truncate mt-1">
                   {selectedVehicle.lastServiceDate || 'None recorded'}
                 </div>
-                <p className="text-xs font-semibold text-slate-600 mt-1">
-                  At <span className="text-slate-900 font-bold">{selectedVehicle.lastServiceKm ? `${selectedVehicle.lastServiceKm.toLocaleString()} KM` : '—'}</span>
+                <p className="text-xs text-slate-500 mt-1">
+                  At <span className="font-mono text-slate-700 dark:text-slate-300">{selectedVehicle.lastServiceKm ? `${selectedVehicle.lastServiceKm.toLocaleString()} KM` : '—'}</span>
                 </p>
               </div>
             </div>
 
-            {/* SMART REMINDER BANNER */}
-            <div className="glass-card p-6 border-l-4 border-l-[#0B5CFF] border-white dark:border-slate-700/50 shadow-lg relative overflow-hidden">
+            {/* Maintenance Advisory Banner */}
+            <div className="bg-white dark:bg-slate-900 rounded-xl p-5 border-l-4 border-l-blue-600 border border-slate-200 dark:border-slate-800 shadow-xs">
               <div className="flex flex-col md:flex-row md:items-center justify-between gap-6">
                 <div className="space-y-2">
                   <div className="flex items-center gap-2">
-                    <span className="w-7 h-7 rounded-lg bg-blue-100 dark:bg-blue-900/40 text-blue-600 flex items-center justify-center font-bold">
-                      <Bell className="w-4 h-4" />
+                    <span className="w-6 h-6 rounded-md bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center font-bold">
+                      <Bell className="w-3.5 h-3.5" />
                     </span>
-                    <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100">
-                      Smart Service Reminder — {selectedVehicle.brandName} {selectedVehicle.modelName}
+                    <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                      Recommended Service Package — {selectedVehicle.brandName} {selectedVehicle.modelName}
                     </h3>
                   </div>
 
-                  <p className="text-xs text-slate-600 dark:text-slate-400 font-medium">Recommended because:</p>
-                  <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 pl-5 list-disc">
-                    <li>
-                      {selectedVehicle.nextServiceKm.toLocaleString()} km milestone approaching (current reading: {selectedVehicle.currentKm.toLocaleString()} km)
-                    </li>
-                    <li>Engine oil and OEM synthetic filter replacement</li>
-                    <li>Brake pads thickness and disc rotor safety check</li>
-                    <li>Tyre pressure and computerized alignment check</li>
+                  <p className="text-xs text-slate-600 dark:text-slate-400">
+                    Manufacturer periodic checklist for the upcoming {selectedVehicle.nextServiceKm.toLocaleString()} KM milestone:
+                  </p>
+                  <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1 list-disc list-inside">
+                    <li>Full synthetic engine oil replacement & OEM oil filter</li>
+                    <li>Brake pad wear measurement and rotor safety check</li>
+                    <li>Air filter and cabin pollen filter inspection</li>
+                    <li>Suspension alignment and tire pressure calibration</li>
                   </ul>
                 </div>
 
-                <div className="flex flex-col sm:flex-row items-center gap-3 shrink-0">
+                <div className="flex items-center gap-2.5 shrink-0">
                   <button
+                    type="button"
                     onClick={() => setShowKmModal(true)}
-                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-700 dark:text-slate-300 shadow-xs flex items-center justify-center gap-1.5"
+                    className="px-3.5 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
                   >
-                    <RefreshCw className="w-3.5 h-3.5 text-blue-600" />
-                    Update Current KM
+                    Update KM
                   </button>
-
                   <a
                     href={`/services/book?vehicleId=${selectedVehicle.id}`}
-                    className="w-full sm:w-auto px-6 py-2.5 rounded-xl gradient-primary text-white text-xs font-bold shadow-md shadow-blue-500/25 hover:opacity-95 flex items-center justify-center gap-2"
+                    className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs inline-flex items-center gap-1.5 transition-colors"
                   >
-                    Book Service Now
-                    <ArrowRight className="w-4 h-4" />
+                    Schedule Service
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </a>
                 </div>
               </div>
             </div>
 
-            {/* UPCOMING BOOKING & QUICK DIAGNOSTICS */}
+            {/* 2-Column Section: Appointment & Component Diagnostics */}
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-              {/* Upcoming Booking Card */}
-              <div className="lg:col-span-6 glass-card p-6 border border-white dark:border-slate-700/50">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <Calendar className="w-4 h-4 text-blue-600" />
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">Upcoming Service Appointment</h3>
+              {/* Upcoming Appointment */}
+              <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <Calendar className="w-4 h-4 text-slate-500" />
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">Service Appointment</h3>
+                    </div>
+                    {upcomingBooking && (
+                      <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-800">
+                        Confirmed
+                      </span>
+                    )}
                   </div>
-                  {upcomingBooking && (
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-100 text-emerald-800">
-                      Confirmed
-                    </span>
-                  )}
-                </div>
 
-                {upcomingBooking ? (
-                  <div className="space-y-4">
-                    <div className="flex items-start justify-between gap-4">
-                      <div>
-                        <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{upcomingBooking.vehicleName}</h4>
-                        <p className="text-xs text-slate-500">{upcomingBooking.vehicleReg}</p>
-                        <div className="mt-2 flex items-center gap-2 text-xs font-bold text-blue-700">
-                          <MapPin className="w-3.5 h-3.5" />
-                          <span>{upcomingBooking.centerName}</span>
+                  {upcomingBooking ? (
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between gap-4">
+                        <div>
+                          <h4 className="font-bold text-sm text-slate-900 dark:text-slate-100">{upcomingBooking.vehicleName}</h4>
+                          <p className="text-xs text-slate-500 font-mono">{upcomingBooking.vehicleReg}</p>
+                          <div className="mt-2 flex items-center gap-1.5 text-xs text-slate-600 dark:text-slate-400">
+                            <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                            <span>{upcomingBooking.centerName}</span>
+                          </div>
+                        </div>
+
+                        <div className="text-right">
+                          <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
+                            {upcomingBooking.serviceDate}
+                          </span>
+                          <span className="text-xs text-slate-500 block">{upcomingBooking.serviceTime}</span>
+                          <span className="text-[10px] font-mono text-slate-400 mt-1 block">
+                            ID: {upcomingBooking.bookingCode}
+                          </span>
                         </div>
                       </div>
 
-                      <div className="text-right">
-                        <span className="text-xs font-bold text-slate-900 dark:text-slate-100 block">
-                          {upcomingBooking.serviceDate}
+                      <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800 text-xs">
+                        <span className="text-slate-500 block text-[10px] font-medium uppercase mb-1">
+                          Booked Services:
                         </span>
-                        <span className="text-xs text-slate-500 block">{upcomingBooking.serviceTime}</span>
-                        <span className="text-[10px] font-mono text-slate-400 mt-1 block">
-                          ID: {upcomingBooking.bookingCode}
-                        </span>
+                        <p className="font-medium text-slate-700 dark:text-slate-300">{upcomingBooking.services.join(', ')}</p>
                       </div>
                     </div>
-
-                    <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/70 border border-slate-100 dark:border-slate-700 text-xs">
-                      <span className="text-slate-400 block text-[10px] font-semibold uppercase mb-1">
-                        Selected Services:
-                      </span>
-                      <p className="font-medium text-slate-700 dark:text-slate-300">{upcomingBooking.services.join(', ')}</p>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-2">
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="w-8 h-8 text-slate-300 mx-auto mb-2" />
+                      <p className="text-xs text-slate-500 mb-4">No active service appointment booked.</p>
                       <a
-                        href="/bookings"
-                        className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-1"
+                        href={`/services/book?vehicleId=${selectedVehicle.id}`}
+                        className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs"
                       >
-                        Manage Booking (Reschedule/Cancel) →
+                        Book a Slot
                       </a>
                     </div>
-                  </div>
-                ) : (
-                  <div className="text-center py-8">
-                    <Calendar className="w-10 h-10 text-slate-300 mx-auto mb-2" />
-                    <p className="text-xs text-slate-500 mb-4">No active service appointment booked.</p>
+                  )}
+                </div>
+
+                {upcomingBooking && (
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex items-center justify-between">
                     <a
-                      href={`/services/book?vehicleId=${selectedVehicle.id}`}
-                      className="px-4 py-2 rounded-xl gradient-primary text-white text-xs font-bold shadow-xs hover:opacity-95"
+                      href="/bookings"
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-1"
                     >
-                      Book a Slot
+                      Manage Booking →
                     </a>
                   </div>
                 )}
               </div>
 
-              {/* Component Health Snapshot */}
-              <div className="lg:col-span-6 glass-card p-6 border border-white dark:border-slate-700/50">
-                <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-700">
-                  <div className="flex items-center gap-2">
-                    <Heart className="w-4 h-4 text-rose-500" />
-                    <h3 className="font-extrabold text-sm text-slate-900 dark:text-slate-100">
-                      Component Wear Telemetry ({selectedVehicle.brandName})
-                    </h3>
+              {/* Component Wear Telemetry */}
+              <div className="lg:col-span-6 bg-white dark:bg-slate-900 rounded-xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between">
+                <div>
+                  <div className="flex items-center justify-between mb-4 pb-3 border-b border-slate-100 dark:border-slate-800">
+                    <div className="flex items-center gap-2">
+                      <ShieldCheck className="w-4 h-4 text-slate-500" />
+                      <h3 className="font-bold text-sm text-slate-900 dark:text-slate-100">
+                        Component Diagnostics ({selectedVehicle.brandName})
+                      </h3>
+                    </div>
+                    <a
+                      href={`/vehicles/${selectedVehicle.id}`}
+                      className="text-xs font-semibold text-blue-600 hover:text-blue-700 dark:text-blue-400 flex items-center gap-0.5"
+                    >
+                      Details <ChevronRight className="w-3.5 h-3.5" />
+                    </a>
                   </div>
-                  <a
-                    href={`/vehicles/${selectedVehicle.id}`}
-                    className="text-xs font-bold text-blue-600 hover:underline flex items-center gap-0.5"
-                  >
-                    Full Details <ChevronRight className="w-3.5 h-3.5" />
-                  </a>
+
+                  <div className="space-y-2.5">
+                    {selectedVehicle.components.slice(0, 5).map((comp) => {
+                      const isGood = comp.status === 'GOOD';
+                      const isDueSoon = comp.status === 'DUE_SOON';
+                      const wearPercent = isGood ? 85 : isDueSoon ? 50 : 20;
+
+                      return (
+                        <div
+                          key={comp.component}
+                          className="p-2.5 rounded-lg border border-slate-100 dark:border-slate-800 text-xs bg-slate-50/50 dark:bg-slate-800/40"
+                        >
+                          <div className="flex items-center justify-between mb-1.5">
+                            <span className="font-semibold text-slate-800 dark:text-slate-200">{comp.label}</span>
+                            <span
+                              className={`px-2 py-0.5 rounded text-[10px] font-semibold ${
+                                isGood
+                                  ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+                                  : isDueSoon
+                                  ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
+                                  : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
+                              }`}
+                            >
+                              {comp.status === 'GOOD' ? 'Good' : comp.status === 'DUE_SOON' ? 'Due Soon' : 'Overdue'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-slate-200 dark:bg-slate-700 h-1 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full ${
+                                isGood ? 'bg-emerald-600' : isDueSoon ? 'bg-amber-500' : 'bg-rose-600'
+                              }`}
+                              style={{ width: `${wearPercent}%` }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
 
-                <div className="space-y-3">
-                  {selectedVehicle.components.slice(0, 4).map((comp) => {
-                    const isGood = comp.status === 'GOOD';
-                    const isDueSoon = comp.status === 'DUE_SOON';
-                    return (
-                      <div
-                        key={comp.component}
-                        className="flex items-center justify-between p-2.5 rounded-xl bg-white/70 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-700 text-xs"
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span
-                            className={`w-2.5 h-2.5 rounded-full ${
-                              isGood ? 'bg-emerald-500' : isDueSoon ? 'bg-amber-500' : 'bg-rose-500'
-                            }`}
-                          />
-                          <span className="font-bold text-slate-800 dark:text-slate-200">{comp.label}</span>
-                        </div>
-
-                        <span
-                          className={`px-2 py-0.5 rounded-md text-[10px] font-bold ${
-                            isGood
-                              ? 'bg-emerald-50 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
-                              : isDueSoon
-                              ? 'bg-amber-50 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400'
-                              : 'bg-rose-50 dark:bg-rose-900/30 text-rose-700 dark:text-rose-400'
-                          }`}
-                        >
-                          {comp.status === 'GOOD' ? 'Good' : comp.status === 'DUE_SOON' ? 'Due Soon' : 'Overdue'}
-                        </span>
-                      </div>
-                    );
-                  })}
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 text-[11px] text-slate-400 flex items-center justify-between">
+                  <span>Sensor checks synchronized with vehicle mileage</span>
+                  <span className="font-medium text-slate-500">OBD-II Profile Verified</span>
                 </div>
               </div>
             </div>
@@ -705,34 +608,34 @@ export default function DashboardPage() {
 
       {/* UPDATE KM MODAL */}
       {showKmModal && selectedVehicle && (
-        <div className="fixed inset-0 z-50 bg-slate-950/40 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
-          <div className="w-full max-w-sm glass-dropdown rounded-3xl p-6 shadow-2xl border border-white dark:border-slate-700">
-            <h3 className="font-extrabold text-base text-slate-900 dark:text-slate-100 mb-1">Update Current KM</h3>
-            <p className="text-xs text-slate-500 mb-4">
-              Enter latest dashboard reading for {selectedVehicle.brandName} {selectedVehicle.modelName}.
+        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-xl p-6 shadow-xl border border-slate-200 dark:border-slate-800">
+            <h3 className="font-bold text-base text-slate-900 dark:text-slate-100 mb-1">Update Current KM</h3>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+              Enter current odometer reading for {selectedVehicle.brandName} {selectedVehicle.modelName}.
             </p>
 
             {kmError && (
-              <div className="mb-3 p-2.5 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
+              <div className="mb-3 p-2.5 rounded-lg bg-rose-50 border border-rose-200 text-xs text-rose-700 font-medium">
                 {kmError}
               </div>
             )}
 
             <div className="mb-4">
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Current Odometer Reading
+              <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-1">
+                Odometer Reading
               </label>
               <div className="relative">
                 <input
                   type="number"
                   value={newKmInput}
                   onChange={(e) => setNewKmInput(Number(e.target.value))}
-                  className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-xl px-3.5 py-2 text-xs font-bold text-slate-900 dark:text-slate-100 focus:outline-hidden focus:border-blue-500"
+                  className="w-full bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded-lg px-3 py-2 text-sm font-semibold text-slate-900 dark:text-slate-100 focus:outline-hidden focus:border-blue-600"
                 />
-                <span className="absolute right-3.5 top-2 text-xs font-bold text-slate-400">KM</span>
+                <span className="absolute right-3 top-2.5 text-xs text-slate-400">KM</span>
               </div>
-              <span className="text-[10px] text-slate-400 mt-1 block">
-                Previous: {selectedVehicle.currentKm.toLocaleString()} KM
+              <span className="text-[11px] text-slate-400 mt-1 block">
+                Last recorded: {selectedVehicle.currentKm.toLocaleString()} KM
               </span>
             </div>
 
@@ -740,7 +643,7 @@ export default function DashboardPage() {
               <button
                 type="button"
                 onClick={() => setShowKmModal(false)}
-                className="px-3.5 py-2 rounded-xl text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800"
+                className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100 dark:text-slate-400 dark:hover:bg-slate-800"
               >
                 Cancel
               </button>
@@ -748,16 +651,16 @@ export default function DashboardPage() {
                 type="button"
                 disabled={isUpdatingKm}
                 onClick={handleUpdateKm}
-                className="px-4 py-2 rounded-xl gradient-primary text-white text-xs font-bold shadow-xs hover:opacity-95"
+                className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-xs"
               >
-                {isUpdatingKm ? 'Recalculating...' : 'Update & Recalculate'}
+                {isUpdatingKm ? 'Updating...' : 'Save & Update'}
               </button>
             </div>
           </div>
         </div>
       )}
 
-      <Chatbot />      
+      <Chatbot />
       <Footer />
     </div>
   );
