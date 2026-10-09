@@ -335,3 +335,197 @@
 .animate-service-glow {
   animation: pulseServiceGlow 8s ease-in-out infinite;
 }
+
+/* ══════════════════════════════════════════════
+   DISNEY PIXAR CARS MOVIE PHYSICS & STAGE ANIMATIONS
+   Reference: Michael Schumacher Ferrari Scene (Pixar Cars)
+   - Dynamic chassis suspension pitch, roll & yaw
+   - Conversational head tilt & body acting while talking
+   - Braking dive, rebound & weight transfer arrival
+   - Ferrari flat-plane V8 throttle rev & idle breathing
+   ══════════════════════════════════════════════ */
+
+/* Drive in from left with realistic high-speed braking dive & suspension rebound */
+@keyframes carDriveInLeft {
+  0% {
+    transform: translateX(-180%) rotate(5deg) scale(0.92);
+    opacity: 0;
+  }
+  55% {
+    /* Hard braking into center: front nose dips down, weight transfers forward */
+    transform: translateX(18px) rotate(-4.5deg) translateY(12px) scale(1.05, 0.94);
+    opacity: 1;
+  }
+  75% {
+    /* Suspension rebounds up with elastic spring overshoot */
+    transform: translateX(-6px) rotate(2.8deg) translateY(-8px) scale(0.97, 1.03);
+  }
+  88% {
+    /* Secondary micro-settle */
+    transform: translateX(3px) rotate(-1deg) translateY(2px) scale(1.01, 0.99);
+  }
+  100% {
+    /* Resting at center stage ready to talk */
+    transform: translateX(0%) rotate(0deg) translateY(0) scale(1);
+    opacity: 1;
+  }
+}
+.animate-car-drive-in {
+  animation: carDriveInLeft 1.15s cubic-bezier(0.16, 0.9, 0.28, 1.25) forwards;
+}
+
+/* Engine idling rumble & suspension breathing */
+@keyframes carEngineIdle {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg);
+  }
+  25% {
+    transform: translateY(-2.5px) rotate(0.4deg);
+  }
+  50% {
+    transform: translateY(0.8px) rotate(-0.35deg);
+  }
+  75% {
+    transform: translateY(-1.8px) rotate(0.25deg);
+  }
+}
+.animate-car-idle {
+  animation: carEngineIdle 3s ease-in-out infinite;
+}
+
+/* Speaking acting: organic chassis sway, pitch forward ("leaning in"), and syllable bounce */
+@keyframes carSpeakingBounce {
+  0%, 100% {
+    transform: translateY(0px) rotate(0deg) scale(1);
+  }
+  14% {
+    /* Leaning in and swaying left with opening syllable */
+    transform: translateY(-9px) rotate(-2.4deg) scale(1.025, 0.975);
+  }
+  32% {
+    /* Dip on emphatic word with forward pitch */
+    transform: translateY(3px) rotate(1.4deg) scale(0.99, 1.015);
+  }
+  52% {
+    /* Swaying right with warm body language */
+    transform: translateY(-8px) rotate(2.2deg) scale(1.02, 0.98);
+  }
+  72% {
+    /* Counter-balance tilt */
+    transform: translateY(1.5px) rotate(-1.2deg) scale(0.995, 1.005);
+  }
+  88% {
+    /* Final conversational inflection */
+    transform: translateY(-4px) rotate(0.8deg) scale(1.01, 0.99);
+  }
+}
+.animate-car-speaking {
+  animation: carSpeakingBounce 0.92s ease-in-out infinite;
+  transform-origin: center bottom;
+}
+
+/* High-RPM Throttle Rev (Ferrari V8 Flat-Plane Scream) */
+@keyframes carFerrariRevShake {
+  0%, 100% {
+    transform: translateY(0) scale(1) rotate(0deg);
+  }
+  15% {
+    /* Rear squat under torque */
+    transform: translateY(4px) scale(1.04, 0.96) rotate(-0.8deg);
+  }
+  30% {
+    /* Nose lift under throttle acceleration */
+    transform: translateY(-12px) scale(0.98, 1.03) rotate(2deg);
+  }
+  45% {
+    /* High-frequency mechanical vibration */
+    transform: translateY(-10px) scale(1.02) rotate(-1.6deg);
+  }
+  60% {
+    transform: translateY(-11px) scale(0.99) rotate(1.2deg);
+  }
+  80% {
+    transform: translateY(-3px) scale(1.01) rotate(-0.5deg);
+  }
+}
+.animate-car-rev {
+  animation: carFerrariRevShake 0.95s cubic-bezier(0.25, 1, 0.5, 1);
+  transform-origin: center bottom;
+}
+
+/* Honk hop on spring suspension */
+@keyframes carHonkHop {
+  0% {
+    transform: scale(1) translateY(0);
+  }
+  28% {
+    transform: scale(1.08, 0.92) translateY(-16px) rotate(-2.4deg);
+  }
+  58% {
+    transform: scale(0.95, 1.05) translateY(4px) rotate(1.8deg);
+  }
+  82% {
+    transform: scale(1.01, 0.99) translateY(-2px) rotate(-0.6deg);
+  }
+  100% {
+    transform: scale(1) translateY(0) rotate(0deg);
+  }
+}
+.animate-car-honk {
+  animation: carHonkHop 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+/* Celebration / Victory donut wiggle */
+@keyframes carVictoryWiggle {
+  0%, 100% {
+    transform: translateY(0) rotate(0deg) scale(1);
+  }
+  25% {
+    transform: translateY(-10px) rotate(-4.5deg) scale(1.04);
+  }
+  50% {
+    transform: translateY(-2px) rotate(4.5deg) scale(1.02);
+  }
+  75% {
+    transform: translateY(-8px) rotate(-2.5deg) scale(1.04);
+  }
+}
+.animate-car-victory {
+  animation: carVictoryWiggle 1.4s ease-in-out infinite;
+}
+
+/* Tire screech smoke cloud pulse */
+@keyframes tireSmokePulse {
+  0% {
+    opacity: 0.85;
+    transform: scale(0.4) translateY(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(2.2) translateY(-25px);
+  }
+}
+.animate-tire-smoke {
+  animation: tireSmokePulse 0.95s ease-out forwards;
+}
+
+/* Exhaust flame / throttle pulse */
+@keyframes exhaustPop {
+  0% {
+    opacity: 1;
+    transform: scale(0.5);
+  }
+  50% {
+    opacity: 0.9;
+    transform: scale(1.4);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+.animate-exhaust-pop {
+  animation: exhaustPop 0.4s ease-out forwards;
+}
+
+

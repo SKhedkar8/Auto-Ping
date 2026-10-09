@@ -26,6 +26,27 @@ export interface CharacterDef {
 
 export const CHARACTERS: CharacterDef[] = [
   {
+    id: 'schumacher',
+    name: 'Michael Schumacher Ferrari',
+    title: '7-Time World Champion & Ferrari F430',
+    image: '/characters/schumacher.jpg',
+    color: '#DC2626', // Scuderia Ferrari Rosso Corsa
+    badgeBg: 'bg-red-600/10 text-red-600 dark:text-red-400 border-red-300 dark:border-red-900',
+    quote: '"Lightning McQueen told me this was the best place in the world to get tires."',
+    voice: { pitch: 0.98, rate: 0.96, preferredVoiceGender: 'male' },
+    intro: "Hi. Lightning McQueen told me this was the best place in the world to get tires. Spero che il tuo amico si riprenda presto!",
+    reactions: {
+      oil: "An oil change with genuine Ferrari-certified synthetic oil ensures your engine revs up to 8,500 RPM flawlessly.",
+      brakes: "Carbon-ceramic brake check! Precision stopping power is what allows you to brake late into every turn.",
+      tyres: "Tires! Just like Luigi and Guido's Casa Della Tires, premier rubber is everything on the asphalt.",
+      battery: "Electrical and telemetry diagnostics! Clean, instant ignition for championship performance.",
+      general: "Full Scuderia-grade multi-point inspection! Every component calibrated to championship tolerances.",
+      ac: "Cabin climate calibration! Staying cool in the cockpit keeps your focus razor sharp.",
+      engine: "V8 powertrain tune-up! Let us unleash that legendary Maranello engine note.",
+      other: "Understood. We will have the master technicians inspect every detail to perfection.",
+    },
+  },
+  {
     id: 'mcqueen',
     name: 'Lightning McQueen',
     title: '#95 Piston Cup Champion',

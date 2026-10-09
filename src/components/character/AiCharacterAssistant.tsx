@@ -26,6 +26,7 @@ import { playCelebrationFanfare } from '@/lib/celebrationAudio';
 import InteractiveCharacterStage from './InteractiveCharacterStage';
 import { getClientSession } from '@/lib/auth';
 import { ServiceCenter, Vehicle } from '@/lib/types';
+import { validateServiceInput } from '@/lib/serviceGuardrail';
 
 interface AiCharacterAssistantProps {
   isOpen: boolean;
@@ -126,7 +127,11 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
   // ── Step 0: Choose Character ──
   const handleSelectCharacter = (char: CharacterDef) => {
     setSelectedChar(char);
-    playCarSound('rev');
+    if (char.id === 'schumacher') {
+      playCarSound('ferrari_rev');
+    } else {
+      playCarSound('rev');
+    }
     setStep('ENTRANCE');
     setSceneState('driving');
 
@@ -170,6 +175,16 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
   const handleCustomInputSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!customInput.trim()) return;
+
+    // Validate with strict automotive service guardrail to prevent token wastage
+    const validation = validateServiceInput(customInput);
+    if (!validation.allowed) {
+      playCarSound('honk');
+      say(
+        `⛔ That is not allowed! ${validation.reason || 'Please provide vehicle service-related details only to avoid wasting tokens.'} Or simply tap one of the available service buttons above!`
+      );
+      return;
+    }
 
     const lower = customInput.toLowerCase();
     let detected = 'general';

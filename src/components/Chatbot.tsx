@@ -7,23 +7,27 @@ import {
   CheckCircle2,
   ChevronRight,
   Clock,
+  Lock,
   MapPin,
   MessageSquare,
   RotateCcw,
   Send,
+  ShieldAlert,
   Sparkles,
   Wrench,
-  X
+  X,
+  Car
 } from 'lucide-react';
 import { getClientSession } from '@/lib/auth';
 import { Booking, ServiceCenter, Vehicle } from '@/lib/types';
+import { validateServiceInput } from '@/lib/serviceGuardrail';
 
 interface ChatMessage {
   id: string;
   sender: 'bot' | 'user';
   text: string;
   timestamp: string;
-  chips?: { label: string; action: () => void | Promise<void> }[];
+  chips?: { label: string; action: () => void | Promise<void> | any }[];
   card?: {
     type: 'vehicle_health' | 'booking_summary' | 'booking_success' | 'center_pick';
     data: any;
@@ -37,6 +41,12 @@ export default function Chatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [centers, setCenters] = useState<ServiceCenter[]>([]);
+
+  // Token Limiter & Step Guardrail mode
+  // 'OPTIONS_ONLY': User can ONLY select from available buttons/chips to avoid token wastage
+  // 'EXTRA_REQUIREMENT_INPUT': Unlocked ONLY at the final step, strictly validated for automotive servicing
+  const [inputMode, setInputMode] = useState<'OPTIONS_ONLY' | 'EXTRA_REQUIREMENT_INPUT'>('OPTIONS_ONLY');
+
   const vehiclesRef = useRef<Vehicle[]>([]);
   const centersRef = useRef<ServiceCenter[]>([]);
   const chatBottomRef = useRef<HTMLDivElement>(null);
@@ -49,6 +59,7 @@ export default function Chatbot() {
     date?: string;
     center?: ServiceCenter;
     slotTime?: string;
+    extraRequirements?: string;
   }
 
   const [chatBooking, setChatBooking] = useState<ChatBookingState>({});
@@ -108,7 +119,7 @@ export default function Chatbot() {
     chatBottomRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages, isTyping]);
 
-  const addBotMessage = (text: string, chips?: { label: string; action: () => void }[], card?: ChatMessage['card']) => {
+  const addBotMessage = (text: string, chips?: ChatMessage['chips'], card?: ChatMessage['card']) => {
     setIsTyping(true);
     setTimeout(() => {
       setIsTyping(false);
@@ -141,13 +152,15 @@ export default function Chatbot() {
   const initMainMenu = () => {
     chatBookingRef.current = {};
     setChatBooking({});
+    setInputMode('OPTIONS_ONLY');
     setMessages([
       {
         id: 'msg-welcome',
         sender: 'bot',
-        text: 'Hi there! I am your Auto Ping Assistant. How can I help keep your vehicle in prime shape today?',
+        text: 'Hi there! I am your Auto Ping Assistant. How can I help keep your vehicle in prime shape today?\n\n🔒 Token Limiter Active: Please tap one of the available options below to proceed.',
         timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         chips: [
+          { label: '🏎️ Talking Cars (Schumacher Ferrari)', action: () => window.dispatchEvent(new CustomEvent('open_ai_character_assistant')) },
           { label: '⚡ Book Service', action: () => startBookingFlow() },
           { label: '📍 Available Service Centers', action: () => viewServiceCentersFlow() },
           { label: '🔍 Check Next Service', action: () => checkNextServiceFlow() },
@@ -161,6 +174,7 @@ export default function Chatbot() {
   // Flow: View Available Service Centers
   const viewServiceCentersFlow = async () => {
     addUserMessage('Show available service centers');
+    setInputMode('OPTIONS_ONLY');
     const currentCenters = await getFreshCenters();
 
     if (!currentCenters || currentCenters.length === 0) {
@@ -197,6 +211,7 @@ export default function Chatbot() {
 
   const startBookingWithCenter = async (center: ServiceCenter) => {
     addUserMessage(`Book at ${center.name}`);
+    setInputMode('OPTIONS_ONLY');
     const currentVehicles = await getFreshVehicles();
 
     if (currentVehicles.length === 0) {
@@ -222,6 +237,7 @@ export default function Chatbot() {
     addUserMessage('I want to book a service');
     chatBookingRef.current = {};
     setChatBooking({});
+    setInputMode('OPTIONS_ONLY');
 
     const currentVehicles = await getFreshVehicles();
 
@@ -243,6 +259,7 @@ export default function Chatbot() {
 
   const selectVehicleForBooking = (vehicle: Vehicle, preselectedCenter?: ServiceCenter) => {
     addUserMessage(`${vehicle.brandName} ${vehicle.modelName}`);
+    setInputMode('OPTIONS_ONLY');
     updateBookingState({
       vehicle,
       ...(preselectedCenter ? { center: preselectedCenter } : {}),
@@ -267,6 +284,7 @@ export default function Chatbot() {
 
   const selectServiceForBooking = (serviceName: string, servicePrice: number) => {
     addUserMessage(serviceName);
+    setInputMode('OPTIONS_ONLY');
     updateBookingState({ service: serviceName, servicePrice });
 
     const today = new Date();
@@ -299,6 +317,7 @@ export default function Chatbot() {
 
   const selectDateForBooking = (dateStr: string, dateLabel: string) => {
     addUserMessage(dateLabel);
+    setInputMode('OPTIONS_ONLY');
     const current = updateBookingState({ date: dateStr });
 
     if (current.center) {
@@ -325,6 +344,7 @@ export default function Chatbot() {
 
   const selectCenterForBooking = (center: ServiceCenter) => {
     addUserMessage(center.name);
+    setInputMode('OPTIONS_ONLY');
     updateBookingState({ center });
 
     const slots = ['09:00 AM', '10:30 AM', '12:00 PM', '02:30 PM', '04:00 PM'];
@@ -338,10 +358,10 @@ export default function Chatbot() {
     );
   };
 
+  // Slot selected -> TRANSITION TO FINAL STEP: EXTRA SERVICE REQUIREMENTS
   const selectSlotForBooking = (slotTime: string) => {
     addUserMessage(slotTime);
 
-    // Ensure state is solid with defaults if earlier steps had gaps
     const fallbackVehicle = chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0];
     const fallbackCenter = chatBookingRef.current.center || centersRef.current[0] || centers[0];
     const fallbackService = chatBookingRef.current.service || 'General Service';
@@ -358,23 +378,47 @@ export default function Chatbot() {
       slotTime,
     });
 
+    // Unlocks text input ONLY at this final step for service-related requirements
+    setInputMode('EXTRA_REQUIREMENT_INPUT');
+
+    addBotMessage(
+      `📝 **Final Step — Extra Service Requirements:**\n\nDo you have any specific car issues or extra service requirements you want the workshop technicians to inspect? (e.g., "brakes squealing when slowing down", "AC cooling is weak", "strange engine humming sound").\n\n⌨️ You can now **type your service requirement below**, or tap the button if you have no extra requirements:`,
+      [
+        {
+          label: '⏩ No Extra Requirements (Standard)',
+          action: () => proceedToBookingSummary(fullBookingState, 'Standard Periodic Service'),
+        },
+        { label: '🔄 Start Over', action: () => initMainMenu() },
+      ]
+    );
+  };
+
+  // Move to Booking Preview Card once extra requirement is handled
+  const proceedToBookingSummary = (state: ChatBookingState, extraNotes?: string) => {
+    setInputMode('OPTIONS_ONLY');
+    const updatedState = updateBookingState({
+      extraRequirements: extraNotes || state.extraRequirements,
+    });
+
+    const fallbackPrice = updatedState.servicePrice || 1800;
     const estMin = Math.round(fallbackPrice * 1.15);
     const estMax = Math.round(estMin * 1.25);
 
     addBotMessage(
-      'Here is your booking summary. Confirm to instantly lock in your slot:',
+      'Here is your booking summary. Confirm to lock in your certified appointment slot:',
       [
-        { label: '✅ Confirm Booking Now', action: () => executeChatBooking(fullBookingState) },
+        { label: '✅ Confirm Booking Now', action: () => executeChatBooking(updatedState) },
         { label: '🔄 Start Over', action: () => initMainMenu() },
       ],
       {
         type: 'booking_summary',
         data: {
-          vehicle: fullBookingState.vehicle,
-          service: fullBookingState.service,
-          center: fullBookingState.center,
-          date: fullBookingState.date,
-          time: slotTime,
+          vehicle: updatedState.vehicle,
+          service: updatedState.service,
+          center: updatedState.center,
+          date: updatedState.date,
+          time: updatedState.slotTime,
+          extraNotes: updatedState.extraRequirements,
           estMin,
           estMax,
         },
@@ -384,9 +428,9 @@ export default function Chatbot() {
 
   const executeChatBooking = async (details?: Partial<ChatBookingState>) => {
     addUserMessage('Confirm Booking');
+    setInputMode('OPTIONS_ONLY');
     const user = getClientSession();
 
-    // Pull from parameter OR fallback to ref OR defaults
     const vehicle = details?.vehicle || chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0];
     const center = details?.center || chatBookingRef.current.center || centersRef.current[0] || centers[0];
     const service = details?.service || chatBookingRef.current.service || 'General Service';
@@ -394,6 +438,7 @@ export default function Chatbot() {
     const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const date = details?.date || chatBookingRef.current.date || tomorrowStr;
     const slotTime = details?.slotTime || chatBookingRef.current.slotTime || '10:30 AM';
+    const extraNotes = details?.extraRequirements || chatBookingRef.current.extraRequirements;
 
     if (!user || !vehicle || !center || !date || !slotTime) {
       addBotMessage('Sorry, booking information is incomplete. Please try again.', [
@@ -406,6 +451,10 @@ export default function Chatbot() {
       setIsTyping(true);
       const estMin = Math.round(servicePrice * 1.15);
       const estMax = Math.round(estMin * 1.25);
+
+      const notesText = extraNotes
+        ? `Booked via AutoPing Assistant. Extra requirement: ${extraNotes}`
+        : 'Booked via Auto Ping Assistant Chatbot.';
 
       const res = await fetch('/api/bookings', {
         method: 'POST',
@@ -420,7 +469,7 @@ export default function Chatbot() {
           services: [service],
           estimatedCostMin: estMin,
           estimatedCostMax: estMax,
-          notes: 'Booked via Auto Ping Assistant Chatbot.',
+          notes: notesText,
         }),
       });
 
@@ -455,6 +504,7 @@ export default function Chatbot() {
   // Flow: Check Next Service
   const checkNextServiceFlow = async () => {
     addUserMessage('Check my next service');
+    setInputMode('OPTIONS_ONLY');
     const currentVehicles = await getFreshVehicles();
 
     if (currentVehicles.length === 0) {
@@ -498,6 +548,7 @@ export default function Chatbot() {
   // Flow: View My Vehicles
   const viewVehiclesFlow = async () => {
     addUserMessage('Show my vehicles');
+    setInputMode('OPTIONS_ONLY');
     const currentVehicles = await getFreshVehicles();
 
     if (currentVehicles.length === 0) {
@@ -536,6 +587,7 @@ export default function Chatbot() {
   // Flow: View Service History
   const viewHistoryFlow = () => {
     addUserMessage('Show my service history');
+    setInputMode('OPTIONS_ONLY');
     addBotMessage(
       'Your past maintenance logs:\n\n• **15 Aug 2026** — Hyundai Creta at Hyundai Motor Plaza (₹4,200)\n  Services: Periodic Maintenance, Synthetic Oil Change.\n• **10 Jan 2026** — Royal Enfield at RE Hub (₹1,850)\n  Services: Periodic Service, Drive Chain Clean & Lube.',
       [
@@ -545,50 +597,60 @@ export default function Chatbot() {
     );
   };
 
+  // ══════════════════════════════════════════════
+  // STRICT TOKEN LIMITER & GUARDRAIL HANDLER
+  // ══════════════════════════════════════════════
   const handleSendText = async () => {
     if (!inputText.trim()) return;
     const text = inputText.trim();
     setInputText('');
-    addUserMessage(text);
 
-    const lower = text.toLowerCase();
-    if (
-      lower.includes('center') ||
-      lower.includes('centre') ||
-      lower.includes('garage') ||
-      lower.includes('workshop') ||
-      lower.includes('station') ||
-      lower.includes('location') ||
-      lower.includes('near me') ||
-      lower.includes('where')
-    ) {
-      await viewServiceCentersFlow();
-    } else if (lower.includes('book') || lower.includes('slot') || lower.includes('appointment')) {
-      await startBookingFlow();
-    } else if (lower.includes('next') || lower.includes('due') || lower.includes('when') || lower.includes('remind')) {
-      await checkNextServiceFlow();
-    } else if (lower.includes('vehicle') || lower.includes('car') || lower.includes('bike') || lower.includes('my')) {
-      await viewVehiclesFlow();
-    } else if (lower.includes('history') || lower.includes('past') || lower.includes('record')) {
-      viewHistoryFlow();
-    } else if (lower.includes('service')) {
+    // 1. IF IN OPTIONS_ONLY MODE: User is NOT allowed to type free-form text.
+    // They must select from available chips to prevent token wastage.
+    if (inputMode === 'OPTIONS_ONLY') {
+      addUserMessage(text);
       addBotMessage(
-        "I can help you book a service slot or view all available verified service centers:",
-        [
-          { label: '⚡ Book Service', action: () => startBookingFlow() },
-          { label: '📍 Available Centers', action: () => viewServiceCentersFlow() },
-        ]
-      );
-    } else {
-      addBotMessage(
-        "I can help you book a service, find service centers, check service milestones, or view vehicle health. Please select an option:",
+        `⛔ **That is not allowed!**\n\nTo prevent token wastage, free-form typing is disabled at this step. Please select from the **available options above** to proceed.\n\n*(You will be able to type custom requirements at the final step of the service flow)*.`,
         [
           { label: '⚡ Book Service', action: () => startBookingFlow() },
           { label: '📍 Available Service Centers', action: () => viewServiceCentersFlow() },
-          { label: '🔍 Check Next Service', action: () => checkNextServiceFlow() },
-          { label: '🚗 View Vehicles', action: () => viewVehiclesFlow() },
+          { label: '🏠 Main Menu', action: () => initMainMenu() },
         ]
       );
+      return;
+    }
+
+    // 2. IF IN EXTRA_REQUIREMENT_INPUT MODE:
+    // User is submitting custom extra requirements. Must be STRICTLY automotive servicing info!
+    if (inputMode === 'EXTRA_REQUIREMENT_INPUT') {
+      addUserMessage(text);
+
+      const validation = validateServiceInput(text);
+
+      if (!validation.allowed) {
+        // REJECT immediately to avoid token wastage!
+        addBotMessage(
+          `⛔ **That is not allowed!**\n\n${validation.reason || 'Your message is not related to vehicle servicing.'}\n\nTo avoid token wastage, only **automotive servicing information** is accepted (e.g., *"brakes making squealing noise"*, *"AC cooling is low"*, *"engine knocking sound"*, *"oil leaking"*).\n\nPlease enter a valid service requirement or tap the button below:`,
+          [
+            {
+              label: '⏩ No Extra Requirements (Standard)',
+              action: () => proceedToBookingSummary(chatBookingRef.current, 'Standard Periodic Service'),
+            },
+            { label: '🔄 Start Over', action: () => initMainMenu() },
+          ]
+        );
+        return;
+      }
+
+      // ACCEPTED SERVICE REQUIREMENT:
+      addBotMessage(
+        `✅ **Extra Service Requirement Recorded:**\n"${text}"\n\nAdding this note to your vehicle job card for the technicians.`,
+        []
+      );
+
+      setTimeout(() => {
+        proceedToBookingSummary(chatBookingRef.current, text);
+      }, 700);
     }
   };
 
@@ -608,7 +670,7 @@ export default function Chatbot() {
 
       {/* Floating Chat Drawer Modal - Clean SaaS Product Assistant */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[390px] h-[560px] max-h-[80vh] z-50 rounded-xl flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-xl">
+        <div className="fixed bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[400px] h-[580px] max-h-[82vh] z-50 rounded-2xl flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
           {/* Header */}
           <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">
@@ -620,13 +682,27 @@ export default function Chatbot() {
                   <h4 className="font-semibold text-xs text-slate-900 dark:text-white">AutoPing Chat Support</h4>
                   <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
                 </div>
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  Instant Customer & Maintenance Support
-                </p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-emerald-500/10 text-emerald-600 dark:text-emerald-400">
+                    Token Guard Active
+                  </span>
+                </div>
               </div>
             </div>
 
             <div className="flex items-center gap-1">
+              {/* Talking Cars AI Assistant Quick Launcher */}
+              <button
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('open_ai_character_assistant'));
+                }}
+                title="Launch Talking Cars AI Assistant"
+                className="p-1.5 rounded-md text-[#0071E3] hover:bg-blue-50 dark:hover:bg-blue-950/50 transition-colors flex items-center gap-1 text-[11px] font-semibold"
+              >
+                <span>🚗</span>
+                <span className="hidden sm:inline">Talking Cars</span>
+              </button>
+
               <button
                 onClick={initMainMenu}
                 title="Restart Chat"
@@ -653,9 +729,11 @@ export default function Chatbot() {
               >
                 {/* Message Bubble */}
                 <div
-                  className={`max-w-[85%] rounded-xl px-3.5 py-2 text-xs leading-relaxed ${
+                  className={`max-w-[88%] rounded-xl px-3.5 py-2 text-xs leading-relaxed ${
                     m.sender === 'user'
                       ? 'bg-blue-600 text-white rounded-tr-xs'
+                      : m.text.includes('⛔')
+                      ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 border border-rose-300 dark:border-rose-900 rounded-tl-xs shadow-xs'
                       : 'bg-white dark:bg-slate-900 text-slate-800 dark:text-slate-200 border border-slate-200 dark:border-slate-800 rounded-tl-xs shadow-2xs'
                   }`}
                 >
@@ -664,9 +742,9 @@ export default function Chatbot() {
 
                 {/* Card Attachments */}
                 {m.card?.type === 'booking_summary' && (
-                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
+                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 shadow-sm">
                     <div className="flex items-center justify-between pb-2 mb-2 border-b border-slate-100 dark:border-slate-800 font-semibold text-xs text-slate-900 dark:text-white">
-                      <span>Booking Preview</span>
+                      <span>Booking Summary</span>
                       <span className="px-1.5 py-0.5 rounded text-[10px] font-medium bg-blue-50 text-blue-700 dark:bg-blue-950 dark:text-blue-300">
                         Ready
                       </span>
@@ -682,6 +760,14 @@ export default function Chatbot() {
                         <span className="text-slate-500 dark:text-slate-400">Service:</span>
                         <span className="font-medium text-slate-900 dark:text-white">{m.card.data.service}</span>
                       </div>
+                      {m.card.data.extraNotes && (
+                        <div className="flex justify-between items-start">
+                          <span className="text-slate-500 dark:text-slate-400 shrink-0">Note:</span>
+                          <span className="font-medium text-emerald-600 dark:text-emerald-400 text-right max-w-[200px] truncate">
+                            {m.card.data.extraNotes}
+                          </span>
+                        </div>
+                      )}
                       <div className="flex justify-between items-center">
                         <span className="text-slate-500 dark:text-slate-400">Center:</span>
                         <span className="font-medium text-slate-900 dark:text-white truncate max-w-[180px]">
@@ -705,7 +791,7 @@ export default function Chatbot() {
                 )}
 
                 {m.card?.type === 'booking_success' && (
-                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs">
+                  <div className="mt-2.5 w-full bg-white dark:bg-slate-900 border border-emerald-200 dark:border-emerald-900 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 shadow-sm">
                     <div className="flex items-center gap-1.5 text-emerald-700 dark:text-emerald-400 font-semibold mb-1.5 text-xs">
                       <CheckCircle2 className="w-4 h-4 text-emerald-600" />
                       <span>Service Slot Confirmed</span>
@@ -727,7 +813,7 @@ export default function Chatbot() {
                     {m.card.data.map((c: ServiceCenter) => (
                       <div
                         key={c.id}
-                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs"
+                        className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl p-3 text-xs text-slate-800 dark:text-slate-200 shadow-xs"
                       >
                         <div className="flex items-start justify-between gap-2">
                           <div>
@@ -764,7 +850,7 @@ export default function Chatbot() {
                       <button
                         key={i}
                         onClick={chip.action}
-                        className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-colors"
+                        className="px-2.5 py-1.5 rounded-lg bg-white dark:bg-slate-900 hover:bg-blue-50 dark:hover:bg-slate-800 hover:border-blue-300 dark:hover:border-blue-700 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700 text-xs font-medium transition-all shadow-2xs"
                       >
                         {chip.label}
                       </button>
@@ -786,28 +872,58 @@ export default function Chatbot() {
             <div ref={chatBottomRef} />
           </div>
 
-          {/* Quick Input Bar */}
-          <div className="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex items-center gap-2 shrink-0">
-            <input
-              type="text"
-              value={inputText}
-              onChange={(e) => setInputText(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
-              placeholder="Ask AutoPing or choose a prompt..."
-              className="flex-1 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden focus:border-blue-500"
-            />
-            <button
-              onClick={handleSendText}
-              className="w-8 h-8 rounded-lg bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center transition-colors shrink-0"
-              aria-label="Send"
-            >
-              <Send className="w-3.5 h-3.5" />
-            </button>
+          {/* ══════════════════════════════════════════════
+              TOKEN LIMITER INPUT BAR
+              ══════════════════════════════════════════════ */}
+          <div className="p-2.5 bg-white dark:bg-slate-900 border-t border-slate-200 dark:border-slate-800 flex flex-col gap-1.5 shrink-0">
+            {/* Status bar indication */}
+            <div className="flex items-center justify-between px-1 text-[10px]">
+              {inputMode === 'OPTIONS_ONLY' ? (
+                <span className="text-slate-500 dark:text-slate-400 flex items-center gap-1">
+                  <Lock className="w-3 h-3 text-amber-500" />
+                  <span>Limiter Active: Select options above to save tokens</span>
+                </span>
+              ) : (
+                <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
+                  <Wrench className="w-3 h-3 text-blue-500" />
+                  <span>Final Step: Automotive service requirements only</span>
+                </span>
+              )}
+            </div>
+
+            <div className="flex items-center gap-2">
+              <input
+                type="text"
+                value={inputText}
+                onChange={(e) => setInputText(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && handleSendText()}
+                placeholder={
+                  inputMode === 'OPTIONS_ONLY'
+                    ? '🔒 Select an available option above...'
+                    : 'Type extra vehicle service details (e.g. brake squeal)...'
+                }
+                className={`flex-1 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden transition-all ${
+                  inputMode === 'EXTRA_REQUIREMENT_INPUT'
+                    ? 'bg-blue-50/50 dark:bg-blue-950/30 border-2 border-blue-500 ring-2 ring-blue-500/20'
+                    : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
+                }`}
+              />
+              <button
+                onClick={handleSendText}
+                className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 text-white ${
+                  inputMode === 'EXTRA_REQUIREMENT_INPUT'
+                    ? 'bg-blue-600 hover:bg-blue-700'
+                    : 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500'
+                }`}
+                aria-label="Send"
+                title={inputMode === 'OPTIONS_ONLY' ? 'Selection required' : 'Submit requirement'}
+              >
+                <Send className="w-3.5 h-3.5" />
+              </button>
+            </div>
           </div>
         </div>
       )}
     </>
   );
 }
-
-

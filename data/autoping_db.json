@@ -18738,7 +18738,7 @@
       "message": "Your booking for Hyundai Creta on 2026-10-10 (10:30 AM) at Hyundai Motor Plaza Pune has been confirmed. Code: AP-20261010-002",
       "vehicleId": "veh-1791463900954-q4oh",
       "bookingId": "book-1791464076696-i6jo",
-      "isRead": false,
+      "isRead": true,
       "createdAt": "2026-10-08T12:54:36.696Z"
     },
     {
