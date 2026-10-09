@@ -7,6 +7,7 @@ interface CartoonCarAvatarProps {
   isFainted: boolean;
   onRecover?: () => void;
   visemePhase?: number; // 0=rest smile, 1=open, 2=wide smile, 3=round
+  color?: string; // character brand color for the car body
 }
 
 export default function CartoonCarAvatar({
@@ -14,7 +15,10 @@ export default function CartoonCarAvatar({
   isFainted,
   onRecover,
   visemePhase = 0,
+  color = '#DC2626',
 }: CartoonCarAvatarProps) {
+  // Derive lighter/darker tones from the brand color for gradient
+  const bodyColor = color;
   const [isBlinking, setIsBlinking] = useState(false);
   const [eyeDirection, setEyeDirection] = useState<'center' | 'left' | 'right'>('center');
 
@@ -97,17 +101,17 @@ export default function CartoonCarAvatar({
           <circle cx="295" cy="197" r="8" fill="#D6D3D1" />
 
           {/* ── Side Mirrors ── */}
-          <ellipse cx="38" cy="100" rx="16" ry="11" fill="#DC2626" />
-          <ellipse cx="36" cy="100" rx="12" ry="8" fill="#B91C1C" />
-          <ellipse cx="302" cy="100" rx="16" ry="11" fill="#DC2626" />
-          <ellipse cx="304" cy="100" rx="12" ry="8" fill="#B91C1C" />
+          <ellipse cx="38" cy="100" rx="16" ry="11" fill={bodyColor} />
+          <ellipse cx="36" cy="100" rx="12" ry="8" fill={bodyColor} fillOpacity="0.8" />
+          <ellipse cx="302" cy="100" rx="16" ry="11" fill={bodyColor} />
+          <ellipse cx="304" cy="100" rx="12" ry="8" fill={bodyColor} fillOpacity="0.8" />
 
           {/* ── Car Body Shell (Sleek red Italian racing coupe) ── */}
           <defs>
             <linearGradient id="bodyPaint" x1="170" y1="20" x2="170" y2="225" gradientUnits="userSpaceOnUse">
-              <stop stopColor="#EF4444" />
-              <stop offset="0.45" stopColor="#DC2626" />
-              <stop offset="1" stopColor="#991B1B" />
+              <stop stopColor={bodyColor} stopOpacity="0.9" />
+              <stop offset="0.45" stopColor={bodyColor} />
+              <stop offset="1" stopColor={bodyColor} stopOpacity="0.75" />
             </linearGradient>
             <linearGradient id="windshieldGlass" x1="170" y1="45" x2="170" y2="135" gradientUnits="userSpaceOnUse">
               <stop stopColor="#E0F2FE" />
@@ -152,14 +156,14 @@ export default function CartoonCarAvatar({
           <path
             d="M 45 130 C 45 120, 65 124, 90 126 C 130 128, 210 128, 250 126 C 275 124, 295 120, 295 130 C 298 175, 285 220, 255 224 C 215 228, 125 228, 85 224 C 55 220, 42 175, 45 130 Z"
             fill="url(#bodyPaint)"
-            stroke="#B91C1C"
+            stroke={bodyColor}
             strokeWidth="2"
           />
 
-          {/* Racing Center Stripes (Italian flag accents) */}
+          {/* Racing Center Stripes (character color accents) */}
           <path d="M 164 128 L 164 226" stroke="#FFFFFF" strokeWidth="6" opacity="0.9" />
-          <path d="M 172 128 L 172 226" stroke="#16A34A" strokeWidth="4" opacity="0.9" />
-          <path d="M 158 128 L 158 226" stroke="#DC2626" strokeWidth="4" opacity="0.9" />
+          <path d="M 172 128 L 172 226" stroke={bodyColor} strokeWidth="4" opacity="0.7" />
+          <path d="M 158 128 L 158 226" stroke={bodyColor} strokeWidth="4" opacity="0.5" />
 
           {/* Pit-Crew Pronto Shield Badge on Hood */}
           <circle cx="170" cy="148" r="11" fill="#FEF08A" stroke="#CA8A04" strokeWidth="1.5" />

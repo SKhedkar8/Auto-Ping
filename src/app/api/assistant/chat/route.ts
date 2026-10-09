@@ -12,6 +12,7 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     const message = body?.message || '';
+    const characterId: string | undefined = body?.characterId;
 
     if (!message.trim()) {
       return NextResponse.json(
@@ -21,11 +22,12 @@ export async function POST(req: Request) {
     }
 
     const apiKey = process.env.GEMINI_API_KEY?.trim();
-    const systemPrompt = getPersonaPrompt();
+    // Use character-specific persona prompt
+    const systemPrompt = getPersonaPrompt(characterId);
 
-    // If API key is missing or is placeholder, use the intelligent fallback
+    // If API key is missing or placeholder, use in-character fallback
     if (!apiKey || apiKey === 'your_gemini_api_key_here') {
-      const fallback = generateProntoFallback(message);
+      const fallback = generateProntoFallback(message, characterId);
       const enforced = enforceMaxSentences(fallback.reply, 3);
       const { cleanText, soundCue } = extractSoundCues(enforced);
       return NextResponse.json({
@@ -84,9 +86,8 @@ export async function POST(req: Request) {
       }
     }
 
-    // If Gemini API succeeded:
+    // Gemini API succeeded
     if (rawReply) {
-      // Strictly enforce max 3 sentences rule
       const reply = enforceMaxSentences(rawReply, 3);
       const { cleanText, soundCue } = extractSoundCues(reply);
       const faints = isExcitingInput(message, reply);
@@ -98,12 +99,13 @@ export async function POST(req: Request) {
         faints,
         sentenceCount: countSentences(reply),
         source: 'gemini',
+        characterId,
       });
     }
 
-    // If Gemini call failed (e.g. invalid key or network error), gracefully fall back
+    // Gemini failed — graceful fallback
     console.warn('Gemini API call failed, falling back to local persona engine:', apiError);
-    const fallback = generateProntoFallback(message);
+    const fallback = generateProntoFallback(message, characterId);
     const enforced = enforceMaxSentences(fallback.reply, 3);
     const { cleanText, soundCue } = extractSoundCues(enforced);
 
