@@ -24,6 +24,7 @@ import { CHARACTERS, CharacterDef } from '@/lib/characterData';
 import { playCarSound, speakDialogue, stopSpeaking } from '@/lib/characterVoice';
 import { playCelebrationFanfare } from '@/lib/celebrationAudio';
 import InteractiveCharacterStage from './InteractiveCharacterStage';
+import PitCrewVoiceAssistant from './PitCrewVoiceAssistant';
 import { getClientSession } from '@/lib/auth';
 import { ServiceCenter, Vehicle } from '@/lib/types';
 import { validateServiceInput } from '@/lib/serviceGuardrail';
@@ -58,6 +59,7 @@ const CITIES = ['Pune', 'Mumbai', 'Bangalore', 'Delhi NCR', 'Hyderabad'];
 
 export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAssistantProps) {
   // Character & Speech state
+  const [assistantMode, setAssistantMode] = useState<'PRONTO' | 'TOUR'>('PRONTO');
   const [selectedChar, setSelectedChar] = useState<CharacterDef>(CHARACTERS[0]);
   const [step, setStep] = useState<SceneStep>('SELECT_CHARACTER');
   const [dialogue, setDialogue] = useState('');
@@ -276,26 +278,52 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
         {/* ── Top Bar ── */}
         <div className="px-5 py-3.5 bg-[#F5F5F7] dark:bg-[#1A1A1C] border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
-            <span className="text-xl">🤖</span>
+            <span className="text-xl">🏎️</span>
             <div>
               <div className="flex items-center gap-2">
                 <h3 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7]">
-                  AI Character Assistant
+                  {assistantMode === 'PRONTO' ? 'Pit-Crew Pronto Voice AI' : 'Cars Garage Tour'}
                 </h3>
-                {step !== 'SELECT_CHARACTER' && (
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] uppercase">
-                    {selectedChar.name}
-                  </span>
-                )}
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-red-600/10 text-red-600 dark:text-red-400 uppercase">
+                  {assistantMode === 'PRONTO' ? 'Gemini AI Voice' : selectedChar.name}
+                </span>
               </div>
               <p className="text-[11px] text-[#86868b]">
-                Interactive Talking Automotive Service Advisor
+                {assistantMode === 'PRONTO'
+                  ? 'Voice Assistant • Cartoon Car Avatar • Speech-to-Text'
+                  : 'Interactive Talking Automotive Service Advisor'}
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-            {step !== 'SELECT_CHARACTER' && (
+            {/* Mode Toggle Switcher */}
+            <div className="flex items-center gap-1 bg-black/5 dark:bg-white/10 p-0.5 rounded-xl mr-1">
+              <button
+                type="button"
+                onClick={() => setAssistantMode('PRONTO')}
+                className={`px-3 py-1 rounded-lg text-xs font-bold transition-all ${
+                  assistantMode === 'PRONTO'
+                    ? 'bg-red-600 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                🏎️ Pit-Crew Pronto
+              </button>
+              <button
+                type="button"
+                onClick={() => setAssistantMode('TOUR')}
+                className={`px-3 py-1 rounded-lg text-xs font-semibold transition-all ${
+                  assistantMode === 'TOUR'
+                    ? 'bg-[#0071E3] text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+              >
+                🏁 Garage Tour
+              </button>
+            </div>
+
+            {assistantMode === 'TOUR' && step !== 'SELECT_CHARACTER' && (
               <button
                 type="button"
                 onClick={() => {
@@ -342,6 +370,10 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
 
         {/* ── Main Stage Area ── */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 bg-gradient-to-b from-[#F9F9FB] to-white dark:from-[#0E0E10] dark:to-[#161618]">
+          {assistantMode === 'PRONTO' ? (
+            <PitCrewVoiceAssistant />
+          ) : (
+            <>
           {/* ══════════════════════════════════════════════
               SCENE 0: CHARACTER SELECTION SCREEN
               ══════════════════════════════════════════════ */}
@@ -838,6 +870,8 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
                 </div>
               </div>
             </div>
+          )}
+          </>
           )}
         </div>
       </div>
