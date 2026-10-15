@@ -23,7 +23,6 @@ import {
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
-import RunningTicker from '@/components/RunningTicker';
 import FloatingReviewsHero from '@/components/FloatingReviewsHero';
 import { ServiceCenter } from '@/lib/types';
 
@@ -41,8 +40,6 @@ export default function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-[#F5F5F7] dark:bg-[#000000] text-slate-900 dark:text-slate-100 antialiased selection:bg-blue-600 selection:text-white">
-      {/* Real-time Ticker */}
-      <RunningTicker />
       <Navbar />
 
       <main className="flex-1">
