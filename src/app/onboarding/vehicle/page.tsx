@@ -24,6 +24,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getClientSession } from '@/lib/auth';
 import { Brand, VehicleModel, VehicleType } from '@/lib/types';
+import VehicleImagePicker from '@/components/VehicleImagePicker';
 
 export default function AddVehiclePage() {
   const router = useRouter();
@@ -506,66 +507,22 @@ export default function AddVehiclePage() {
                   </div>
                 </div>
 
-                {/* Vehicle Photo Upload (Optional) */}
+                {/* Vehicle Showcase Photo Selection (4 Official Angles + Custom) */}
                 <div className="pt-2">
-                  <label className="block text-xs font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    Vehicle Photo (Upload your bike/car photo or use default)
+                  <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
+                    Vehicle Showcase Photo (Choose from 4 Official OEM Angles or Upload)
                   </label>
-                  <div className="flex flex-col sm:flex-row sm:items-center gap-3 p-3 rounded-lg bg-slate-50 dark:bg-slate-850 border border-slate-200 dark:border-slate-700">
-                    <div className="w-20 h-14 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-700 shrink-0 border border-slate-200 dark:border-slate-600 relative">
-                      <img
-                        src={
-                          customImageUrl ||
-                          selectedModel?.imageUrl ||
-                          (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
-                        }
-                        alt="Vehicle Preview"
-                        className="w-full h-full object-cover"
-                      />
-                    </div>
-                    <div className="flex-1 space-y-1">
-                      <input
-                        type="file"
-                        ref={fileInputRef}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) {
-                            const reader = new FileReader();
-                            reader.onloadend = () => {
-                              setCustomImageUrl(reader.result as string);
-                            };
-                            reader.readAsDataURL(file);
-                          }
-                        }}
-                        accept="image/*"
-                        className="hidden"
-                      />
-                      <div className="flex items-center gap-2">
-                        <button
-                          type="button"
-                          onClick={() => fileInputRef.current?.click()}
-                          className="px-2.5 py-1 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700 text-xs font-medium flex items-center gap-1.5 transition-colors"
-                        >
-                          <Camera className="w-3.5 h-3.5" />
-                          {customImageUrl ? 'Replace Photo' : 'Upload Image'}
-                        </button>
-                        {customImageUrl && (
-                          <button
-                            type="button"
-                            onClick={() => setCustomImageUrl('')}
-                            className="text-xs text-rose-500 hover:underline"
-                          >
-                            Reset
-                          </button>
-                        )}
-                      </div>
-                      <p className="text-[11px] text-slate-400">
-                        {customImageUrl
-                          ? 'Custom photo uploaded'
-                          : 'Standard image for this model will be used if none uploaded.'}
-                      </p>
-                    </div>
-                  </div>
+                  <VehicleImagePicker
+                    brandName={selectedBrand?.name || 'Hyundai'}
+                    modelName={selectedModel?.name || 'Creta'}
+                    vehicleType={vehicleType}
+                    selectedImageUrl={
+                      customImageUrl ||
+                      selectedModel?.imageUrl ||
+                      (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
+                    }
+                    onSelectImage={(url) => setCustomImageUrl(url)}
+                  />
                 </div>
               </div>
 

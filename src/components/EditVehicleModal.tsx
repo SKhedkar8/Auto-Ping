@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { X, Image as ImageIcon, Car, Save, CheckCircle2, AlertCircle, RefreshCw, Sparkles } from 'lucide-react';
 import { FuelType, Vehicle, VehicleType } from '@/lib/types';
+import VehicleImagePicker from './VehicleImagePicker';
 
 interface EditVehicleModalProps {
   vehicle: Vehicle;
@@ -124,67 +125,27 @@ export default function EditVehicleModal({
         )}
 
         <form onSubmit={handleSubmit} className="mt-5 space-y-5">
-          {/* IMAGE SECTION */}
-          <div className="p-4 rounded-2xl bg-[#F5F5F7] dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.06]">
-            <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#86868b] mb-3">
-              Vehicle Image / Photo
-            </label>
-
-            <div className="flex flex-col sm:flex-row gap-4 items-center mb-3">
-              <div className="relative w-36 h-24 rounded-xl overflow-hidden bg-black/5 dark:bg-white/5 border border-black/[0.08] dark:border-white/[0.1] shrink-0 flex items-center justify-center shadow-inner">
-                {imageUrl && !previewError ? (
-                  <img
-                    src={imageUrl}
-                    alt="Preview"
-                    className="w-full h-full object-cover"
-                    onError={() => setPreviewError(true)}
-                    onLoad={() => setPreviewError(false)}
-                  />
-                ) : (
-                  <div className="flex flex-col items-center justify-center text-[#86868b] text-[11px] p-2 text-center">
-                    <ImageIcon className="w-6 h-6 mb-1 opacity-50" />
-                    <span>No image preview</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="flex-1 w-full space-y-2">
-                <input
-                  type="text"
-                  placeholder="https://example.com/vehicle-image.jpg or /default-car.png"
-                  value={imageUrl}
-                  onChange={(e) => {
-                    setImageUrl(e.target.value);
-                    setPreviewError(false);
-                  }}
-                  className="w-full px-3.5 py-2 rounded-xl text-[13px] bg-white dark:bg-[#161617] border border-black/[0.1] dark:border-white/[0.15] text-[#1d1d1f] dark:text-[#f5f5f7] focus:outline-none focus:ring-2 focus:ring-[#0071E3] transition-all"
-                />
-                <p className="text-[11px] text-[#86868b]">
-                  Paste any direct image URL, or choose a one-click preset below:
-                </p>
-              </div>
+          {/* IMAGE SELECTION WITH 4 OFFICIAL COMPANY IMAGES */}
+          <div className="p-5 rounded-3xl bg-[#F5F5F7] dark:bg-[#1C1C1E] border border-black/[0.04] dark:border-white/[0.06]">
+            <div className="flex items-center justify-between mb-3">
+              <label className="block text-[12px] font-semibold uppercase tracking-wider text-[#86868b]">
+                Vehicle Showcase Image
+              </label>
+              <span className="text-[11px] text-blue-600 dark:text-blue-400 font-medium">
+                Official OEM Showroom Angles
+              </span>
             </div>
 
-            {/* Presets */}
-            <div className="flex flex-wrap gap-1.5 pt-2 border-t border-black/[0.04] dark:border-white/[0.06]">
-              {PRESET_IMAGES.map((preset) => (
-                <button
-                  key={preset.label}
-                  type="button"
-                  onClick={() => {
-                    setImageUrl(preset.url);
-                    setPreviewError(false);
-                  }}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium transition-colors ${
-                    imageUrl === preset.url
-                      ? 'bg-[#0071E3] text-white shadow-xs'
-                      : 'bg-white dark:bg-[#2C2C2E] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.06] dark:hover:bg-white/[0.1] border border-black/[0.06] dark:border-white/[0.08]'
-                  }`}
-                >
-                  {preset.label}
-                </button>
-              ))}
-            </div>
+            <VehicleImagePicker
+              brandName={brandName}
+              modelName={modelName}
+              vehicleType={type}
+              selectedImageUrl={imageUrl}
+              onSelectImage={(url) => {
+                setImageUrl(url);
+                setPreviewError(false);
+              }}
+            />
           </div>
 
           {/* BASIC INFO GRID */}

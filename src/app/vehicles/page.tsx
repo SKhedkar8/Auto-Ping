@@ -11,6 +11,7 @@ import {
   Heart,
   Pencil,
   Plus,
+  Sparkles,
   Trash2,
   Wrench
 } from 'lucide-react';
@@ -19,6 +20,7 @@ import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
 import EditVehicleModal from '@/components/EditVehicleModal';
 import ServiceBackground from '@/components/ServiceBackground';
+import VehicleBigPopupModal from '@/components/VehicleBigPopupModal';
 import { getClientSession } from '@/lib/auth';
 import { Vehicle } from '@/lib/types';
 
@@ -26,6 +28,7 @@ export default function VehiclesPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [editingVehicle, setEditingVehicle] = useState<Vehicle | null>(null);
+  const [inspectedVehicle, setInspectedVehicle] = useState<Vehicle | null>(null);
 
   useEffect(() => {
     const user = getClientSession();
@@ -94,10 +97,13 @@ export default function VehiclesPage() {
               return (
                 <div
                   key={v.id}
-                  className="bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col justify-between"
+                  className="group relative bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden flex flex-col justify-between transition-all hover:shadow-lg hover:border-blue-500/50"
                 >
-                  {/* Vehicle Image Banner */}
-                  <div className="relative h-40 overflow-hidden bg-slate-900">
+                  {/* Vehicle Image Banner with Big Popup Hover Trigger */}
+                  <div
+                    onClick={() => setInspectedVehicle(v)}
+                    className="relative h-48 overflow-hidden bg-slate-900 cursor-pointer"
+                  >
                     <img
                       src={
                         v.imageUrl ||
@@ -106,13 +112,21 @@ export default function VehiclesPage() {
                           : 'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80')
                       }
                       alt={`${v.brandName} ${v.modelName}`}
-                      className="w-full h-full object-cover opacity-90"
+                      className="w-full h-full object-cover opacity-90 group-hover:scale-105 transition-transform duration-500"
                       onError={(e) => {
                         (e.currentTarget as HTMLImageElement).src =
                           'https://images.unsplash.com/photo-1605559424843-9e4c228bf1c2?w=800&auto=format&fit=crop&q=80';
                       }}
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
+
+                    {/* Smooth Hover Overlay: Click to Popup Big Size */}
+                    <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-xs">
+                      <span className="px-4 py-2 rounded-full bg-white/95 dark:bg-black/90 text-slate-900 dark:text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        Expand Full Details in Big Size
+                      </span>
+                    </div>
 
                     {/* Status badge */}
                     <div className="absolute top-3 right-3">
@@ -226,13 +240,14 @@ export default function VehiclesPage() {
                         <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
                         Edit
                       </button>
-                      <a
-                        href={`/vehicles/${v.id}`}
-                        className="flex-1 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 text-center transition-colors flex items-center justify-center gap-1.5"
+                      <button
+                        type="button"
+                        onClick={() => setInspectedVehicle(v)}
+                        className="flex-1 py-2 rounded-lg bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-700 dark:text-slate-200 text-center transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
                       >
                         <Heart className="w-3.5 h-3.5 text-rose-500" />
-                        Health
-                      </a>
+                        Inspect Health
+                      </button>
                       <a
                         href={`/services/book?vehicleId=${v.id}`}
                         className="flex-1 py-2 rounded-lg bg-[#0071E3] hover:bg-[#0077ED] text-white text-xs font-medium text-center transition-colors flex items-center justify-center gap-1.5 shadow-xs"
@@ -246,6 +261,16 @@ export default function VehiclesPage() {
               );
             })}
           </div>
+        )}
+
+        {/* Big Size Vehicle Detail Popup Modal */}
+        {inspectedVehicle && (
+          <VehicleBigPopupModal
+            vehicle={inspectedVehicle}
+            isOpen={true}
+            onClose={() => setInspectedVehicle(null)}
+            onEdit={(veh) => setEditingVehicle(veh)}
+          />
         )}
 
         {/* Edit Vehicle Modal */}

@@ -606,39 +606,38 @@ export default function Chatbot() {
     setInputText('');
 
     // 1. IF IN OPTIONS_ONLY MODE: User is NOT allowed to type free-form text.
-    // They must select from available chips to prevent token wastage.
+    // They must select from available options.
     if (inputMode === 'OPTIONS_ONLY') {
       addUserMessage(text);
       addBotMessage(
-        `⛔ **That is not allowed!**\n\nTo prevent token wastage, free-form typing is disabled at this step. Please select from the **available options above** to proceed.\n\n*(You will be able to type custom requirements at the final step of the service flow)*.`,
+        `⛔ It's not permitted. Returning to start...`,
         [
-          { label: '⚡ Book Service', action: () => startBookingFlow() },
-          { label: '📍 Available Service Centers', action: () => viewServiceCentersFlow() },
-          { label: '🏠 Main Menu', action: () => initMainMenu() },
+          { label: '🏠 Return to Start', action: () => initMainMenu() },
         ]
       );
+      setTimeout(() => {
+        initMainMenu();
+      }, 1200);
       return;
     }
 
     // 2. IF IN EXTRA_REQUIREMENT_INPUT MODE:
-    // User is submitting custom extra requirements. Must be STRICTLY automotive servicing info!
+    // User is submitting custom extra requirements. Must be automotive servicing info!
     if (inputMode === 'EXTRA_REQUIREMENT_INPUT') {
       addUserMessage(text);
 
       const validation = validateServiceInput(text);
 
       if (!validation.allowed) {
-        // REJECT immediately to avoid token wastage!
         addBotMessage(
-          `⛔ **That is not allowed!**\n\n${validation.reason || 'Your message is not related to vehicle servicing.'}\n\nTo avoid token wastage, only **automotive servicing information** is accepted (e.g., *"brakes making squealing noise"*, *"AC cooling is low"*, *"engine knocking sound"*, *"oil leaking"*).\n\nPlease enter a valid service requirement or tap the button below:`,
+          `⛔ It's not permitted. Returning to start...`,
           [
-            {
-              label: '⏩ No Extra Requirements (Standard)',
-              action: () => proceedToBookingSummary(chatBookingRef.current, 'Standard Periodic Service'),
-            },
-            { label: '🔄 Start Over', action: () => initMainMenu() },
+            { label: '🏠 Return to Start', action: () => initMainMenu() },
           ]
         );
+        setTimeout(() => {
+          initMainMenu();
+        }, 1200);
         return;
       }
 

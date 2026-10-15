@@ -255,23 +255,25 @@ export default function DashboardPage() {
                         setSelectedVehicle(v);
                         setNewKmInput(v.currentKm);
                       }}
-                      className={`text-left rounded-xl border transition-all overflow-hidden bg-white dark:bg-slate-900 cursor-pointer ${
+                      className={`group relative text-left rounded-2xl border transition-all overflow-hidden bg-white dark:bg-slate-900 cursor-pointer ${
                         isSelected
-                          ? 'border-blue-600 ring-2 ring-blue-600/20 shadow-sm'
-                          : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                          ? 'border-blue-600 ring-2 ring-blue-600/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-800 hover:border-blue-400 dark:hover:border-blue-500 hover:shadow-md'
                       }`}
                     >
-                      <div className="relative h-28 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
+                      <div className="relative h-32 w-full bg-slate-100 dark:bg-slate-800 overflow-hidden">
                         <img
                           src={vehicleImg}
                           alt={`${v.brandName} ${v.modelName}`}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                           onError={(e) => {
                             const el = e.currentTarget as HTMLImageElement;
                             el.src = (v.type === 'BIKE' || v.type === 'SCOOTER') ? '/default-bike.png' : '/default-car.png';
                           }}
                         />
-                        <div className="absolute top-2 right-2">
+                        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/70 via-transparent to-transparent" />
+
+                        <div className="absolute top-2 right-2 z-10">
                           {isOverdue ? (
                             <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-rose-600 text-white">
                               Overdue
