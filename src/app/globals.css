@@ -528,4 +528,132 @@
   animation: exhaustPop 0.4s ease-out forwards;
 }
 
+/* ══════════════════════════════════════════════
+   GLASSMORPHIC FLOATING REVIEW BUBBLES
+   Bottom to Top gentle floating stream
+   ══════════════════════════════════════════════ */
+@keyframes floatBubbleStream {
+  0% {
+    transform: translateY(120%) translateX(0px) scale(0.92);
+    opacity: 0;
+  }
+  8% {
+    opacity: 0.95;
+    transform: translateY(100%) translateX(4px) scale(0.96);
+  }
+  30% {
+    transform: translateY(60%) translateX(-12px) scale(1);
+    opacity: 0.98;
+  }
+  70% {
+    transform: translateY(15%) translateX(16px) scale(1);
+    opacity: 0.98;
+  }
+  92% {
+    opacity: 0.9;
+    transform: translateY(-20%) translateX(-6px) scale(0.97);
+  }
+  100% {
+    transform: translateY(-50%) translateX(0px) scale(0.9);
+    opacity: 0;
+  }
+}
+
+@keyframes floatBubbleStreamAlt {
+  0% {
+    transform: translateY(120%) translateX(0px) scale(0.88);
+    opacity: 0;
+  }
+  10% {
+    opacity: 0.95;
+    transform: translateY(100%) translateX(-8px) scale(0.94);
+  }
+  35% {
+    transform: translateY(55%) translateX(14px) scale(0.98);
+    opacity: 0.98;
+  }
+  65% {
+    transform: translateY(10%) translateX(-18px) scale(1);
+    opacity: 0.98;
+  }
+  90% {
+    opacity: 0.85;
+    transform: translateY(-25%) translateX(8px) scale(0.95);
+  }
+  100% {
+    transform: translateY(-55%) translateX(0px) scale(0.88);
+    opacity: 0;
+  }
+}
+
+.animate-float-bubble-1 {
+  animation: floatBubbleStream 22s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-float-bubble-2 {
+  animation: floatBubbleStreamAlt 26s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-float-bubble-3 {
+  animation: floatBubbleStream 30s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+.animate-float-bubble-4 {
+  animation: floatBubbleStreamAlt 34s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  will-change: transform, opacity;
+}
+
+/* Pause animation on hover */
+.pause-on-hover:hover {
+  animation-play-state: paused !important;
+}
+
+/* Pure Glassmorphic Review Bubble Card */
+.glass-bubble-card {
+  background: rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(20px) saturate(190%);
+  -webkit-backdrop-filter: blur(20px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  box-shadow: 0 12px 36px -4px rgba(0, 113, 227, 0.08), 0 4px 12px rgba(0, 0, 0, 0.04), inset 0 1px 1px rgba(255, 255, 255, 0.8);
+  transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.35s ease, border-color 0.35s ease;
+}
+
+.dark .glass-bubble-card {
+  background: rgba(18, 24, 38, 0.72);
+  backdrop-filter: blur(24px) saturate(190%);
+  -webkit-backdrop-filter: blur(24px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 12px 36px -4px rgba(0, 0, 0, 0.5), 0 4px 12px rgba(41, 151, 255, 0.08), inset 0 1px 1px rgba(255, 255, 255, 0.1);
+}
+
+.glass-bubble-card:hover {
+  transform: scale(1.04) translateY(-4px) !important;
+  border-color: rgba(0, 113, 227, 0.4);
+  box-shadow: 0 20px 48px -6px rgba(0, 113, 227, 0.18), 0 8px 24px rgba(0, 0, 0, 0.08);
+}
+
+.dark .glass-bubble-card:hover {
+  border-color: rgba(41, 151, 255, 0.4);
+  box-shadow: 0 20px 48px -6px rgba(0, 0, 0, 0.7), 0 8px 24px rgba(41, 151, 255, 0.2);
+}
+
+/* Ambient gradient pulse */
+@keyframes ambientGlowPulse {
+  0%, 100% {
+    opacity: 0.35;
+    transform: scale(1) translate(0, 0);
+  }
+  50% {
+    opacity: 0.6;
+    transform: scale(1.1) translate(10px, -10px);
+  }
+}
+.animate-ambient-glow {
+  animation: ambientGlowPulse 12s ease-in-out infinite alternate;
+}
+
+
 

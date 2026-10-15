@@ -19,12 +19,15 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
 import ServiceCentersMap from '@/components/ServiceCentersMap';
+import AddReviewModal from '@/components/AddReviewModal';
 import { ServiceCenter } from '@/lib/types';
+import { getCenterReviews } from '@/lib/data/reviews';
 
 export default function ServiceMapPage() {
   const [centers, setCenters] = useState<ServiceCenter[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [selectedCenterId, setSelectedCenterId] = useState<string | null>(null);
+  const [isReviewModalOpen, setIsReviewModalOpen] = useState(false);
 
   useEffect(() => {
     fetch('/api/centers')
@@ -57,6 +60,13 @@ export default function ServiceMapPage() {
           </div>
 
           <div className="flex items-center gap-3">
+            <button
+              onClick={() => setIsReviewModalOpen(true)}
+              className="px-4 py-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-700 text-slate-800 dark:text-white text-xs font-semibold border border-slate-200 dark:border-white/10 shadow-xs flex items-center gap-2 transition-all cursor-pointer"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-blue-500" />
+              Share Experience
+            </button>
             <a
               href="/services/book"
               className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-md shadow-blue-500/20 flex items-center gap-2 transition-all cursor-pointer"
@@ -147,6 +157,26 @@ export default function ServiceMapPage() {
                         )}
                       </div>
                     </div>
+                    {/* Customer Review Snippet */}
+                    {(() => {
+                      const reviews = getCenterReviews(c.id);
+                      const topReview = reviews[0];
+                      if (!topReview) return null;
+                      return (
+                        <div className="p-3 rounded-2xl bg-blue-50/70 dark:bg-blue-950/30 border border-blue-100 dark:border-blue-900/40 text-xs mb-4">
+                          <div className="flex items-center justify-between text-[10px] text-blue-600 dark:text-blue-400 font-bold mb-1">
+                            <span>Verified Experience</span>
+                            <span>★ {topReview.rating}.0</span>
+                          </div>
+                          <p className="text-slate-600 dark:text-slate-300 italic line-clamp-2 text-[11px]">
+                            &ldquo;{topReview.reviewText}&rdquo;
+                          </p>
+                          <span className="text-[10px] text-slate-400 block mt-1 font-medium">
+                            — {topReview.userName} ({topReview.vehicleModel})
+                          </span>
+                        </div>
+                      );
+                    })()}
                   </div>
 
                   <div className="pt-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
@@ -176,6 +206,13 @@ export default function ServiceMapPage() {
 
       <Chatbot />
       <Footer />
+
+      {/* Share Experience Modal */}
+      <AddReviewModal
+        isOpen={isReviewModalOpen}
+        onClose={() => setIsReviewModalOpen(false)}
+        serviceCenters={centers}
+      />
     </div>
   );
 }

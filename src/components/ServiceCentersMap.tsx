@@ -21,8 +21,11 @@ import {
   CheckCircle2,
   ChevronDown,
   Globe2,
+  MessageSquarePlus,
 } from 'lucide-react';
-import { ServiceCenter } from '@/lib/types';
+import { ServiceCenter, ServiceReview } from '@/lib/types';
+import { getCenterReviews } from '@/lib/data/reviews';
+import AddReviewModal from './AddReviewModal';
 
 export type CenterWithDistance = ServiceCenter & { calculatedDistance?: number };
 
@@ -84,6 +87,9 @@ export default function ServiceCentersMap({
   const [zoomLevel, setZoomLevel] = useState<number>(5);
   const [isLocating, setIsLocating] = useState(false);
   const [showFacilityDrawer, setShowFacilityDrawer] = useState(true);
+  const [selectedCardTab, setSelectedCardTab] = useState<'OVERVIEW' | 'EXPERIENCES'>('OVERVIEW');
+  const [isAddReviewOpen, setIsAddReviewOpen] = useState(false);
+  const [reviewsRefreshKey, setReviewsRefreshKey] = useState(0);
 
   // Sync external selected center
   useEffect(() => {
@@ -734,101 +740,177 @@ export default function ServiceCentersMap({
         )}
 
         {/* ─── DETAILED SELECTED CENTER POPUP MODAL (Bottom Center/Right) ─── */}
-        {selectedCenter && (
-          <div className="absolute right-4 bottom-4 z-40 max-w-sm w-full animate-in slide-in-from-bottom-4 duration-300">
-            <div className="bg-slate-900/95 backdrop-blur-2xl rounded-3xl p-5 border border-white/15 shadow-2xl">
-              <div className="flex items-start justify-between gap-3 mb-2">
-                <div>
-                  <span
-                    className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
-                      getMarkerBadge(selectedCenter.type).bgClass
-                    }`}
-                  >
+        {selectedCenter && (() => {
+          const centerReviews = getCenterReviews(selectedCenter.id);
+
+          return (
+            <div className="absolute right-4 bottom-4 z-40 max-w-sm sm:max-w-md w-full animate-in slide-in-from-bottom-4 duration-300">
+              <div className="bg-slate-900/95 backdrop-blur-2xl rounded-3xl p-5 border border-white/15 shadow-2xl">
+                {/* Header */}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <div>
                     <span
-                      className="w-1.5 h-1.5 rounded-full"
-                      style={{ backgroundColor: getMarkerBadge(selectedCenter.type).color }}
-                    />
-                    {getMarkerBadge(selectedCenter.type).label}
-                  </span>
-                  <h3 className="font-bold text-base text-white mt-1.5 leading-snug">
-                    {selectedCenter.name}
-                  </h3>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => setSelectedCenter(null)}
-                  className="p-1 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-
-              {/* Rating & Distance */}
-              <div className="flex items-center gap-2 text-xs mb-2">
-                <span className="font-bold text-amber-400 flex items-center gap-1">
-                  ★ {selectedCenter.rating}
-                </span>
-                <span className="text-white/40">({selectedCenter.reviewCount} reviews)</span>
-                <span className="text-white/20">•</span>
-                <span className="font-semibold text-blue-400">
-                  {selectedCenter.calculatedDistance ?? selectedCenter.distanceKm ?? 2.5} KM away
-                </span>
-              </div>
-
-              <p className="text-xs text-slate-300 line-clamp-2 mb-3">
-                {selectedCenter.address}, {selectedCenter.city}
-              </p>
-
-              {/* Brands supported */}
-              {selectedCenter.brandsSupported && selectedCenter.brandsSupported.length > 0 && (
-                <div className="flex flex-wrap gap-1 mb-4">
-                  {selectedCenter.brandsSupported.slice(0, 4).map((b) => (
-                    <span
-                      key={b}
-                      className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] text-slate-300 border border-white/5 font-medium"
+                      className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                        getMarkerBadge(selectedCenter.type).bgClass
+                      }`}
                     >
-                      {b}
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: getMarkerBadge(selectedCenter.type).color }}
+                      />
+                      {getMarkerBadge(selectedCenter.type).label}
                     </span>
-                  ))}
-                  {selectedCenter.brandsSupported.length > 4 && (
-                    <span className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] text-slate-400">
-                      +{selectedCenter.brandsSupported.length - 4} more
-                    </span>
-                  )}
+                    <h3 className="font-bold text-base text-white mt-1.5 leading-snug">
+                      {selectedCenter.name}
+                    </h3>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCenter(null)}
+                    className="p-1 rounded-full text-white/50 hover:text-white hover:bg-white/10 transition-colors cursor-pointer shrink-0"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-              )}
 
-              {/* Action Buttons: Directions, Call, Book */}
-              <div className="grid grid-cols-3 gap-2">
-                <a
-                  href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
-                    `${selectedCenter.name} ${selectedCenter.address} ${selectedCenter.city}`
-                  )}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="py-2.5 rounded-2xl bg-[#4285F4] hover:bg-[#3275e4] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer"
-                >
-                  <Navigation className="w-3.5 h-3.5" />
-                  Directions
-                </a>
-                <a
-                  href={`tel:${selectedCenter.phone}`}
-                  className="py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-white/10 cursor-pointer"
-                >
-                  <Phone className="w-3.5 h-3.5" />
-                  Call
-                </a>
-                <a
-                  href={`/services/book?centerId=${selectedCenter.id}`}
-                  className="py-2.5 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer"
-                >
-                  <Wrench className="w-3.5 h-3.5" />
-                  Book Slot
-                </a>
+                {/* Rating & Distance */}
+                <div className="flex items-center justify-between text-xs mb-3 pb-2 border-b border-white/10">
+                  <div className="flex items-center gap-2">
+                    <span className="font-bold text-amber-400 flex items-center gap-1">
+                      ★ {selectedCenter.rating}
+                    </span>
+                    <span className="text-white/40">({selectedCenter.reviewCount} ratings)</span>
+                    <span className="text-white/20">•</span>
+                    <span className="font-semibold text-blue-400">
+                      {selectedCenter.calculatedDistance ?? selectedCenter.distanceKm ?? 2.5} KM away
+                    </span>
+                  </div>
+
+                  {/* Tab Selector */}
+                  <div className="flex items-center bg-slate-800/80 p-0.5 rounded-xl border border-white/10">
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCardTab('OVERVIEW')}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer ${
+                        selectedCardTab === 'OVERVIEW' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Overview
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSelectedCardTab('EXPERIENCES')}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-semibold transition-colors cursor-pointer flex items-center gap-1 ${
+                        selectedCardTab === 'EXPERIENCES' ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+                      }`}
+                    >
+                      Experiences ({centerReviews.length})
+                    </button>
+                  </div>
+                </div>
+
+                {/* TAB 1: OVERVIEW */}
+                {selectedCardTab === 'OVERVIEW' ? (
+                  <>
+                    <p className="text-xs text-slate-300 line-clamp-2 mb-3">
+                      {selectedCenter.address}, {selectedCenter.city}
+                    </p>
+
+                    {/* Brands supported */}
+                    {selectedCenter.brandsSupported && selectedCenter.brandsSupported.length > 0 && (
+                      <div className="flex flex-wrap gap-1 mb-4">
+                        {selectedCenter.brandsSupported.slice(0, 4).map((b) => (
+                          <span
+                            key={b}
+                            className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] text-slate-300 border border-white/5 font-medium"
+                          >
+                            {b}
+                          </span>
+                        ))}
+                        {selectedCenter.brandsSupported.length > 4 && (
+                          <span className="px-2 py-0.5 rounded-md bg-slate-800 text-[10px] text-slate-400">
+                            +{selectedCenter.brandsSupported.length - 4} more
+                          </span>
+                        )}
+                      </div>
+                    )}
+                  </>
+                ) : (
+                  /* TAB 2: USER EXPERIENCES */
+                  <div className="space-y-2 mb-3 max-h-40 overflow-y-auto custom-scrollbar pr-1">
+                    <div className="flex items-center justify-between pb-1">
+                      <span className="text-[11px] font-semibold text-slate-400">Motorist Experiences</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsAddReviewOpen(true)}
+                        className="text-[10px] text-blue-400 hover:text-blue-300 font-bold flex items-center gap-1 cursor-pointer"
+                      >
+                        <MessageSquarePlus className="w-3 h-3" />
+                        + Write Experience
+                      </button>
+                    </div>
+
+                    {centerReviews.length === 0 ? (
+                      <div className="p-3 rounded-2xl bg-slate-800/40 text-center">
+                        <p className="text-[11px] text-slate-400">Be the first to share an experience for this center!</p>
+                        <button
+                          type="button"
+                          onClick={() => setIsAddReviewOpen(true)}
+                          className="mt-1.5 text-xs text-blue-400 font-bold"
+                        >
+                          Write a Review &rarr;
+                        </button>
+                      </div>
+                    ) : (
+                      centerReviews.slice(0, 3).map((r) => (
+                        <div key={r.id} className="p-2.5 rounded-2xl bg-slate-800/60 border border-white/5">
+                          <div className="flex items-center justify-between text-[11px] mb-1">
+                            <span className="font-bold text-white flex items-center gap-1">
+                              {r.userName}
+                              {r.verifiedBooking && <CheckCircle2 className="w-3 h-3 text-blue-400" />}
+                            </span>
+                            <span className="text-amber-400 font-bold">★ {r.rating}.0</span>
+                          </div>
+                          <p className="text-[10px] text-blue-300 font-medium mb-1">🚗 {r.vehicleModel} • {r.serviceType}</p>
+                          <p className="text-[11px] text-slate-300 italic line-clamp-2">&ldquo;{r.reviewText}&rdquo;</p>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                )}
+
+                {/* Action Buttons: Directions, Call, Book */}
+                <div className="grid grid-cols-3 gap-2">
+                  <a
+                    href={`https://www.google.com/maps/dir/?api=1&destination=${encodeURIComponent(
+                      `${selectedCenter.name} ${selectedCenter.address} ${selectedCenter.city}`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="py-2.5 rounded-2xl bg-[#4285F4] hover:bg-[#3275e4] text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer"
+                  >
+                    <Navigation className="w-3.5 h-3.5" />
+                    Directions
+                  </a>
+                  <a
+                    href={`tel:${selectedCenter.phone}`}
+                    className="py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all border border-white/10 cursor-pointer"
+                  >
+                    <Phone className="w-3.5 h-3.5" />
+                    Call
+                  </a>
+                  <a
+                    href={`/services/book?centerId=${selectedCenter.id}`}
+                    className="py-2.5 rounded-2xl bg-gradient-to-r from-violet-600 to-blue-600 hover:from-violet-500 hover:to-blue-500 text-white text-xs font-semibold flex items-center justify-center gap-1.5 transition-all shadow-lg cursor-pointer"
+                  >
+                    <Wrench className="w-3.5 h-3.5" />
+                    Book Slot
+                  </a>
+                </div>
               </div>
             </div>
-          </div>
-        )}
+          );
+        })()}
       </div>
 
       {/* ─── FOOTER BAR (LEGEND & EXTERNAL NAVIGATION) ─── */}
@@ -861,6 +943,20 @@ export default function ServiceCentersMap({
           </a>
         </div>
       </div>
+
+      {/* Write Experience Modal */}
+      {selectedCenter && (
+        <AddReviewModal
+          isOpen={isAddReviewOpen}
+          onClose={() => setIsAddReviewOpen(false)}
+          serviceCenters={centers}
+          defaultCenterId={selectedCenter.id}
+          onReviewAdded={() => {
+            setReviewsRefreshKey((k) => k + 1);
+            setSelectedCardTab('EXPERIENCES');
+          }}
+        />
+      )}
     </div>
   );
 }

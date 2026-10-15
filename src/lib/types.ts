@@ -114,6 +114,24 @@ export interface ServiceCenter {
   autoConfirm: boolean;
   isActive: boolean;
   distanceKm?: number;
+  reviews?: ServiceReview[];
+}
+
+export interface ServiceReview {
+  id: string;
+  centerId?: string;
+  centerName?: string;
+  userName: string;
+  userAvatar?: string;
+  userCity: string;
+  vehicleModel: string;
+  rating: number; // 1 - 5
+  serviceType: string;
+  reviewText: string;
+  date: string;
+  verifiedBooking?: boolean;
+  helpfulCount?: number;
+  tags?: string[];
 }
 
 export interface Slot {
