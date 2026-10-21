@@ -1,26 +1,44 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
+import confetti from 'canvas-confetti';
+import { playCelebrationFanfare } from '@/lib/celebrationAudio';
 import {
+  ArrowRight,
   Bot,
   Calendar,
+  Car,
+  Check,
+  CheckCheck,
   CheckCircle2,
   ChevronRight,
   Clock,
+  Copy,
+  Download,
   Lock,
   MapPin,
   MessageSquare,
   RotateCcw,
   Send,
   ShieldAlert,
+  ShieldCheck,
   Sparkles,
   Wrench,
-  X,
-  Car
+  X
 } from 'lucide-react';
 import { getClientSession } from '@/lib/auth';
 import { Booking, ServiceCenter, Vehicle } from '@/lib/types';
 import { validateServiceInput } from '@/lib/serviceGuardrail';
+
+export interface ConfirmedCelebrationData {
+  booking: Booking;
+  vehicle?: Vehicle | null;
+  center?: ServiceCenter | null;
+  services: string[];
+  estMin?: number;
+  estMax?: number;
+  notes?: string;
+}
 
 interface ChatMessage {
   id: string;
@@ -44,17 +62,122 @@ export default function Chatbot() {
 
   // Token Limiter & Step Guardrail mode
   // 'OPTIONS_ONLY': User can ONLY select from available buttons/chips to avoid token wastage
-  // 'EXTRA_REQUIREMENT_INPUT': Unlocked ONLY at the final step, strictly validated for automotive servicing
-  const [inputMode, setInputMode] = useState<'OPTIONS_ONLY' | 'EXTRA_REQUIREMENT_INPUT'>('OPTIONS_ONLY');
+  const [inputMode, setInputMode] = useState<'OPTIONS_ONLY' | 'EXTRA_REQUIREMENT_INPUT' | 'ADD_OTHER_SERVICE'>('OPTIONS_ONLY');
 
   const vehiclesRef = useRef<Vehicle[]>([]);
   const centersRef = useRef<ServiceCenter[]>([]);
   const chatBottomRef = useRef<HTMLDivElement>(null);
 
+  // Floating celebration card state
+  const [confirmedCelebration, setConfirmedCelebration] = useState<ConfirmedCelebrationData | null>(null);
+  const [copiedCode, setCopiedCode] = useState(false);
+
+  // Multi-stage confetti and fanfare celebration trigger
+  const triggerCelebration = () => {
+    try {
+      playCelebrationFanfare();
+    } catch {}
+
+    try {
+      // Stage 1: Big Center Cannon blast
+      confetti({
+        particleCount: 120,
+        spread: 90,
+        origin: { y: 0.5 },
+        zIndex: 100000,
+        colors: ['#0071E3', '#34C759', '#FF9500', '#FF2D55', '#AF52DE', '#5856D6', '#FFD60A'],
+      });
+
+      // Stage 2: Left angled cannon burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 75,
+          angle: 60,
+          spread: 65,
+          origin: { x: 0.15, y: 0.6 },
+          zIndex: 100000,
+          colors: ['#34C759', '#0071E3', '#FFD60A'],
+        });
+      }, 250);
+
+      // Stage 3: Right angled cannon burst
+      setTimeout(() => {
+        confetti({
+          particleCount: 75,
+          angle: 120,
+          spread: 65,
+          origin: { x: 0.85, y: 0.6 },
+          zIndex: 100000,
+          colors: ['#FF2D55', '#AF52DE', '#0071E3', '#FF9500'],
+        });
+      }, 500);
+
+      // Stage 4: Cascading celebration shower
+      setTimeout(() => {
+        confetti({
+          particleCount: 95,
+          spread: 120,
+          origin: { y: 0.35 },
+          zIndex: 100000,
+          colors: ['#0071E3', '#34C759', '#FFD60A', '#FF9500'],
+        });
+      }, 850);
+    } catch {}
+  };
+
+  const handleCopyCode = (code: string) => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(code);
+      setCopiedCode(true);
+      setTimeout(() => setCopiedCode(false), 2000);
+    }
+  };
+
+  const handleDownloadIcs = (item: ConfirmedCelebrationData) => {
+    const { booking, center } = item;
+    const dateFormatted = (booking.serviceDate || '').replace(/-/g, '');
+    const icsContent = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Auto Ping//EN
+BEGIN:VEVENT
+SUMMARY:Vehicle Service: ${booking.vehicleName}
+DESCRIPTION:Service appointment at ${booking.centerName}. Services: ${(booking.services || []).join(', ')}. Booking ID: ${booking.bookingCode}
+DTSTART:${dateFormatted}T103000
+DTEND:${dateFormatted}T120000
+LOCATION:${center?.address || booking.centerAddress || booking.centerName}
+STATUS:CONFIRMED
+END:VEVENT
+END:VCALENDAR`;
+    const blob = new Blob([icsContent], { type: 'text/calendar;charset=utf-8' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `AutoPing-${booking.bookingCode}.ics`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
+  useEffect(() => {
+    const handleGlobalBookingConfirmed = (e: Event) => {
+      const customEvent = e as CustomEvent<ConfirmedCelebrationData>;
+      if (customEvent.detail) {
+        setConfirmedCelebration(customEvent.detail);
+        triggerCelebration();
+      }
+    };
+    window.addEventListener('service_booking_confirmed', handleGlobalBookingConfirmed);
+    return () => {
+      window.removeEventListener('service_booking_confirmed', handleGlobalBookingConfirmed);
+    };
+  }, []);
+
   // In-flight booking wizard state in chatbot
   interface ChatBookingState {
     vehicle?: Vehicle;
     service?: string;
+    services?: string[];
+    selectedServices?: { name: string; price: number; icon: string }[];
     servicePrice?: number;
     date?: string;
     center?: ServiceCenter;
@@ -257,35 +380,158 @@ export default function Chatbot() {
     addBotMessage('Which vehicle would you like to schedule service for?', vehicleChips);
   };
 
+  const CHAT_SERVICE_CATALOG = [
+    { name: 'General Service', price: 1800, icon: '🔧' },
+    { name: 'Engine Oil & Filter', price: 1350, icon: '🛢️' },
+    { name: 'Brake Inspection & Pads', price: 950, icon: '🛑' },
+    { name: 'Periodic Maintenance', price: 2400, icon: '📋' },
+    { name: 'AC Gas & Cooling', price: 1450, icon: '❄️' },
+    { name: 'Battery Health Check', price: 650, icon: '🔋' },
+    { name: 'Tyre Rotation & Alignment', price: 850, icon: '🛞' },
+  ];
+
   const selectVehicleForBooking = (vehicle: Vehicle, preselectedCenter?: ServiceCenter) => {
     addUserMessage(`${vehicle.brandName} ${vehicle.modelName}`);
     setInputMode('OPTIONS_ONLY');
     updateBookingState({
       vehicle,
+      selectedServices: [],
+      services: [],
       ...(preselectedCenter ? { center: preselectedCenter } : {}),
     });
 
-    const serviceOptions = [
-      { name: 'General Service', price: 1800, icon: '🔧' },
-      { name: 'Engine Oil & Filter', price: 1350, icon: '🛢️' },
-      { name: 'Brake Inspection', price: 950, icon: '🛑' },
-      { name: 'Periodic Maintenance', price: 2400, icon: '📋' },
-      { name: 'AC Gas & Cooling', price: 1450, icon: '❄️' },
-    ];
+    renderMultiServiceMenu(vehicle, []);
+  };
 
+  const startAddOtherServiceFlow = (vehicle?: Vehicle) => {
+    const veh = vehicle || chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0];
+    addUserMessage('Add other service');
+    setInputMode('ADD_OTHER_SERVICE');
     addBotMessage(
-      `Great choice! What type of service does your ${vehicle.modelName} require?`,
-      serviceOptions.map((s) => ({
-        label: `${s.icon} ${s.name} (₹${s.price})`,
-        action: () => selectServiceForBooking(s.name, s.price),
-      }))
+      `✍️ **Add Other Service or Custom Repair:**\n\nPlease type the name or description of the custom service, inspection, or repair you need in the box below:\n*(e.g., "Clutch plate replacement", "Dent & paint touch-up", "Suspension squeaking noise", "Horn replacement")*\n\n⌨️ **Type your custom service below and press send:**`,
+      [
+        {
+          label: '🔙 Back to Services Catalog',
+          action: () => {
+            setInputMode('OPTIONS_ONLY');
+            renderMultiServiceMenu(veh, chatBookingRef.current.selectedServices || []);
+          },
+        },
+        { label: '🏠 Main Menu', action: () => initMainMenu() },
+      ]
     );
   };
 
-  const selectServiceForBooking = (serviceName: string, servicePrice: number) => {
-    addUserMessage(serviceName);
+  const renderMultiServiceMenu = (
+    vehicle: Vehicle,
+    selected: { name: string; price: number; icon: string }[]
+  ) => {
+    const selectedCount = selected.length;
+    const totalPrice = selected.reduce((sum, s) => sum + s.price, 0);
+
+    const chips: { label: string; action: () => void | Promise<void> }[] = [];
+
+    // 1. Prominent NEXT STEP button when services are selected
+    if (selectedCount > 0) {
+      chips.push({
+        label: `➡️ Next Step: Proceed to Booking (${selectedCount} selected • ₹${totalPrice.toLocaleString()})`,
+        action: () => confirmMultipleServicesForBooking(selected),
+      });
+    }
+
+    // 2. Option to add OTHER / CUSTOM service
+    chips.push({
+      label: '➕ Add Other Service (Custom/Unlisted)',
+      action: () => startAddOtherServiceFlow(vehicle),
+    });
+
+    // 3. Toggle chips for each available service in catalog
+    CHAT_SERVICE_CATALOG.forEach((s) => {
+      const isSelected = selected.some((item) => item.name === s.name);
+      chips.push({
+        label: isSelected
+          ? `✓ ${s.icon} ${s.name} (₹${s.price}) [Remove]`
+          : `+ ${s.icon} ${s.name} (₹${s.price})`,
+        action: () => toggleServiceInChat(vehicle, s),
+      });
+    });
+
+    // 4. Package shortcut
+    chips.push({
+      label: '⚡ Package: General + Oil + Brakes (₹4,100)',
+      action: () => {
+        const pkg = CHAT_SERVICE_CATALOG.filter(
+          (s) =>
+            s.name === 'General Service' ||
+            s.name === 'Engine Oil & Filter' ||
+            s.name === 'Brake Inspection & Pads'
+        );
+        confirmMultipleServicesForBooking(pkg);
+      },
+    });
+
+    if (selectedCount > 0) {
+      chips.push({
+        label: '🔄 Clear Selection',
+        action: () => {
+          updateBookingState({ selectedServices: [], services: [] });
+          renderMultiServiceMenu(vehicle, []);
+        },
+      });
+    }
+
+    chips.push({ label: '🏠 Main Menu', action: () => initMainMenu() });
+
+    let text = `Great choice! What services does your **${vehicle.brandName} ${vehicle.modelName}** require?\n\n✨ **Select one or multiple services below, or tap Add Other Service:**\n`;
+    if (selectedCount === 0) {
+      text += `(Tap any service to select it, or tap **Add Other Service** to type a custom repair.)`;
+    } else {
+      text +=
+        `\n🛒 **Selected Services (${selectedCount}):**\n` +
+        selected.map((s) => `  • ${s.icon} ${s.name} — ₹${s.price.toLocaleString()}`).join('\n') +
+        `\n\n💰 **Subtotal:** ₹${totalPrice.toLocaleString()}\n\n*Tap **Add Other Service** to add an unlisted repair, or tap **Next Step** to process your booking schedule.*`;
+    }
+
+    addBotMessage(text, chips);
+  };
+
+  const toggleServiceInChat = (
+    vehicle: Vehicle,
+    serviceItem: { name: string; price: number; icon: string }
+  ) => {
+    const current = chatBookingRef.current.selectedServices || [];
+    const exists = current.some((s) => s.name === serviceItem.name);
+    const updated = exists
+      ? current.filter((s) => s.name !== serviceItem.name)
+      : [...current, serviceItem];
+
+    updateBookingState({
+      selectedServices: updated,
+      services: updated.map((s) => s.name),
+      servicePrice: updated.reduce((sum, s) => sum + s.price, 0),
+    });
+
+    addUserMessage(
+      exists ? `Removed ${serviceItem.name}` : `Added ${serviceItem.name} (+₹${serviceItem.price})`
+    );
+    renderMultiServiceMenu(vehicle, updated);
+  };
+
+  const confirmMultipleServicesForBooking = (
+    chosenServices: { name: string; price: number; icon: string }[]
+  ) => {
+    const serviceNames = chosenServices.map((s) => s.name);
+    const totalPrice = chosenServices.reduce((sum, s) => sum + s.price, 0);
+
+    addUserMessage(`Proceed to booking: ${serviceNames.join(', ')} (₹${totalPrice.toLocaleString()})`);
     setInputMode('OPTIONS_ONLY');
-    updateBookingState({ service: serviceName, servicePrice });
+
+    updateBookingState({
+      service: serviceNames.join(', '),
+      services: serviceNames,
+      selectedServices: chosenServices,
+      servicePrice: totalPrice,
+    });
 
     const today = new Date();
     const tomorrow = new Date(today);
@@ -299,20 +545,33 @@ export default function Chatbot() {
     const label = (d: Date) =>
       d.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
 
-    addBotMessage('When would you prefer your appointment?', [
-      {
-        label: `Tomorrow (${label(tomorrow)})`,
-        action: () => selectDateForBooking(fmt(tomorrow), label(tomorrow)),
-      },
-      {
-        label: `Day After (${label(dayAfter)})`,
-        action: () => selectDateForBooking(fmt(dayAfter), label(dayAfter)),
-      },
-      {
-        label: `Next Week (${label(nextWeek)})`,
-        action: () => selectDateForBooking(fmt(nextWeek), label(nextWeek)),
-      },
-    ]);
+    addBotMessage(
+      `Great! We have locked in **${chosenServices.length} services** (${serviceNames.join(
+        ', '
+      )}) totaling **₹${totalPrice.toLocaleString()}**.\n\n📅 **Next Step — Select Appointment Schedule:**\nWhen would you prefer your vehicle drop-off?`,
+      [
+        {
+          label: `Tomorrow (${label(tomorrow)})`,
+          action: () => selectDateForBooking(fmt(tomorrow), label(tomorrow)),
+        },
+        {
+          label: `Day After (${label(dayAfter)})`,
+          action: () => selectDateForBooking(fmt(dayAfter), label(dayAfter)),
+        },
+        {
+          label: `Next Week (${label(nextWeek)})`,
+          action: () => selectDateForBooking(fmt(nextWeek), label(nextWeek)),
+        },
+        {
+          label: '➕ Add Other Service',
+          action: () => startAddOtherServiceFlow(chatBookingRef.current.vehicle),
+        },
+        {
+          label: '🔙 Modify Services',
+          action: () => renderMultiServiceMenu(chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0], chosenServices),
+        },
+      ]
+    );
   };
 
   const selectDateForBooking = (dateStr: string, dateLabel: string) => {
@@ -364,7 +623,9 @@ export default function Chatbot() {
 
     const fallbackVehicle = chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0];
     const fallbackCenter = chatBookingRef.current.center || centersRef.current[0] || centers[0];
-    const fallbackService = chatBookingRef.current.service || 'General Service';
+    const fallbackServices =
+      chatBookingRef.current.services ||
+      (chatBookingRef.current.service ? [chatBookingRef.current.service] : ['General Service']);
     const fallbackPrice = chatBookingRef.current.servicePrice || 1800;
     const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const fallbackDate = chatBookingRef.current.date || tomorrowStr;
@@ -372,7 +633,8 @@ export default function Chatbot() {
     const fullBookingState = updateBookingState({
       vehicle: fallbackVehicle,
       center: fallbackCenter,
-      service: fallbackService,
+      services: fallbackServices,
+      service: fallbackServices.join(', '),
       servicePrice: fallbackPrice,
       date: fallbackDate,
       slotTime,
@@ -403,18 +665,21 @@ export default function Chatbot() {
     const fallbackPrice = updatedState.servicePrice || 1800;
     const estMin = Math.round(fallbackPrice * 1.15);
     const estMax = Math.round(estMin * 1.25);
+    const serviceList =
+      updatedState.services || (updatedState.service ? [updatedState.service] : ['General Service']);
 
     addBotMessage(
       'Here is your booking summary. Confirm to lock in your certified appointment slot:',
       [
-        { label: '✅ Confirm Booking Now', action: () => executeChatBooking(updatedState) },
+        { label: '✅ Confirm Service', action: () => executeChatBooking(updatedState) },
         { label: '🔄 Start Over', action: () => initMainMenu() },
       ],
       {
         type: 'booking_summary',
         data: {
           vehicle: updatedState.vehicle,
-          service: updatedState.service,
+          service: serviceList.join(', '),
+          services: serviceList,
           center: updatedState.center,
           date: updatedState.date,
           time: updatedState.slotTime,
@@ -427,13 +692,16 @@ export default function Chatbot() {
   };
 
   const executeChatBooking = async (details?: Partial<ChatBookingState>) => {
-    addUserMessage('Confirm Booking');
+    addUserMessage('Confirm Service');
     setInputMode('OPTIONS_ONLY');
     const user = getClientSession();
 
     const vehicle = details?.vehicle || chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0];
     const center = details?.center || chatBookingRef.current.center || centersRef.current[0] || centers[0];
-    const service = details?.service || chatBookingRef.current.service || 'General Service';
+    const servicesList =
+      details?.services ||
+      chatBookingRef.current.services ||
+      (details?.service ? [details.service] : chatBookingRef.current.service ? [chatBookingRef.current.service] : ['General Service']);
     const servicePrice = details?.servicePrice || chatBookingRef.current.servicePrice || 1800;
     const tomorrowStr = new Date(Date.now() + 86400000).toISOString().split('T')[0];
     const date = details?.date || chatBookingRef.current.date || tomorrowStr;
@@ -466,7 +734,7 @@ export default function Chatbot() {
           slotId: `slot-${center.id}-${date}-${slotTime.replace(/[^a-zA-Z0-9]/g, '')}`,
           serviceDate: date,
           serviceTime: slotTime,
-          services: [service],
+          services: servicesList,
           estimatedCostMin: estMin,
           estimatedCostMax: estMax,
           notes: notesText,
@@ -478,9 +746,22 @@ export default function Chatbot() {
 
       if (data.data) {
         const booking: Booking = data.data;
+        const celebrationPayload: ConfirmedCelebrationData = {
+          booking,
+          vehicle,
+          center,
+          services: servicesList,
+          estMin,
+          estMax,
+          notes: extraNotes,
+        };
+        setConfirmedCelebration(celebrationPayload);
+        triggerCelebration();
+
         addBotMessage(
-          `🎉 Service Booked! Your appointment at ${center.name} is confirmed.`,
+          `🎉 Congratulations! Service Booked! Your appointment at ${center.name} is confirmed.`,
           [
+            { label: '🎉 Replay Celebration', action: () => triggerCelebration() },
             { label: '📄 View All Bookings', action: () => (window.location.href = '/bookings') },
             { label: '🏠 Back to Menu', action: () => initMainMenu() },
           ],
@@ -621,7 +902,76 @@ export default function Chatbot() {
       return;
     }
 
-    // 2. IF IN EXTRA_REQUIREMENT_INPUT MODE:
+    // 2. IF IN ADD_OTHER_SERVICE MODE:
+    // User is adding a custom or unlisted automotive service
+    if (inputMode === 'ADD_OTHER_SERVICE') {
+      addUserMessage(text);
+
+      const validation = validateServiceInput(text);
+
+      if (!validation.allowed) {
+        addBotMessage(
+          `⛔ **Non-Automotive Input:** Please enter a valid vehicle repair or service requirement.`,
+          [
+            {
+              label: '🔙 Back to Services Menu',
+              action: () => {
+                setInputMode('OPTIONS_ONLY');
+                renderMultiServiceMenu(
+                  chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0],
+                  chatBookingRef.current.selectedServices || []
+                );
+              },
+            },
+            { label: '🏠 Main Menu', action: () => initMainMenu() },
+          ]
+        );
+        return;
+      }
+
+      const customService = {
+        name: text.length > 35 ? text.slice(0, 35) + '...' : text,
+        price: 1200,
+        icon: '🔧',
+      };
+
+      const current = chatBookingRef.current.selectedServices || [];
+      const updated = [...current, customService];
+      const totalPrice = updated.reduce((sum, s) => sum + s.price, 0);
+
+      updateBookingState({
+        selectedServices: updated,
+        services: updated.map((s) => s.name),
+        servicePrice: totalPrice,
+      });
+
+      setInputMode('OPTIONS_ONLY');
+
+      addBotMessage(
+        `✅ Added other service: **${customService.name}** (Est. ₹${customService.price.toLocaleString()}).\n\nTotal selected: **${updated.length} services** (₹${totalPrice.toLocaleString()}).\n\nTap **Next Step** to process booking or add more services:`,
+        [
+          {
+            label: `➡️ Next Step: Proceed to Booking (${updated.length} services • ₹${totalPrice.toLocaleString()})`,
+            action: () => confirmMultipleServicesForBooking(updated),
+          },
+          {
+            label: '➕ Add Another Service',
+            action: () => startAddOtherServiceFlow(chatBookingRef.current.vehicle),
+          },
+          {
+            label: '📋 View All Services',
+            action: () =>
+              renderMultiServiceMenu(
+                chatBookingRef.current.vehicle || vehiclesRef.current[0] || vehicles[0],
+                updated
+              ),
+          },
+        ]
+      );
+      return;
+    }
+
+    // 3. IF IN EXTRA_REQUIREMENT_INPUT MODE:
     // User is submitting custom extra requirements. Must be automotive servicing info!
     if (inputMode === 'EXTRA_REQUIREMENT_INPUT') {
       addUserMessage(text);
@@ -755,9 +1105,11 @@ export default function Chatbot() {
                           {m.card.data.vehicle?.brandName} {m.card.data.vehicle?.modelName}
                         </span>
                       </div>
-                      <div className="flex justify-between items-center">
-                        <span className="text-slate-500 dark:text-slate-400">Service:</span>
-                        <span className="font-medium text-slate-900 dark:text-white">{m.card.data.service}</span>
+                      <div className="flex justify-between items-start">
+                        <span className="text-slate-500 dark:text-slate-400 shrink-0">Services:</span>
+                        <span className="font-medium text-slate-900 dark:text-white text-right max-w-[220px]">
+                          {m.card.data.services ? m.card.data.services.join(', ') : m.card.data.service}
+                        </span>
                       </div>
                       {m.card.data.extraNotes && (
                         <div className="flex justify-between items-start">
@@ -882,6 +1234,11 @@ export default function Chatbot() {
                   <Lock className="w-3 h-3 text-amber-500" />
                   <span>Limiter Active: Select options above to save tokens</span>
                 </span>
+              ) : inputMode === 'ADD_OTHER_SERVICE' ? (
+                <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
+                  <Wrench className="w-3 h-3 text-blue-500" />
+                  <span>Custom Service: Type other repair or service name</span>
+                </span>
               ) : (
                 <span className="text-blue-600 dark:text-blue-400 font-semibold flex items-center gap-1">
                   <Wrench className="w-3 h-3 text-blue-500" />
@@ -899,10 +1256,12 @@ export default function Chatbot() {
                 placeholder={
                   inputMode === 'OPTIONS_ONLY'
                     ? '🔒 Select an available option above...'
+                    : inputMode === 'ADD_OTHER_SERVICE'
+                    ? 'Type other custom service (e.g. Clutch plate repair)...'
                     : 'Type extra vehicle service details (e.g. brake squeal)...'
                 }
                 className={`flex-1 rounded-lg px-3 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-hidden transition-all ${
-                  inputMode === 'EXTRA_REQUIREMENT_INPUT'
+                  inputMode !== 'OPTIONS_ONLY'
                     ? 'bg-blue-50/50 dark:bg-blue-950/30 border-2 border-blue-500 ring-2 ring-blue-500/20'
                     : 'bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
                 }`}
@@ -910,7 +1269,7 @@ export default function Chatbot() {
               <button
                 onClick={handleSendText}
                 className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors shrink-0 text-white ${
-                  inputMode === 'EXTRA_REQUIREMENT_INPUT'
+                  inputMode !== 'OPTIONS_ONLY'
                     ? 'bg-blue-600 hover:bg-blue-700'
                     : 'bg-slate-400 dark:bg-slate-700 hover:bg-slate-500'
                 }`}
@@ -919,6 +1278,249 @@ export default function Chatbot() {
               >
                 <Send className="w-3.5 h-3.5" />
               </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════════════════════════════════════════════════════════════
+          FLOATING CELEBRATION CARD ON MIDDLE OF SCREEN
+          ══════════════════════════════════════════════════════════════ */}
+      {confirmedCelebration && (
+        <div
+          className="fixed inset-0 z-[99999] bg-slate-950/75 backdrop-blur-md flex items-center justify-center p-3 sm:p-5 overflow-y-auto animate-in fade-in duration-300"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setConfirmedCelebration(null);
+          }}
+        >
+          <div className="relative w-full max-w-lg my-auto rounded-3xl bg-white dark:bg-[#13141a] border border-slate-200/90 dark:border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[92vh] animate-in zoom-in-95 duration-300">
+            {/* Top Celebration Radiant Banner */}
+            <div className="relative bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-600 px-6 py-6 text-white text-center shrink-0 overflow-hidden">
+              {/* Background Glows */}
+              <div className="absolute -top-12 -left-12 w-36 h-36 bg-white/20 rounded-full blur-2xl pointer-events-none" />
+              <div className="absolute -bottom-10 -right-10 w-36 h-36 bg-emerald-400/25 rounded-full blur-2xl pointer-events-none" />
+
+              {/* Top-Right Dismiss Button */}
+              <button
+                type="button"
+                onClick={() => setConfirmedCelebration(null)}
+                className="absolute top-3.5 right-3.5 w-8 h-8 rounded-full bg-black/20 hover:bg-black/35 text-white/90 hover:text-white flex items-center justify-center transition-colors cursor-pointer"
+                aria-label="Close celebration modal"
+              >
+                <X className="w-4 h-4" />
+              </button>
+
+              {/* Animated Celebration Icon with Bouncing Emojis */}
+              <div className="relative mb-3 inline-block mx-auto">
+                <span className="absolute -top-2 -right-3 text-3xl animate-bounce select-none">🎉</span>
+                <span className="absolute -bottom-1 -left-3 text-2xl animate-pulse select-none">✨</span>
+                <div className="w-16 h-16 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center mx-auto shadow-xl ring-4 ring-white/30">
+                  <div className="w-12 h-12 rounded-full bg-white flex items-center justify-center text-emerald-600 shadow-md">
+                    <CheckCircle2 className="w-7 h-7 stroke-[2.5]" />
+                  </div>
+                </div>
+              </div>
+
+              {/* Status Pill */}
+              <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-white text-[11px] font-semibold uppercase tracking-wider mb-2">
+                <span className="w-2 h-2 rounded-full bg-emerald-300 animate-ping inline-block" />
+                <span>Service Booked · Live Bay Reserved</span>
+              </div>
+
+              <h2 className="text-2xl sm:text-[26px] font-bold tracking-tight text-white mb-1">
+                Congratulations!
+              </h2>
+              <p className="text-white/90 text-xs sm:text-[13px] max-w-sm mx-auto leading-relaxed">
+                Your service appointment has been booked with our certified workshop partner.
+              </p>
+
+              {/* Booking Reference Code with copy */}
+              <div className="mt-3.5 inline-flex items-center gap-2 bg-black/25 backdrop-blur-md px-3.5 py-1.5 rounded-full border border-white/15 text-xs">
+                <span className="text-white/70">Booking ID:</span>
+                <span className="font-mono font-bold text-white tracking-wide">
+                  {confirmedCelebration.booking.bookingCode}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopyCode(confirmedCelebration.booking.bookingCode)}
+                  className="p-1 rounded hover:bg-white/20 text-white/80 hover:text-white transition-colors cursor-pointer"
+                  title="Copy Booking ID"
+                >
+                  {copiedCode ? <CheckCheck className="w-3.5 h-3.5 text-emerald-300" /> : <Copy className="w-3.5 h-3.5" />}
+                </button>
+              </div>
+            </div>
+
+            {/* Scrollable Service Detail Body */}
+            <div className="p-5 sm:p-6 overflow-y-auto space-y-4 text-slate-800 dark:text-slate-200 text-xs sm:text-sm">
+              {/* Vehicle & Workshop Cards Grid */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                {/* Vehicle Card */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-blue-500/10 dark:bg-blue-500/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <Car className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                      Vehicle Details
+                    </p>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                      {confirmedCelebration.vehicle
+                        ? `${confirmedCelebration.vehicle.brandName} ${confirmedCelebration.vehicle.modelName}`
+                        : confirmedCelebration.booking.vehicleName}
+                    </h4>
+                    <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                      <span className="font-mono text-[11px] px-2 py-0.5 rounded-md bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 font-semibold text-slate-700 dark:text-slate-300">
+                        {confirmedCelebration.vehicle?.registrationNo || 'Registered'}
+                      </span>
+                      {confirmedCelebration.vehicle?.fuelType && (
+                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-medium">
+                          {confirmedCelebration.vehicle.fuelType}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+
+                {/* Service Center Card */}
+                <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/70 border border-slate-200/80 dark:border-slate-800 flex items-start gap-3">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/10 dark:bg-amber-500/20 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <MapPin className="w-5 h-5" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center justify-between">
+                      <p className="text-[10px] font-semibold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+                        Workshop Partner
+                      </p>
+                      {confirmedCelebration.center?.rating && (
+                        <span className="text-[10px] font-bold text-amber-600 dark:text-amber-400">
+                          ★ {confirmedCelebration.center.rating}
+                        </span>
+                      )}
+                    </div>
+                    <h4 className="font-bold text-sm text-slate-900 dark:text-white truncate">
+                      {confirmedCelebration.center?.name || confirmedCelebration.booking.centerName}
+                    </h4>
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate mt-0.5">
+                      {confirmedCelebration.center?.address || confirmedCelebration.booking.centerAddress || 'Certified Bay Facility'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Schedule, Slot & Price Matrix */}
+              <div className="grid grid-cols-3 divide-x divide-slate-200 dark:divide-slate-800 bg-slate-50/80 dark:bg-slate-900/50 rounded-2xl border border-slate-200/70 dark:border-slate-800/80 p-3 text-center">
+                <div className="px-2">
+                  <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1 mb-0.5">
+                    <Calendar className="w-3 h-3 text-blue-500" /> Date
+                  </p>
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                    {confirmedCelebration.booking.serviceDate}
+                  </p>
+                  <p className="text-[10px] text-slate-400">Scheduled</p>
+                </div>
+
+                <div className="px-2">
+                  <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 flex items-center justify-center gap-1 mb-0.5">
+                    <Clock className="w-3 h-3 text-emerald-500" /> Time
+                  </p>
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate">
+                    {confirmedCelebration.booking.serviceTime}
+                  </p>
+                  <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">Priority Bay</p>
+                </div>
+
+                <div className="px-2">
+                  <p className="text-[10px] uppercase font-semibold text-slate-400 dark:text-slate-500 mb-0.5">
+                    Est. Cost
+                  </p>
+                  <p className="font-bold text-xs sm:text-sm text-slate-900 dark:text-white truncate font-mono">
+                    ₹{(confirmedCelebration.estMin || confirmedCelebration.booking.estimatedCostMin || 1800).toLocaleString()} – ₹{(confirmedCelebration.estMax || confirmedCelebration.booking.estimatedCostMax || 3500).toLocaleString()}
+                  </p>
+                  <p className="text-[10px] text-slate-400">Pay at center</p>
+                </div>
+              </div>
+
+              {/* Booked Services List */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Confirmed Services ({confirmedCelebration.services.length})
+                  </p>
+                  <span className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium flex items-center gap-1">
+                    <ShieldCheck className="w-3.5 h-3.5" /> Certified Quality
+                  </span>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {confirmedCelebration.services.map((srv, idx) => (
+                    <div
+                      key={idx}
+                      className="flex items-center gap-2 p-2.5 rounded-xl bg-blue-50/60 dark:bg-blue-950/20 border border-blue-200/50 dark:border-blue-900/30 text-xs font-medium text-slate-800 dark:text-slate-200"
+                    >
+                      <div className="w-5 h-5 rounded-full bg-emerald-500/15 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+                        <Check className="w-3 h-3 stroke-[3]" />
+                      </div>
+                      <span className="truncate">{srv}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Notes / Special Requirements */}
+              {(confirmedCelebration.notes || confirmedCelebration.booking.notes) && (
+                <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-900/60 border border-slate-200/60 dark:border-slate-800 text-xs">
+                  <span className="font-semibold text-slate-700 dark:text-slate-300">Special Notes: </span>
+                  <span className="text-slate-600 dark:text-slate-400 italic">
+                    "{confirmedCelebration.notes || confirmedCelebration.booking.notes}"
+                  </span>
+                </div>
+              )}
+
+              {/* Guarantee banner */}
+              <div className="flex items-center gap-2 p-2.5 rounded-xl bg-emerald-50/60 dark:bg-emerald-950/20 border border-emerald-200/50 dark:border-emerald-800/30 text-[11px] text-emerald-800 dark:text-emerald-300">
+                <ShieldCheck className="w-4 h-4 shrink-0 text-emerald-600" />
+                <span>100% Genuine Parts Guarantee · Free cancellation up to 2 hours prior to slot</span>
+              </div>
+            </div>
+
+            {/* Bottom Action Footer */}
+            <div className="px-5 py-3.5 bg-slate-50 dark:bg-slate-900/90 border-t border-slate-200/80 dark:border-slate-800 flex flex-wrap items-center justify-between gap-2 shrink-0">
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={triggerCelebration}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Replay Confetti 🎊</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleDownloadIcs(confirmedCelebration)}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-200/80 hover:bg-slate-300/80 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-medium transition-colors cursor-pointer"
+                >
+                  <Download className="w-3.5 h-3.5" />
+                  <span>Calendar (.ics)</span>
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2 ml-auto">
+                <button
+                  type="button"
+                  onClick={() => (window.location.href = '/bookings')}
+                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
+                >
+                  <span>View All Bookings</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setConfirmedCelebration(null)}
+                  className="px-3.5 py-2 rounded-xl bg-slate-200 hover:bg-slate-300 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold transition-colors cursor-pointer"
+                >
+                  Done
+                </button>
+              </div>
             </div>
           </div>
         </div>

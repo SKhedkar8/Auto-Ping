@@ -279,9 +279,25 @@ function BookServicePageInner() {
       const data = await res.json();
       setIsSubmitting(false);
       if (data.data) {
-        setBookingResult(data.data);
+        const booking = data.data;
+        setBookingResult(booking);
         setStep(5);
         triggerCelebration();
+
+        // Dispatch global event so Chatbot's floating celebration card fires as well
+        window.dispatchEvent(
+          new CustomEvent('service_booking_confirmed', {
+            detail: {
+              booking,
+              vehicle: selectedVehicle,
+              center: selectedCenter,
+              services: chosenServiceNames.length > 0 ? chosenServiceNames : ['General Service'],
+              estMin: costMin,
+              estMax: costMax,
+              notes: specialNotes || undefined,
+            },
+          })
+        );
       } else {
         setBookingError(data.error || 'Failed to confirm booking. Slot may have been taken.');
       }
