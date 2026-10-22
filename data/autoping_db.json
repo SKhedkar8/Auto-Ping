@@ -10661,7 +10661,7 @@
       "date": "2026-10-23",
       "startTime": "10:30 AM",
       "capacity": 2,
-      "booked": 0,
+      "booked": 1,
       "isBlocked": false
     },
     {
@@ -19148,6 +19148,33 @@
       "createdAt": "2026-10-21T09:13:47.032Z",
       "updatedAt": "2026-10-21T11:38:00.598Z",
       "cancelReason": "Admin operational cancellation"
+    },
+    {
+      "id": "book-1792663776981-jjid",
+      "bookingCode": "AP-20261023-002",
+      "userId": "user-customer-1",
+      "userName": "Shreyas Patil",
+      "userPhone": "9876543210",
+      "userEmail": "shreyas@example.com",
+      "vehicleId": "veh-1791463900954-q4oh",
+      "vehicleName": "Hyundai Creta",
+      "vehicleReg": "MH12AB1234",
+      "centerId": "center-pune-4",
+      "centerName": "SpeedoWheel Multi-Brand Car Care",
+      "centerAddress": "Shop 1-4, Goodwill Enclave, Viman Nagar",
+      "slotId": "slot-center-pune-4-2026-10-23-1030AM",
+      "serviceDate": "2026-10-23",
+      "serviceTime": "10:30 AM",
+      "services": [
+        "AC Gas & Cooling",
+        "Battery Health Check"
+      ],
+      "notes": "Booked via AutoPing Assistant. Extra requirement: Standard Periodic Service",
+      "estimatedCostMin": 2415,
+      "estimatedCostMax": 3019,
+      "status": "CONFIRMED",
+      "createdAt": "2026-10-22T10:09:36.981Z",
+      "updatedAt": "2026-10-22T10:09:36.981Z"
     }
   ],
   "records": [
@@ -19361,6 +19388,17 @@
     }
   ],
   "notifications": [
+    {
+      "id": "notif-1792663776981",
+      "userId": "user-customer-1",
+      "type": "BOOKING_CONFIRMED",
+      "title": "Service Booked Successfully!",
+      "message": "Your booking for Hyundai Creta on 2026-10-23 (10:30 AM) at SpeedoWheel Multi-Brand Car Care has been confirmed. Code: AP-20261023-002",
+      "vehicleId": "veh-1791463900954-q4oh",
+      "bookingId": "book-1792663776981-jjid",
+      "isRead": false,
+      "createdAt": "2026-10-22T10:09:36.981Z"
+    },
     {
       "id": "notif-1792582684762",
       "userId": "user-customer-3",
