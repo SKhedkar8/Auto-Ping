@@ -13,11 +13,22 @@ import {
   Sun,
 } from 'lucide-react';
 import { DEMO_CUSTOMER_USER, getClientSession, setClientSession } from '@/lib/auth';
+import { switchUserRoleWithAnimation } from '@/lib/roleTransition';
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
   const [isDark, setIsDark] = useState(false);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+
+  useEffect(() => {
+    const handleSwitchingState = (e: Event) => {
+      const ce = e as CustomEvent<{ isSwitching: boolean }>;
+      setIsSwitchingRole(!!ce.detail?.isSwitching);
+    };
+    window.addEventListener('autoping_role_switching_state', handleSwitchingState);
+    return () => window.removeEventListener('autoping_role_switching_state', handleSwitchingState);
+  }, []);
 
   // Persist & restore theme
   useEffect(() => {
@@ -235,11 +246,15 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
 
             <button
+              type="button"
+              disabled={isSwitchingRole}
               onClick={() => {
-                setClientSession(DEMO_CUSTOMER_USER);
-                router.push('/dashboard');
+                if (isSwitchingRole) return;
+                switchUserRoleWithAnimation('CUSTOMER', '/dashboard');
               }}
-              className="px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all duration-150 hover:opacity-80"
+              className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all duration-150 ${
+                isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'
+              }`}
               style={{
                 background: 'var(--abtn)',
                 color: 'var(--abtntxt)',

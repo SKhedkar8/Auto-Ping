@@ -24,6 +24,7 @@ import {
   X
 } from 'lucide-react';
 import { clearClientSession, DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, getClientSession, setClientSession } from '@/lib/auth';
+import { switchUserRoleWithAnimation } from '@/lib/roleTransition';
 import { Notification, User as UserType } from '@/lib/types';
 import { useDarkMode } from './DarkModeProvider';
 import RunningTicker from './RunningTicker';
@@ -41,6 +42,16 @@ export default function Navbar() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
+  const [isSwitchingRole, setIsSwitchingRole] = useState(false);
+
+  useEffect(() => {
+    const handleRoleSwitchState = (e: Event) => {
+      const ce = e as CustomEvent<{ isSwitching: boolean }>;
+      setIsSwitchingRole(!!ce.detail?.isSwitching);
+    };
+    window.addEventListener('autoping_role_switching_state', handleRoleSwitchState);
+    return () => window.removeEventListener('autoping_role_switching_state', handleRoleSwitchState);
+  }, []);
 
   useEffect(() => {
     const handleOpenAi = () => setIsAiAssistantOpen(true);
@@ -230,22 +241,34 @@ export default function Navbar() {
             {/* Demo role switcher */}
             <div className="hidden lg:flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-full text-xs">
               <button
-                onClick={() => { setClientSession(DEMO_CUSTOMER_USER); router.push('/dashboard'); }}
+                type="button"
+                disabled={isSwitchingRole}
+                onClick={() => {
+                  if (currentUser?.role === 'CUSTOMER' || isSwitchingRole) return;
+                  switchUserRoleWithAnimation('CUSTOMER', '/dashboard');
+                }}
                 className={`px-3 py-1 rounded-full transition-all duration-200 font-medium ${
                   currentUser?.role === 'CUSTOMER'
                     ? 'bg-white dark:bg-slate-900 shadow-xs text-blue-600 dark:text-blue-400 font-semibold'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                } ${isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                title="Switch to Customer Mode"
               >
                 Customer
               </button>
               <button
-                onClick={() => { setClientSession(DEMO_ADMIN_USER); router.push('/admin'); }}
+                type="button"
+                disabled={isSwitchingRole}
+                onClick={() => {
+                  if (currentUser?.role === 'ADMIN' || isSwitchingRole) return;
+                  switchUserRoleWithAnimation('ADMIN', '/admin');
+                }}
                 className={`px-3 py-1 rounded-full transition-all duration-200 font-medium flex items-center gap-1 ${
                   currentUser?.role === 'ADMIN'
                     ? 'bg-white dark:bg-slate-900 shadow-xs text-amber-600 dark:text-amber-400 font-semibold'
                     : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-                }`}
+                } ${isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+                title="Switch to Admin Console"
               >
                 <Shield className="w-3 h-3 text-amber-500" />
                 Admin
@@ -369,15 +392,31 @@ export default function Navbar() {
                       Profile & Preferences
                     </a>
                     {currentUser?.role === 'ADMIN' ? (
-                      <a href="/admin" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#FF9500] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
+                      <button
+                        type="button"
+                        disabled={isSwitchingRole}
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          switchUserRoleWithAnimation('ADMIN', '/admin');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#FF9500] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                      >
                         <Shield className="w-3.5 h-3.5 text-[#FF9500]" />
                         Admin Center
-                      </a>
+                      </button>
                     ) : (
-                      <a href="/admin/login" onClick={() => setShowUserMenu(false)} className="flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors">
-                        <Shield className="w-3.5 h-3.5 text-[#86868b]" />
-                        Admin Login
-                      </a>
+                      <button
+                        type="button"
+                        disabled={isSwitchingRole}
+                        onClick={() => {
+                          setShowUserMenu(false);
+                          switchUserRoleWithAnimation('ADMIN', '/admin');
+                        }}
+                        className="w-full flex items-center gap-2.5 px-4 py-2.5 text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/[0.04] dark:hover:bg-white/[0.06] transition-colors text-left cursor-pointer"
+                      >
+                        <Shield className="w-3.5 h-3.5 text-amber-500" />
+                        Switch to Admin Console
+                      </button>
                     )}
                   </div>
 
@@ -423,6 +462,43 @@ export default function Navbar() {
                 Interactive
               </span>
             </button>
+
+            {/* Mobile Role Switcher */}
+            <div className="flex items-center gap-1 p-1 bg-black/[0.04] dark:bg-white/[0.06] rounded-xl text-xs mb-2">
+              <button
+                type="button"
+                disabled={isSwitchingRole}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (currentUser?.role === 'CUSTOMER' || isSwitchingRole) return;
+                  switchUserRoleWithAnimation('CUSTOMER', '/dashboard');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-center font-medium transition-all ${
+                  currentUser?.role === 'CUSTOMER'
+                    ? 'bg-white dark:bg-slate-900 shadow-xs text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                } ${isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                Customer App
+              </button>
+              <button
+                type="button"
+                disabled={isSwitchingRole}
+                onClick={() => {
+                  setMobileMenuOpen(false);
+                  if (currentUser?.role === 'ADMIN' || isSwitchingRole) return;
+                  switchUserRoleWithAnimation('ADMIN', '/admin');
+                }}
+                className={`flex-1 py-1.5 rounded-lg text-center font-medium transition-all flex items-center justify-center gap-1 ${
+                  currentUser?.role === 'ADMIN'
+                    ? 'bg-white dark:bg-slate-900 shadow-xs text-amber-600 dark:text-amber-400 font-semibold'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+                } ${isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'cursor-pointer'}`}
+              >
+                <Shield className="w-3 h-3 text-amber-500" />
+                Admin Console
+              </button>
+            </div>
 
             {navLinks.map((link) => {
               const Icon = link.icon;
