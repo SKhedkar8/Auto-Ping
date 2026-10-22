@@ -1,13 +1,14 @@
 import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import DarkModeProvider from "@/components/DarkModeProvider";
+import PwaRegister from "@/components/PwaRegister";
 
 export const viewport: Viewport = {
   width: "device-width",
   initialScale: 1,
   maximumScale: 5,
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#F7F9FC" },
+    { media: "(prefers-color-scheme: light)", color: "#2563EB" },
     { media: "(prefers-color-scheme: dark)", color: "#020617" },
   ],
 };
@@ -15,6 +16,16 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: "Auto Ping — Never Miss a Service | Smart Vehicle Care",
   description: "Track maintenance intervals, diagnose vehicle health, estimate service costs, and book verified service center slots.",
+  manifest: "/manifest.webmanifest",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "AutoPing",
+  },
+  icons: {
+    icon: "/icons/icon-192.png",
+    apple: "/icons/apple-touch-icon.png",
+  },
 };
 
 export default function RootLayout({
@@ -31,10 +42,14 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
+        <meta name="apple-mobile-web-app-capable" content="yes" />
+        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased">
         <DarkModeProvider>
           {children}
+          <PwaRegister />
         </DarkModeProvider>
       </body>
     </html>

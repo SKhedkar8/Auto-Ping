@@ -8,6 +8,7 @@ import {
   Car,
   ChevronDown,
   Compass,
+  Download,
   History,
   LayoutDashboard,
   LogOut,
@@ -15,6 +16,7 @@ import {
   Moon,
   Scan,
   Shield,
+  Smartphone,
   Sparkles,
   Sun,
   User,
@@ -208,6 +210,17 @@ export default function Navbar() {
               >
                 <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>AI Assistant</span>
+              </button>
+
+              {/* 📲 Install App Button */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('autoping_trigger_pwa_install'))}
+                className="hidden xl:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all duration-200 cursor-pointer ml-0.5"
+                title="Install AutoPing as an app on your device"
+              >
+                <Smartphone className="w-3.5 h-3.5 text-slate-400" />
+                <span>Install App</span>
               </button>
             </nav>
           </div>
@@ -438,13 +451,17 @@ export default function Navbar() {
                 {isDark ? <Sun className="w-4 h-4 text-[#FF9500]" /> : <Moon className="w-4 h-4" />}
                 {isDark ? 'Light Mode' : 'Dark Mode'}
               </button>
-              <a
-                href="/admin"
-                onClick={() => setMobileMenuOpen(false)}
-                className="flex-1 text-center py-2.5 text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7] bg-black/[0.05] dark:bg-white/[0.08] rounded-xl"
+              <button
+                type="button"
+                onClick={() => {
+                  window.dispatchEvent(new CustomEvent('autoping_trigger_pwa_install'));
+                  setMobileMenuOpen(false);
+                }}
+                className="flex-1 flex items-center justify-center gap-2 py-2.5 text-[13px] font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/40 rounded-xl border border-blue-200/60 dark:border-blue-900/40 cursor-pointer"
               >
-                Go to Admin
-              </a>
+                <Download className="w-4 h-4" />
+                Install App
+              </button>
             </div>
           </div>
         )}
