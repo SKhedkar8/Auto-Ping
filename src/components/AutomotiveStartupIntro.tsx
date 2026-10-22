@@ -10,25 +10,18 @@ import { DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, setClientSession } from '@/lib/aut
  * 
  * Cinematic automotive startup intro animation for AutoPing:
  * - Shared for both:
- *   1. Initial site launch startup intro (plays once per browser session)
+ *   1. Initial site launch startup intro (plays once per browser session, ~3.5s)
  *   2. Customer <-> Admin mode switching transition (1.5 - 1.8s calibrated duration)
- * 
- * Timeline for Role Switching:
- * - 0–300ms: Fade in deep navy background (#07111F) & ambient glow
- * - 300–900ms: High-tech horizontal blue light trail / laser beam sweep
- * - 700–1300ms: AutoPing brand logo & "Never Miss a Service" tagline reveal
- * - 1300–1800ms: Session update & smooth transition to destination dashboard
  */
 export default function AutomotiveStartupIntro() {
   const router = useRouter();
 
-  const [mounted, setMounted] = useState(false);
-  const [shouldPlay, setShouldPlay] = useState(false);
+  // Overlay visibility and phase
+  const [isOpen, setIsOpen] = useState(false);
   const [phase, setPhase] = useState<0 | 1 | 2 | 3 | 4 | 5>(0);
   const [isFadingOut, setIsFadingOut] = useState(false);
-  const [isUnmounted, setIsUnmounted] = useState(false);
 
-  // Tracks active role switch transition metadata if triggered via role switch
+  // Active role switch target metadata
   const [switchTarget, setSwitchTarget] = useState<{
     role: 'ADMIN' | 'CUSTOMER';
     url: string;
@@ -36,8 +29,9 @@ export default function AutomotiveStartupIntro() {
 
   const timersRef = useRef<NodeJS.Timeout[]>([]);
   const isTransitioningRef = useRef(false);
+  const switchTargetRef = useRef<{ role: 'ADMIN' | 'CUSTOMER'; url: string } | null>(null);
 
-  const cleanupTimers = useCallback(() => {
+  const clearAllTimers = useCallback(() => {
     timersRef.current.forEach(clearTimeout);
     timersRef.current = [];
   }, []);
@@ -52,41 +46,43 @@ export default function AutomotiveStartupIntro() {
     }
   }, []);
 
-  const completeIntro = useCallback((immediate = false) => {
-    cleanupTimers();
-    try {
-      sessionStorage.setItem('autoping_intro_played', '1');
-    } catch {}
-
+  const finishTransition = useCallback(() => {
+    clearAllTimers();
+    setIsOpen(false);
+    setIsFadingOut(false);
+    setSwitchTarget(null);
+    switchTargetRef.current = null;
+    isTransitioningRef.current = false;
+    notifySwitchingState(false);
     if (typeof document !== 'undefined') {
       document.documentElement.classList.remove('autoping-intro-active');
     }
+  }, [clearAllTimers, notifySwitchingState]);
 
-    if (immediate) {
-      setIsUnmounted(true);
-      isTransitioningRef.current = false;
-      notifySwitchingState(false);
-      setSwitchTarget(null);
-    } else {
-      setIsFadingOut(true);
-      const exitTimer = setTimeout(() => {
-        setIsUnmounted(true);
-        isTransitioningRef.current = false;
-        notifySwitchingState(false);
-        setSwitchTarget(null);
-      }, 550);
-      timersRef.current.push(exitTimer);
-    }
-  }, [cleanupTimers, notifySwitchingState]);
+  const applyRoleAndNavigate = useCallback(
+    (targetRole: 'ADMIN' | 'CUSTOMER', targetUrl: string) => {
+      if (targetRole === 'ADMIN') {
+        setClientSession(DEMO_ADMIN_USER);
+      } else {
+        setClientSession(DEMO_CUSTOMER_USER);
+      }
+      try {
+        router.push(targetUrl);
+      } catch {
+        window.location.href = targetUrl;
+      }
+    },
+    [router]
+  );
 
-  // Standard initial site startup intro (3.2–3.6s)
-  const startInitialIntro = useCallback(() => {
-    cleanupTimers();
-    setIsUnmounted(false);
-    setIsFadingOut(false);
-    setPhase(0);
+  // Full Initial Startup Intro sequence (~3.2 - 3.5s)
+  const playStartupIntro = useCallback(() => {
+    clearAllTimers();
     setSwitchTarget(null);
-    setShouldPlay(true);
+    switchTargetRef.current = null;
+    setPhase(0);
+    setIsFadingOut(false);
+    setIsOpen(true);
 
     if (typeof document !== 'undefined') {
       document.documentElement.classList.add('autoping-intro-active');
@@ -98,46 +94,53 @@ export default function AutomotiveStartupIntro() {
     const t2 = setTimeout(() => setPhase(2), 1450);
     // Phase 4: Tagline Reveal (2200ms)
     const t3 = setTimeout(() => setPhase(3), 2200);
-    // Phase 5: Transition to App (3150ms)
+    // Phase 5: Fade out & complete (3150ms)
     const t4 = setTimeout(() => {
       setPhase(4);
-      completeIntro(false);
+      setIsFadingOut(true);
+      try {
+        sessionStorage.setItem('autoping_intro_played', '1');
+      } catch {}
+      const exit = setTimeout(() => {
+        finishTransition();
+      }, 550);
+      timersRef.current.push(exit);
     }, 3150);
 
     timersRef.current = [t1, t2, t3, t4];
-  }, [cleanupTimers, completeIntro]);
+  }, [clearAllTimers, finishTransition]);
 
-  // Role Switching intro (~1.5–1.8s sequence)
-  const startRoleSwitchIntro = useCallback(
+  // Calibrated Role-Switch Intro sequence (~1.5 - 1.8s)
+  const playRoleSwitchIntro = useCallback(
     (targetRole: 'ADMIN' | 'CUSTOMER', targetUrl: string) => {
-      // Prevent multiple triggers while transition is running
+      // Send acknowledgment to caller
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('autoping_role_switch_ack'));
+      }
+
       if (isTransitioningRef.current) return;
       isTransitioningRef.current = true;
       notifySwitchingState(true);
 
-      cleanupTimers();
-      setSwitchTarget({ role: targetRole, url: targetUrl });
-      setIsUnmounted(false);
-      setIsFadingOut(false);
+      clearAllTimers();
+      const target = { role: targetRole, url: targetUrl };
+      setSwitchTarget(target);
+      switchTargetRef.current = target;
+
       setPhase(0);
-      setShouldPlay(true);
+      setIsFadingOut(false);
+      setIsOpen(true);
 
       if (typeof document !== 'undefined') {
         document.documentElement.classList.add('autoping-intro-active');
       }
 
-      // Check prefers-reduced-motion for accessible transition
       const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
       if (prefersReducedMotion) {
-        if (targetRole === 'ADMIN') {
-          setClientSession(DEMO_ADMIN_USER);
-        } else {
-          setClientSession(DEMO_CUSTOMER_USER);
-        }
-        router.push(targetUrl);
+        applyRoleAndNavigate(targetRole, targetUrl);
         const fastExit = setTimeout(() => {
-          completeIntro(true);
-        }, 300);
+          finishTransition();
+        }, 250);
         timersRef.current.push(fastExit);
         return;
       }
@@ -150,19 +153,9 @@ export default function AutomotiveStartupIntro() {
       // Phase 4: Tagline Reveal (900ms)
       const t3 = setTimeout(() => setPhase(3), 900);
 
-      // Phase 5: Transition to destination dashboard (1350ms)
+      // Phase 5: Apply session & navigate (1350ms)
       const t4 = setTimeout(() => {
-        try {
-          if (targetRole === 'ADMIN') {
-            setClientSession(DEMO_ADMIN_USER);
-          } else {
-            setClientSession(DEMO_CUSTOMER_USER);
-          }
-          router.push(targetUrl);
-        } catch {
-          // Fallback if router fails
-          window.location.href = targetUrl;
-        }
+        applyRoleAndNavigate(targetRole, targetUrl);
       }, 1350);
 
       // Fade out overlay (1650ms)
@@ -172,37 +165,24 @@ export default function AutomotiveStartupIntro() {
 
       // Final unmount and unlock (1950ms)
       const t6 = setTimeout(() => {
-        setIsUnmounted(true);
-        isTransitioningRef.current = false;
-        notifySwitchingState(false);
-        setSwitchTarget(null);
-        if (typeof document !== 'undefined') {
-          document.documentElement.classList.remove('autoping-intro-active');
-        }
+        finishTransition();
       }, 1950);
 
-      // Hard safety timer (3200ms) to ensure overlay NEVER gets stuck
-      const safetyTimer = setTimeout(() => {
+      // Hard safety timer (3200ms)
+      const safety = setTimeout(() => {
         if (isTransitioningRef.current) {
-          setIsUnmounted(true);
-          isTransitioningRef.current = false;
-          notifySwitchingState(false);
-          setSwitchTarget(null);
-          if (typeof document !== 'undefined') {
-            document.documentElement.classList.remove('autoping-intro-active');
-          }
+          applyRoleAndNavigate(targetRole, targetUrl);
+          finishTransition();
         }
       }, 3200);
 
-      timersRef.current = [t1, t2, t3, t4, t5, t6, safetyTimer];
+      timersRef.current = [t1, t2, t3, t4, t5, t6, safety];
     },
-    [cleanupTimers, completeIntro, notifySwitchingState, router]
+    [clearAllTimers, notifySwitchingState, applyRoleAndNavigate, finishTransition]
   );
 
+  // 1. One-time initial mount check for startup intro (runs only on mount!)
   useEffect(() => {
-    setMounted(true);
-
-    // Check if initial intro has already played in this session
     let hasPlayed = false;
     try {
       hasPlayed = !!sessionStorage.getItem('autoping_intro_played');
@@ -214,17 +194,22 @@ export default function AutomotiveStartupIntro() {
       if (typeof document !== 'undefined') {
         document.documentElement.classList.remove('autoping-intro-active');
       }
-      setIsUnmounted(true);
-    } else {
-      const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
-      if (prefersReducedMotion) {
-        completeIntro(true);
-      } else {
-        startInitialIntro();
-      }
+      return;
     }
 
-    // Role-switch event listener (Customer <-> Admin transitions)
+    const prefersReducedMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)')?.matches;
+    if (prefersReducedMotion) {
+      try {
+        sessionStorage.setItem('autoping_intro_played', '1');
+      } catch {}
+      return;
+    }
+
+    playStartupIntro();
+  }, [playStartupIntro]);
+
+  // 2. Global event listeners for role switching & manual replay
+  useEffect(() => {
     const handleRoleSwitch = (e: Event) => {
       const customEvent = e as CustomEvent<{
         targetRole: 'ADMIN' | 'CUSTOMER';
@@ -233,47 +218,44 @@ export default function AutomotiveStartupIntro() {
       const { targetRole, targetUrl } = customEvent.detail || {};
       if (!targetRole) return;
       const dest = targetUrl || (targetRole === 'ADMIN' ? '/admin' : '/dashboard');
-      startRoleSwitchIntro(targetRole, dest);
+      playRoleSwitchIntro(targetRole, dest);
     };
-    window.addEventListener('autoping_role_switch_request', handleRoleSwitch);
 
-    // Support manual replay event for previewing or testing startup intro
     const handleReplay = () => {
       try {
         sessionStorage.removeItem('autoping_intro_played');
       } catch {}
-      startInitialIntro();
+      playStartupIntro();
     };
+
+    window.addEventListener('autoping_role_switch_request', handleRoleSwitch);
     window.addEventListener('autoping_replay_intro', handleReplay);
 
     // Escape key listener for skipping
     const handleKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (switchTarget) {
-          // Immediately perform switch & dismiss
-          if (switchTarget.role === 'ADMIN') {
-            setClientSession(DEMO_ADMIN_USER);
-          } else {
-            setClientSession(DEMO_CUSTOMER_USER);
-          }
-          router.push(switchTarget.url);
-          completeIntro(true);
+        if (switchTargetRef.current) {
+          applyRoleAndNavigate(switchTargetRef.current.role, switchTargetRef.current.url);
+          finishTransition();
         } else {
-          completeIntro(false);
+          try {
+            sessionStorage.setItem('autoping_intro_played', '1');
+          } catch {}
+          finishTransition();
         }
       }
     };
     window.addEventListener('keydown', handleKeyDown);
 
     return () => {
-      cleanupTimers();
+      clearAllTimers();
       window.removeEventListener('keydown', handleKeyDown);
       window.removeEventListener('autoping_replay_intro', handleReplay);
       window.removeEventListener('autoping_role_switch_request', handleRoleSwitch);
     };
-  }, [completeIntro, cleanupTimers, startInitialIntro, startRoleSwitchIntro, switchTarget, router]);
+  }, [playRoleSwitchIntro, playStartupIntro, applyRoleAndNavigate, finishTransition, clearAllTimers]);
 
-  if (!mounted || !shouldPlay || isUnmounted) {
+  if (!isOpen) {
     return null;
   }
 
@@ -294,16 +276,14 @@ export default function AutomotiveStartupIntro() {
         <button
           type="button"
           onClick={() => {
-            if (switchTarget) {
-              if (switchTarget.role === 'ADMIN') {
-                setClientSession(DEMO_ADMIN_USER);
-              } else {
-                setClientSession(DEMO_CUSTOMER_USER);
-              }
-              router.push(switchTarget.url);
-              completeIntro(true);
+            if (switchTargetRef.current) {
+              applyRoleAndNavigate(switchTargetRef.current.role, switchTargetRef.current.url);
+              finishTransition();
             } else {
-              completeIntro(false);
+              try {
+                sessionStorage.setItem('autoping_intro_played', '1');
+              } catch {}
+              finishTransition();
             }
           }}
           className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/60 hover:bg-slate-800/80 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-white text-xs font-medium tracking-wide backdrop-blur-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/50"
