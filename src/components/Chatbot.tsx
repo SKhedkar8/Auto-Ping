@@ -1005,11 +1005,11 @@ END:VCALENDAR`;
 
   return (
     <>
-      {/* Floating Trigger Button - Clean Product Help Button */}
-      <div className="fixed bottom-6 right-6 z-40">
+      {/* Floating Trigger Button - Clean Product Help Button (offset on mobile to clear tab bar) */}
+      <div className="fixed bottom-16 md:bottom-6 right-3 sm:right-6 z-40">
         <button
           onClick={() => setIsOpen(!isOpen)}
-          className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-850 text-white shadow-xl shadow-black/20 border border-white/10 transition-all apple-btn"
+          className="flex items-center gap-2 px-3.5 sm:px-4 py-2 sm:py-2.5 rounded-full bg-slate-900 dark:bg-slate-800 hover:bg-slate-850 text-white shadow-xl shadow-black/20 border border-white/10 transition-all apple-btn"
           aria-label="Open Chat Support"
         >
           <span className="text-sm">💬</span>
@@ -1019,7 +1019,7 @@ END:VCALENDAR`;
 
       {/* Floating Chat Drawer Modal - Clean SaaS Product Assistant */}
       {isOpen && (
-        <div className="fixed bottom-20 right-4 sm:right-6 w-[92vw] sm:w-[400px] h-[580px] max-h-[82vh] z-50 rounded-2xl flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
+        <div className="fixed bottom-16 md:bottom-20 right-2 sm:right-6 w-[94vw] sm:w-[400px] h-[580px] max-h-[78vh] sm:max-h-[82vh] z-50 rounded-2xl flex flex-col overflow-hidden bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl">
           {/* Header */}
           <div className="px-4 py-3 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 flex items-center justify-between shrink-0">
             <div className="flex items-center gap-2.5">

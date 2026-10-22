@@ -290,7 +290,7 @@ export default function DashboardPage() {
             {/* ==================================================
                 5. COMPACT SERVICE OVERVIEW SECTION
                 ================================================== */}
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5 sm:gap-4">
               {/* Metric 1: Total Vehicles */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs flex items-center gap-4 transition-all hover:shadow-md">
                 <div className="w-11 h-11 rounded-xl bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-100 dark:border-blue-900/40">
@@ -689,9 +689,9 @@ export default function DashboardPage() {
             </div>
 
             {/* ==================================================
-                9. SERVICE METRICS CARDS (5 Core KPI Cards in 1 Row)
+                9. SERVICE METRICS CARDS (5 Core KPI Cards)
                 ================================================== */}
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 xl:grid-cols-5 gap-3.5 sm:gap-4">
               {/* Card 1: Next Service */}
               <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 sm:p-5 border border-slate-200/90 dark:border-slate-800 shadow-xs flex flex-col justify-between">
                 <div>
