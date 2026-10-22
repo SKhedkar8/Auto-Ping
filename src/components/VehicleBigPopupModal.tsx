@@ -19,6 +19,7 @@ import {
   ShieldCheck,
   Sparkles,
   Thermometer,
+  Trash2,
   Wrench,
   X,
   Zap
@@ -30,6 +31,7 @@ interface VehicleBigPopupModalProps {
   isOpen: boolean;
   onClose: () => void;
   onEdit?: (vehicle: Vehicle) => void;
+  onDelete?: (id: string) => void;
 }
 
 export default function VehicleBigPopupModal({
@@ -37,6 +39,7 @@ export default function VehicleBigPopupModal({
   isOpen,
   onClose,
   onEdit,
+  onDelete,
 }: VehicleBigPopupModalProps) {
   if (!isOpen) return null;
 
@@ -350,6 +353,20 @@ export default function VehicleBigPopupModal({
                 >
                   <Pencil className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
                   Edit Specs &amp; Photo
+                </button>
+              )}
+              {onDelete && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    onClose();
+                    onDelete(vehicle.id);
+                  }}
+                  className="flex-1 sm:flex-none py-2.5 px-4 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-600 hover:text-white border border-rose-200 dark:border-rose-900 text-xs font-semibold text-rose-600 dark:text-rose-400 transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
+                  title="Remove vehicle from account"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete Vehicle
                 </button>
               )}
               <a

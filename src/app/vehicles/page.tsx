@@ -41,14 +41,24 @@ export default function VehiclesPage() {
       .finally(() => setIsLoading(false));
   }, []);
 
-  const handleDelete = async (id: string, e: React.MouseEvent) => {
-    e.preventDefault();
-    if (!confirm('Are you sure you want to remove this vehicle from your account?')) return;
+  const handleDelete = async (id: string, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
+    if (!confirm('Are you sure you want to remove this vehicle from your account? This action cannot be undone.')) return;
 
     try {
-      await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
-      setVehicles((prev) => prev.filter((v) => v.id !== id));
-    } catch {}
+      const res = await fetch(`/api/vehicles/${id}`, { method: 'DELETE' });
+      if (res.ok) {
+        setVehicles((prev) => prev.filter((v) => v.id !== id));
+        if (inspectedVehicle?.id === id) {
+          setInspectedVehicle(null);
+        }
+      }
+    } catch (err) {
+      console.error('Failed to delete vehicle', err);
+    }
   };
 
   return (
@@ -120,51 +130,55 @@ export default function VehiclesPage() {
                     />
                     <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
 
-                    {/* Smooth Hover Overlay: Click to Popup Big Size */}
-                    <div className="absolute inset-0 z-20 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-xs">
-                      <span className="px-4 py-2 rounded-full bg-white/95 dark:bg-black/90 text-slate-900 dark:text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform">
-                        <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
-                        Expand Full Details in Big Size
-                      </span>
-                    </div>
-
-                    {/* Status badge */}
-                    <div className="absolute top-3 right-3">
+                    {/* Status badge - top right, high z-index */}
+                    <div className="absolute top-3 right-3 z-30 pointer-events-none">
                       {isOverdue ? (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-rose-600 text-white">
+                        <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-rose-600 text-white shadow-md">
                           Overdue
                         </span>
                       ) : isDueSoon ? (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-amber-500 text-white">
+                        <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-amber-500 text-white shadow-md">
                           Due in {v.daysRemaining}d
                         </span>
                       ) : (
-                        <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-emerald-600 text-white">
+                        <span className="px-2.5 py-1 rounded-lg text-[11px] font-bold bg-emerald-600 text-white shadow-md">
                           Good
                         </span>
                       )}
                     </div>
 
-                    {/* Delete and Edit buttons */}
-                    <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                    {/* Delete and Edit buttons - ALWAYS visible and clickable (z-30), never hidden by hover */}
+                    <div className="absolute top-3 left-3 z-30 flex items-center gap-2">
                       <button
+                        type="button"
                         onClick={(e) => handleDelete(v.id, e)}
-                        title="Remove Vehicle"
-                        className="p-1.5 rounded-lg bg-black/40 hover:bg-rose-600 text-white transition-colors"
+                        title="Delete Vehicle"
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-rose-600 text-white backdrop-blur-md border border-white/20 shadow-md transition-all flex items-center gap-1.5 text-xs font-semibold hover:scale-105 active:scale-95 cursor-pointer"
                       >
-                        <Trash2 className="w-3.5 h-3.5" />
+                        <Trash2 className="w-3.5 h-3.5 text-rose-400 group-hover:text-white" />
+                        <span>Delete</span>
                       </button>
                       <button
+                        type="button"
                         onClick={(e) => {
                           e.preventDefault();
                           e.stopPropagation();
                           setEditingVehicle(v);
                         }}
                         title="Edit Details & Image"
-                        className="p-1.5 rounded-lg bg-black/40 hover:bg-[#0071E3] text-white transition-colors"
+                        className="px-2.5 py-1.5 rounded-xl bg-slate-900/90 hover:bg-[#0071E3] text-white backdrop-blur-md border border-white/20 shadow-md transition-all flex items-center gap-1.5 text-xs font-semibold hover:scale-105 active:scale-95 cursor-pointer"
                       >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="w-3.5 h-3.5 text-blue-300" />
+                        <span>Edit</span>
                       </button>
+                    </div>
+
+                    {/* Smooth Hover Overlay: Click to Popup Big Size (z-10 and pointer-events-none so it NEVER obscures or blocks clicks to buttons) */}
+                    <div className="absolute inset-0 z-10 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all duration-300 bg-black/40 backdrop-blur-xs pointer-events-none">
+                      <span className="px-4 py-2 rounded-full bg-white/95 dark:bg-black/90 text-slate-900 dark:text-white text-xs font-bold shadow-2xl border border-white/20 flex items-center gap-2 transform translate-y-2 group-hover:translate-y-0 transition-transform">
+                        <Sparkles className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                        Click to View Full Details
+                      </span>
                     </div>
 
                     {/* Name overlay */}
@@ -233,12 +247,21 @@ export default function VehiclesPage() {
                     {/* Actions */}
                     <div className="flex items-center gap-2 pt-4 border-t border-slate-100 dark:border-slate-800">
                       <button
+                        type="button"
+                        onClick={(e) => handleDelete(v.id, e)}
+                        className="py-2 px-2.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 hover:bg-rose-100 dark:hover:bg-rose-900/40 text-xs font-semibold text-rose-600 dark:text-rose-400 border border-rose-200/60 dark:border-rose-900/40 transition-colors flex items-center justify-center gap-1.5 cursor-pointer shrink-0"
+                        title="Delete Vehicle"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Delete</span>
+                      </button>
+                      <button
                         onClick={() => setEditingVehicle(v)}
-                        className="py-2 px-3 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5"
+                        className="py-2 px-2.5 rounded-lg bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-xs font-medium text-slate-700 dark:text-slate-200 transition-colors flex items-center justify-center gap-1.5 shrink-0"
                         title="Edit Vehicle Details & Image"
                       >
                         <Pencil className="w-3.5 h-3.5 text-[#0071E3]" />
-                        Edit
+                        <span>Edit</span>
                       </button>
                       <button
                         type="button"
@@ -270,6 +293,7 @@ export default function VehiclesPage() {
             isOpen={true}
             onClose={() => setInspectedVehicle(null)}
             onEdit={(veh) => setEditingVehicle(veh)}
+            onDelete={(id) => handleDelete(id)}
           />
         )}
 
