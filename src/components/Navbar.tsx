@@ -15,6 +15,7 @@ import {
   Moon,
   Scan,
   Shield,
+  Sparkles,
   Sun,
   User,
   Wrench,
@@ -34,6 +35,7 @@ export default function Navbar() {
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showNotifMenu, setShowNotifMenu] = useState(false);
   const [showUserMenu, setShowUserMenu] = useState(false);
+  const [showMoreMenu, setShowMoreMenu] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [isAiAssistantOpen, setIsAiAssistantOpen] = useState(false);
@@ -81,15 +83,20 @@ export default function Navbar() {
     } catch {}
   };
 
-  const navLinks = [
+  const primaryNavLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
     { href: '/vehicles', label: 'My Vehicles', icon: Car },
     { href: '/services/book', label: 'Book Service', icon: Wrench },
+    { href: '/bookings', label: 'Bookings', icon: Calendar },
+  ];
+
+  const secondaryNavLinks = [
     { href: '/services/inspection', label: 'Inspection', icon: Scan },
     { href: '/map', label: 'Service Map', icon: Compass },
-    { href: '/bookings', label: 'Bookings', icon: Calendar },
     { href: '/history', label: 'History', icon: History },
   ];
+
+  const navLinks = [...primaryNavLinks, ...secondaryNavLinks];
 
   const AvatarEl = () =>
     currentUser?.photoUrl ? (
@@ -99,7 +106,7 @@ export default function Navbar() {
         className="w-7 h-7 rounded-full object-cover ring-1 ring-black/10 dark:ring-white/20"
       />
     ) : (
-      <div className="w-7 h-7 rounded-full bg-[#0071E3] text-white flex items-center justify-center font-semibold text-xs">
+      <div className="w-7 h-7 rounded-full bg-blue-600 text-white flex items-center justify-center font-semibold text-xs shadow-xs">
         {currentUser?.name?.charAt(0) || 'U'}
       </div>
     );
@@ -110,52 +117,96 @@ export default function Navbar() {
       <header
         className={`sticky top-0 z-40 w-full transition-all duration-300 ${
           scrolled
-            ? 'bg-white/80 dark:bg-black/80 backdrop-blur-2xl border-b border-black/[0.06] dark:border-white/[0.08] shadow-sm'
-            : 'bg-white/70 dark:bg-black/70 backdrop-blur-xl border-b border-black/[0.04] dark:border-white/[0.05]'
+            ? 'bg-white/85 dark:bg-slate-950/85 backdrop-blur-2xl border-b border-slate-200/80 dark:border-slate-800/80 shadow-xs'
+            : 'bg-white/75 dark:bg-slate-950/75 backdrop-blur-xl border-b border-slate-200/60 dark:border-slate-800/60'
         }`}
         style={{ WebkitBackdropFilter: 'blur(20px) saturate(180%)', backdropFilter: 'blur(20px) saturate(180%)' }}
       >
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[52px] flex items-center justify-between">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-[54px] flex items-center justify-between">
           {/* Logo */}
-          <div className="flex items-center gap-8">
-            <a href="/" className="flex items-center gap-2">
-              <div className="w-7 h-7 rounded-[8px] bg-[#0071E3] flex items-center justify-center">
-                <Car className="w-3.5 h-3.5 text-white" />
+          <div className="flex items-center gap-6 lg:gap-8">
+            <a href="/" className="flex items-center gap-2.5 shrink-0 group">
+              <div className="w-8 h-8 rounded-xl bg-blue-600 flex items-center justify-center shadow-xs group-hover:scale-105 transition-transform">
+                <Car className="w-4 h-4 text-white" />
               </div>
-              <span className="font-semibold text-[15px] tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-                Auto<span className="text-[#0071E3]">Ping</span>
+              <span className="font-bold text-[15px] tracking-tight text-slate-900 dark:text-white">
+                Auto<span className="text-blue-600">Ping</span>
               </span>
             </a>
 
             {/* Desktop nav links */}
-            <nav className="hidden md:flex items-center gap-0.5">
-              {navLinks.map((link) => {
+            <nav className="hidden md:flex items-center gap-1">
+              {primaryNavLinks.map((link) => {
                 const Icon = link.icon;
                 const isActive = pathname === link.href || (link.href !== '/' && pathname.startsWith(link.href));
                 return (
                   <a
                     key={link.href}
                     href={link.href}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-medium transition-all duration-200 ${
+                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 ${
                       isActive
-                        ? 'bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]'
-                        : 'text-[#1d1d1f]/70 dark:text-[#f5f5f7]/60 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7] hover:bg-black/[0.05] dark:hover:bg-white/[0.06]'
+                        ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-semibold shadow-2xs'
+                        : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
                     }`}
                   >
-                    <Icon className={`w-[14px] h-[14px] ${isActive ? 'text-[#0071E3] dark:text-[#2997FF]' : ''}`} />
-                    {link.label}
+                    <Icon className={`w-3.5 h-3.5 ${isActive ? 'text-blue-600 dark:text-blue-400' : 'text-slate-400 dark:text-slate-500'}`} />
+                    <span>{link.label}</span>
                   </a>
                 );
               })}
+
+              {/* More Dropdown for Secondary Navigation */}
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowMoreMenu(!showMoreMenu);
+                    setShowNotifMenu(false);
+                    setShowUserMenu(false);
+                  }}
+                  className={`flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                    secondaryNavLinks.some((l) => pathname.startsWith(l.href))
+                      ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-semibold'
+                      : 'text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-slate-800/60'
+                  }`}
+                >
+                  <span>More</span>
+                  <ChevronDown className={`w-3.5 h-3.5 transition-transform duration-200 ${showMoreMenu ? 'rotate-180 text-blue-600' : 'text-slate-400'}`} />
+                </button>
+
+                {showMoreMenu && (
+                  <div className="absolute left-0 mt-2 w-48 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-xl z-50 p-1.5 animate-in fade-in zoom-in-95">
+                    {secondaryNavLinks.map((link) => {
+                      const Icon = link.icon;
+                      const isActive = pathname.startsWith(link.href);
+                      return (
+                        <a
+                          key={link.href}
+                          href={link.href}
+                          onClick={() => setShowMoreMenu(false)}
+                          className={`flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-medium transition-colors ${
+                            isActive
+                              ? 'bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400 font-semibold'
+                              : 'text-slate-700 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5 text-slate-400" />
+                          <span>{link.label}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
 
               {/* 🤖 AI Assistant Button */}
               <button
                 type="button"
                 onClick={() => setIsAiAssistantOpen(true)}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[13px] font-semibold bg-gradient-to-r from-[#0071E3]/15 to-[#34C759]/15 text-[#0071E3] dark:text-[#2997FF] hover:from-[#0071E3]/25 hover:to-[#34C759]/25 border border-[#0071E3]/30 transition-all duration-200 apple-btn shadow-xs ml-1"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-semibold bg-cyan-50 dark:bg-cyan-950/40 text-cyan-700 dark:text-cyan-300 hover:bg-cyan-100 dark:hover:bg-cyan-900/50 border border-cyan-200 dark:border-cyan-800/60 shadow-xs transition-all duration-200 cursor-pointer ml-1"
                 title="Launch Talking Cars AI Assistant"
               >
-                <span>🤖</span>
+                <Sparkles className="w-3.5 h-3.5 text-cyan-600 dark:text-cyan-400" />
                 <span>AI Assistant</span>
               </button>
             </nav>
@@ -163,14 +214,14 @@ export default function Navbar() {
 
           {/* Right actions */}
           <div className="flex items-center gap-1.5">
-            {/* Demo role switcher — Apple segmented pill */}
-            <div className="hidden lg:flex items-center gap-0.5 bg-black/[0.06] dark:bg-white/[0.08] p-0.5 rounded-full text-[12px]">
+            {/* Demo role switcher */}
+            <div className="hidden lg:flex items-center gap-0.5 bg-slate-100 dark:bg-slate-800/80 p-0.5 rounded-full text-xs">
               <button
                 onClick={() => { setClientSession(DEMO_CUSTOMER_USER); router.push('/dashboard'); }}
                 className={`px-3 py-1 rounded-full transition-all duration-200 font-medium ${
                   currentUser?.role === 'CUSTOMER'
-                    ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#0071E3] dark:text-[#2997FF]'
-                    : 'text-[#1d1d1f]/60 dark:text-[#f5f5f7]/50 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
+                    ? 'bg-white dark:bg-slate-900 shadow-xs text-blue-600 dark:text-blue-400 font-semibold'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
                 Customer
@@ -179,11 +230,11 @@ export default function Navbar() {
                 onClick={() => { setClientSession(DEMO_ADMIN_USER); router.push('/admin'); }}
                 className={`px-3 py-1 rounded-full transition-all duration-200 font-medium flex items-center gap-1 ${
                   currentUser?.role === 'ADMIN'
-                    ? 'bg-white dark:bg-[#1c1c1e] shadow-sm text-[#1d1d1f] dark:text-[#f5f5f7]'
-                    : 'text-[#1d1d1f]/60 dark:text-[#f5f5f7]/50 hover:text-[#1d1d1f] dark:hover:text-[#f5f5f7]'
+                    ? 'bg-white dark:bg-slate-900 shadow-xs text-amber-600 dark:text-amber-400 font-semibold'
+                    : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
                 }`}
               >
-                <Shield className="w-[11px] h-[11px] text-[#FF9500]" />
+                <Shield className="w-3 h-3 text-amber-500" />
                 Admin
               </button>
             </div>
@@ -192,42 +243,42 @@ export default function Navbar() {
             <button
               onClick={toggle}
               aria-label={isDark ? 'Light Mode' : 'Dark Mode'}
-              className="p-2 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] text-[#1d1d1f] dark:text-[#f5f5f7] transition-all duration-200 apple-btn"
+              className="p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all duration-200 cursor-pointer"
             >
               {isDark
-                ? <Sun className="w-[15px] h-[15px] text-[#FF9500]" />
-                : <Moon className="w-[15px] h-[15px] text-[#1d1d1f]/70" />
+                ? <Sun className="w-4 h-4 text-amber-500" />
+                : <Moon className="w-4 h-4 text-slate-600" />
               }
             </button>
 
             {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => { setShowNotifMenu(!showNotifMenu); setShowUserMenu(false); }}
+                onClick={() => { setShowNotifMenu(!showNotifMenu); setShowUserMenu(false); setShowMoreMenu(false); }}
                 aria-label="Notifications"
-                className="relative p-2 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] text-[#1d1d1f] dark:text-[#f5f5f7] transition-all duration-200 apple-btn"
+                className="relative p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all duration-200 cursor-pointer"
               >
-                <Bell className="w-[15px] h-[15px]" />
+                <Bell className="w-4 h-4" />
                 {unreadCount > 0 && (
-                  <span className="absolute -top-0.5 -right-0.5 w-[16px] h-[16px] bg-[#FF3B30] text-white text-[9px] font-bold rounded-full flex items-center justify-center">
+                  <span className="absolute -top-0.5 -right-0.5 w-4 h-4 bg-rose-600 text-white text-[9px] font-bold rounded-full flex items-center justify-center">
                     {unreadCount}
                   </span>
                 )}
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white/90 dark:bg-[#1c1c1e]/90 backdrop-blur-2xl border border-black/[0.06] dark:border-white/[0.1] shadow-2xl z-50 apple-scale-in overflow-hidden">
-                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-black/[0.06] dark:border-white/[0.08]">
+                <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                  <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80">
                     <div className="flex items-center gap-2">
-                      <h4 className="font-semibold text-[14px] text-[#1d1d1f] dark:text-[#f5f5f7]">Notifications</h4>
+                      <h4 className="font-semibold text-sm text-slate-900 dark:text-white">Notifications</h4>
                       {unreadCount > 0 && (
-                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF]">
+                        <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">
                           {unreadCount} new
                         </span>
                       )}
                     </div>
                     {unreadCount > 0 && (
-                      <button onClick={handleMarkAllRead} className="text-[12px] font-medium text-[#0071E3] dark:text-[#2997FF] hover:opacity-80 transition-opacity">
+                      <button onClick={handleMarkAllRead} className="text-xs font-medium text-blue-600 dark:text-blue-400 hover:underline cursor-pointer">
                         Mark all read
                       </button>
                     )}
@@ -235,29 +286,29 @@ export default function Navbar() {
 
                   <div className="max-h-72 overflow-y-auto">
                     {notifications.length === 0 ? (
-                      <div className="text-center py-8 text-[#86868b] text-[13px]">No notifications yet.</div>
+                      <div className="text-center py-8 text-slate-400 text-xs">No notifications yet.</div>
                     ) : (
                       notifications.slice(0, 5).map((notif) => (
                         <div
                           key={notif.id}
-                          className={`px-4 py-3 border-b border-black/[0.04] dark:border-white/[0.05] last:border-0 transition-colors ${
-                            notif.isRead ? '' : 'bg-[#0071E3]/[0.04] dark:bg-[#2997FF]/[0.06]'
+                          className={`px-4 py-3 border-b border-slate-100 dark:border-slate-800/60 last:border-0 transition-colors ${
+                            notif.isRead ? '' : 'bg-blue-50/40 dark:bg-blue-950/20'
                           }`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h5 className="font-medium text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7]">{notif.title}</h5>
-                            <span className="text-[11px] text-[#86868b] whitespace-nowrap shrink-0">
+                            <h5 className="font-semibold text-xs text-slate-900 dark:text-white">{notif.title}</h5>
+                            <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">
                               {new Date(notif.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                             </span>
                           </div>
-                          <p className="text-[12px] text-[#86868b] mt-0.5 line-clamp-2">{notif.message}</p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notif.message}</p>
                         </div>
                       ))
                     )}
                   </div>
 
-                  <div className="px-4 py-3 border-t border-black/[0.06] dark:border-white/[0.08] text-center">
-                    <a href="/notifications" onClick={() => setShowNotifMenu(false)} className="text-[13px] font-medium text-[#0071E3] dark:text-[#2997FF] hover:opacity-80 transition-opacity">
+                  <div className="px-4 py-3 border-t border-slate-200/80 dark:border-slate-800/80 text-center">
+                    <a href="/notifications" onClick={() => setShowNotifMenu(false)} className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline">
                       View all notifications →
                     </a>
                   </div>
@@ -268,14 +319,14 @@ export default function Navbar() {
             {/* Profile */}
             <div className="relative">
               <button
-                onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifMenu(false); }}
-                className="flex items-center gap-1.5 p-1 pr-2.5 rounded-full bg-black/[0.05] dark:bg-white/[0.08] hover:bg-black/[0.09] dark:hover:bg-white/[0.12] border border-transparent transition-all duration-200 apple-btn"
+                onClick={() => { setShowUserMenu(!showUserMenu); setShowNotifMenu(false); setShowMoreMenu(false); }}
+                className="flex items-center gap-2 py-1 pl-1 pr-2.5 rounded-full bg-slate-100 dark:bg-slate-800/80 hover:bg-slate-200 dark:hover:bg-slate-700 border border-slate-200/80 dark:border-slate-700/80 transition-all duration-200 cursor-pointer"
               >
                 <AvatarEl />
-                <span className="hidden sm:block text-[13px] font-medium text-[#1d1d1f] dark:text-[#f5f5f7]">
+                <span className="hidden sm:inline-block text-xs font-semibold text-slate-800 dark:text-slate-200">
                   {currentUser?.name?.split(' ')[0] || 'Account'}
                 </span>
-                <ChevronDown className="w-3 h-3 text-[#86868b]" />
+                <ChevronDown className="w-3 h-3 text-slate-400" />
               </button>
 
               {showUserMenu && (
