@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import "./globals.css";
 import DarkModeProvider from "@/components/DarkModeProvider";
 import PwaRegister from "@/components/PwaRegister";
+import AutomotiveStartupIntro from "@/components/AutomotiveStartupIntro";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -45,9 +46,23 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
         <meta name="apple-mobile-web-app-capable" content="yes" />
         <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  if (!sessionStorage.getItem('autoping_intro_played')) {
+                    document.documentElement.classList.add('autoping-intro-active');
+                  }
+                } catch (e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased">
         <DarkModeProvider>
+          <AutomotiveStartupIntro />
           {children}
           <PwaRegister />
         </DarkModeProvider>

@@ -38,6 +38,10 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  html.autoping-intro-active {
+    overflow: hidden !important;
+  }
+
   * {
     -webkit-tap-highlight-color: transparent;
   }
