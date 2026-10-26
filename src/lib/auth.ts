@@ -2,7 +2,7 @@ import { User } from './types';
 
 export const DEMO_CUSTOMER_USER: User = {
   id: 'user-customer-1',
-  name: 'Shreyas Patil',
+  name: 'Shreyas',
   email: 'shreyas@example.com',
   mobile: '9876543210',
   role: 'CUSTOMER',
@@ -38,7 +38,12 @@ export function getClientSession(): User | null {
     return DEMO_CUSTOMER_USER;
   }
   try {
-    return JSON.parse(stored);
+    const user: User = JSON.parse(stored);
+    if (user && user.name === 'Shreyas Patil') {
+      user.name = 'Shreyas';
+      localStorage.setItem(SESSION_KEY, JSON.stringify(user));
+    }
+    return user;
   } catch {
     return null;
   }

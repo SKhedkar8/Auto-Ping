@@ -21,7 +21,8 @@ import {
   Sun,
   User,
   Wrench,
-  X
+  X,
+  FileText
 } from 'lucide-react';
 import { clearClientSession, DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, getClientSession, setClientSession } from '@/lib/auth';
 import { switchUserRoleWithAnimation } from '@/lib/roleTransition';
@@ -98,7 +99,7 @@ export default function Navbar() {
 
   const primaryNavLinks = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard },
-    { href: '/vehicles', label: 'My Vehicles', icon: Car },
+    { href: '/vehicles', label: 'Garage', icon: Car },
     { href: '/services/book', label: 'Book Service', icon: Wrench },
     { href: '/bookings', label: 'Bookings', icon: Calendar },
   ];
@@ -327,17 +328,37 @@ export default function Navbar() {
                       notifications.slice(0, 5).map((notif) => (
                         <div
                           key={notif.id}
+                          onClick={() => {
+                            if (notif.type === 'SERVICE_COMPLETED' && notif.bookingId) {
+                              setShowNotifMenu(false);
+                              window.dispatchEvent(
+                                new CustomEvent('autoping_open_bill', {
+                                  detail: { bookingId: notif.bookingId },
+                                })
+                              );
+                            }
+                          }}
                           className={`px-4 py-3 border-b border-slate-100 dark:border-slate-800/60 last:border-0 transition-colors ${
                             notif.isRead ? '' : 'bg-blue-50/40 dark:bg-blue-950/20'
-                          }`}
+                          } ${notif.type === 'SERVICE_COMPLETED' ? 'cursor-pointer hover:bg-blue-50/70 dark:hover:bg-blue-950/40' : ''}`}
                         >
                           <div className="flex items-start justify-between gap-2">
-                            <h5 className="font-semibold text-xs text-slate-900 dark:text-white">{notif.title}</h5>
+                            <h5 className="font-semibold text-xs text-slate-900 dark:text-white flex items-center gap-1.5">
+                              {notif.title}
+                            </h5>
                             <span className="text-[11px] text-slate-400 whitespace-nowrap shrink-0">
                               {new Date(notif.createdAt).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' })}
                             </span>
                           </div>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 line-clamp-2">{notif.message}</p>
+                          {notif.type === 'SERVICE_COMPLETED' && notif.bookingId && (
+                            <div className="mt-1.5">
+                              <span className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-600 dark:text-blue-400 hover:underline">
+                                <FileText className="w-3 h-3" />
+                                View Detailed Bill & Receipt →
+                              </span>
+                            </div>
+                          )}
                         </div>
                       ))
                     )}

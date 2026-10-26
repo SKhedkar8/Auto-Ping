@@ -1,11 +1,21 @@
 import { NextResponse } from 'next/server';
 import { createVehicle, getVehicles } from '@/lib/db';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
   const userId = searchParams.get('userId');
   const vehicles = getVehicles(userId || undefined);
-  return NextResponse.json({ data: vehicles });
+  return NextResponse.json(
+    { data: vehicles },
+    {
+      headers: {
+        'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+      },
+    }
+  );
 }
 
 export async function POST(request: Request) {

@@ -13,7 +13,8 @@ import {
   RotateCcw,
   Sparkles,
   Wrench,
-  XCircle
+  XCircle,
+  FileText
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -264,6 +265,25 @@ export default function BookingsPage() {
                       </div>
 
                       {/* Action buttons */}
+                      {isCompleted && (
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.dispatchEvent(
+                                new CustomEvent('autoping_open_bill', {
+                                  detail: { bookingId: booking.id, invoice: booking.invoice },
+                                })
+                              );
+                            }}
+                            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 active:scale-95 text-xs font-bold text-white shadow-xs transition-all cursor-pointer hover:scale-[1.02]"
+                          >
+                            <FileText className="w-3.5 h-3.5" />
+                            <span>View Bill & Breakdown</span>
+                          </button>
+                        </div>
+                      )}
+
                       {isConfirmed && (
                         <div className="flex items-center gap-2">
                           <button

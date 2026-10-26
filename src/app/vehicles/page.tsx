@@ -32,7 +32,10 @@ export default function VehiclesPage() {
 
   useEffect(() => {
     const user = getClientSession();
-    fetch(`/api/vehicles?userId=${user?.id || 'user-customer-1'}`)
+    fetch(`/api/vehicles?userId=${user?.id || 'user-customer-1'}`, {
+      cache: 'no-store',
+      headers: { 'Cache-Control': 'no-cache' },
+    })
       .then((res) => res.json())
       .then((res) => {
         if (res.data) setVehicles(res.data);
@@ -69,20 +72,28 @@ export default function VehiclesPage() {
       <main className="flex-1 py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto w-full">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
+            <div className="flex items-center gap-2 mb-1">
+              <span className="px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-300 border border-blue-200 dark:border-blue-900/40 uppercase tracking-wider">
+                Garage Inventory
+              </span>
+              <span className="text-xs text-slate-400">
+                • {vehicles.length} {vehicles.length === 1 ? 'vehicle' : 'vehicles'} registered
+              </span>
+            </div>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white tracking-tight">
-              My Registered Vehicles
+              My Garage
             </h1>
             <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-              Live diagnostics, component status timelines, and service intervals for your garage.
+              Live diagnostics, component status timelines, and service intervals for your garage vehicles.
             </p>
           </div>
 
           <a
             href="/onboarding/vehicle"
-            className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
+            className="px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold shadow-sm shadow-blue-500/20 transition-all flex items-center gap-1.5 self-start sm:self-auto hover:scale-[1.02] active:scale-[0.98]"
           >
             <Plus className="w-4 h-4" />
-            Add New Vehicle
+            Add Vehicle to Garage
           </a>
         </div>
 

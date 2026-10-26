@@ -15,6 +15,7 @@ import {
   Flame,
   Gauge,
   HelpCircle,
+  Plus,
   Search,
   Sparkles,
   Upload,
@@ -24,7 +25,6 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { getClientSession } from '@/lib/auth';
 import { Brand, VehicleModel, VehicleType } from '@/lib/types';
-import VehicleImagePicker from '@/components/VehicleImagePicker';
 
 export default function AddVehiclePage() {
   const router = useRouter();
@@ -45,6 +45,8 @@ export default function AddVehiclePage() {
   const [customImageUrl, setCustomImageUrl] = useState<string>('');
   const fileInputRef = React.useRef<HTMLInputElement>(null);
 
+  const [savedCount, setSavedCount] = useState(0);
+  const [successBanner, setSuccessBanner] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -76,7 +78,7 @@ export default function AddVehiclePage() {
 
   const years = Array.from({ length: 27 }, (_, i) => 2026 - i);
 
-  const handleSaveVehicle = async () => {
+  const handleSaveVehicle = async (andAddAnother: boolean = false) => {
     if (!selectedBrand || !selectedModel) {
       setError('Please choose a brand and model.');
       return;
@@ -113,7 +115,7 @@ export default function AddVehiclePage() {
           fuelType,
           lastServiceDate: lastServiceDate || undefined,
           lastServiceKm: lastServiceKm ? Number(lastServiceKm) : undefined,
-          imageUrl: customImageUrl || selectedModel.imageUrl || undefined,
+          imageUrl: customImageUrl || undefined,
         }),
       });
 
@@ -121,7 +123,26 @@ export default function AddVehiclePage() {
       setIsSubmitting(false);
 
       if (data.data) {
-        router.push('/dashboard');
+        if (andAddAnother) {
+          const addedName = `${selectedBrand.name} ${selectedModel.name}`;
+          setSavedCount((prev) => prev + 1);
+          setSuccessBanner(`🎉 ${addedName} (${registrationNo.toUpperCase().trim() || 'NEW-REG'}) added to your Garage! Add your next vehicle below, or proceed to your Garage.`);
+          // Reset form fields for the next vehicle
+          setSelectedBrand(null);
+          setSelectedModel(null);
+          setModels([]);
+          setBrandSearch('');
+          setCustomImageUrl('');
+          setRegistrationNo('');
+          setCurrentKm(15000);
+          setLastServiceKm(10000);
+          setLastServiceDate('');
+          setStep(1);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        } else {
+          // Direct navigation to Garage
+          window.location.href = '/vehicles';
+        }
       } else {
         setError(data.error || 'Failed to save vehicle');
       }
@@ -143,7 +164,7 @@ export default function AddVehiclePage() {
               Vehicle Setup Wizard
             </span>
             <h1 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mt-1">
-              Add Your Vehicle
+              Add Vehicle to Garage
             </h1>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               Step {step} of 6 — Tailoring maintenance algorithms to your exact model
@@ -157,6 +178,26 @@ export default function AddVehiclePage() {
               />
             </div>
           </div>
+
+          {/* Success Banner when multiple vehicles added */}
+          {successBanner && (
+            <div className="mb-6 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-xl bg-emerald-100 dark:bg-emerald-900/60 text-emerald-600 dark:text-emerald-300 flex items-center justify-center shrink-0">
+                  <CheckCircle2 className="w-5 h-5" />
+                </div>
+                <span className="text-xs sm:text-sm font-semibold text-emerald-900 dark:text-emerald-200">
+                  {successBanner}
+                </span>
+              </div>
+              <a
+                href="/vehicles"
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold shadow-xs transition-colors shrink-0 inline-flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+              >
+                Go to Garage ({savedCount}) →
+              </a>
+            </div>
+          )}
 
           {error && (
             <div className="mb-6 p-4 rounded-lg bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-900 text-xs text-rose-700 dark:text-rose-300 font-medium flex items-center justify-between">
@@ -324,9 +365,7 @@ export default function AddVehiclePage() {
                       type="button"
                       onClick={() => {
                         setSelectedModel(model);
-                        if (model.imageUrl) {
-                          setCustomImageUrl(model.imageUrl);
-                        }
+                        // Do NOT auto-assign image; user will upload their own
                       }}
                       className={`p-3.5 rounded-xl border text-left flex items-center justify-between transition-colors cursor-pointer ${
                         isSelected
@@ -335,19 +374,20 @@ export default function AddVehiclePage() {
                       }`}
                     >
                       <div className="flex items-center gap-3">
-                        {model.imageUrl && (
-                          <div className="w-12 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 shrink-0">
-                            <img
-                              src={model.imageUrl}
-                              alt={model.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
+                        {/* Compact model icon — no car image shown */}
+                        <div
+                          className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 text-xs font-bold border ${
+                            isSelected
+                              ? 'bg-blue-600 text-white border-blue-600'
+                              : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-slate-200 dark:border-slate-700'
+                          }`}
+                        >
+                          {model.vehicleClass === 'bike' || model.vehicleClass === 'scooter' ? '🛵' : '🚗'}
+                        </div>
                         <div>
                           <h4 className="font-semibold text-xs text-slate-900 dark:text-white">{model.name}</h4>
                           <span className="text-[11px] text-slate-500 dark:text-slate-400 uppercase tracking-wider block">
-                            Class: {model.vehicleClass} • Interval: {model.serviceKmInterval.toLocaleString()} km
+                            {model.vehicleClass} · {model.serviceKmInterval.toLocaleString()} km interval
                           </span>
                         </div>
                       </div>
@@ -507,22 +547,76 @@ export default function AddVehiclePage() {
                   </div>
                 </div>
 
-                {/* Vehicle Showcase Photo Selection (4 Official Angles + Custom) */}
+                {/* Custom Vehicle Photo Upload */}
                 <div className="pt-2">
                   <label className="block text-xs font-semibold text-slate-700 dark:text-slate-300 mb-2">
-                    Vehicle Showcase Photo (Choose from 4 Official OEM Angles or Upload)
+                    Vehicle Photo <span className="font-normal text-slate-400">(Optional)</span>
                   </label>
-                  <VehicleImagePicker
-                    brandName={selectedBrand?.name || 'Hyundai'}
-                    modelName={selectedModel?.name || 'Creta'}
-                    vehicleType={vehicleType}
-                    selectedImageUrl={
-                      customImageUrl ||
-                      selectedModel?.imageUrl ||
-                      (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
-                    }
-                    onSelectImage={(url) => setCustomImageUrl(url)}
+
+                  {customImageUrl ? (
+                    /* Preview with remove option */
+                    <div className="relative rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700 bg-slate-100 dark:bg-slate-800">
+                      <img
+                        src={customImageUrl}
+                        alt="Vehicle preview"
+                        className="w-full h-44 object-cover"
+                        onError={(e) => { (e.currentTarget as HTMLImageElement).src = vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png'; }}
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-slate-950/60 via-transparent to-transparent" />
+                      <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                        <span className="text-xs font-semibold text-white drop-shadow">Custom photo uploaded ✓</span>
+                        <button
+                          type="button"
+                          onClick={() => { setCustomImageUrl(''); if (fileInputRef.current) fileInputRef.current.value = ''; }}
+                          className="text-[11px] font-bold text-white bg-rose-600 hover:bg-rose-700 px-2.5 py-1 rounded-lg transition-colors"
+                        >
+                          Remove
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    /* Upload zone */
+                    <label
+                      htmlFor="vehicle-photo-upload"
+                      className="flex flex-col items-center justify-center gap-3 w-full h-44 rounded-xl border-2 border-dashed border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50 hover:border-blue-500 dark:hover:border-blue-500 hover:bg-blue-50/30 dark:hover:bg-blue-950/20 transition-all cursor-pointer group"
+                    >
+                      <div className="w-12 h-12 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 flex items-center justify-center group-hover:border-blue-400 transition-colors shadow-sm">
+                        <Upload className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                      </div>
+                      <div className="text-center">
+                        <p className="text-xs font-semibold text-slate-700 dark:text-slate-300 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                          Click to upload your vehicle photo
+                        </p>
+                        <p className="text-[11px] text-slate-400 mt-0.5">JPG, PNG, WEBP · Max 5 MB</p>
+                      </div>
+                    </label>
+                  )}
+
+                  <input
+                    ref={fileInputRef}
+                    id="vehicle-photo-upload"
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      if (file.size > 5 * 1024 * 1024) {
+                        setError('Image file is too large. Please upload an image under 5 MB.');
+                        return;
+                      }
+                      const reader = new FileReader();
+                      reader.onload = (ev) => {
+                        const dataUrl = ev.target?.result as string;
+                        if (dataUrl) setCustomImageUrl(dataUrl);
+                      };
+                      reader.readAsDataURL(file);
+                    }}
                   />
+
+                  <p className="text-[11px] text-slate-400 dark:text-slate-500 mt-2">
+                    Upload a photo of your actual vehicle. If skipped, a default icon will be shown.
+                  </p>
                 </div>
               </div>
 
@@ -556,16 +650,20 @@ export default function AddVehiclePage() {
 
               <div className="rounded-xl border border-slate-200 dark:border-slate-700 overflow-hidden mb-6 bg-slate-50/50 dark:bg-slate-800/40">
                 {/* Vehicle Banner */}
-                <div className="relative h-40 w-full overflow-hidden bg-slate-900">
-                  <img
-                    src={
-                      customImageUrl ||
-                      selectedModel?.imageUrl ||
-                      (vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png')
-                    }
-                    alt={`${selectedBrand?.name} ${selectedModel?.name}`}
-                    className="w-full h-full object-cover opacity-90"
-                  />
+                <div className="relative h-40 w-full overflow-hidden bg-slate-900 flex items-center justify-center">
+                  {customImageUrl ? (
+                    <img
+                      src={customImageUrl}
+                      alt={`${selectedBrand?.name} ${selectedModel?.name}`}
+                      className="w-full h-full object-cover opacity-90"
+                      onError={(e) => { (e.currentTarget as HTMLImageElement).src = vehicleType === 'CAR' ? '/default-car.png' : '/default-bike.png'; }}
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center gap-2 text-slate-500 dark:text-slate-400">
+                      <Camera className="w-10 h-10 opacity-40" />
+                      <span className="text-xs font-medium opacity-60">No photo uploaded</span>
+                    </div>
+                  )}
                   <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
                   <div className="absolute bottom-3 left-4 text-white">
                     <span className="px-2 py-0.5 rounded text-[10px] font-semibold bg-blue-600 text-white uppercase tracking-wider mb-1 inline-block">
@@ -594,23 +692,42 @@ export default function AddVehiclePage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between">
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-4 border-t border-slate-100 dark:border-slate-800">
                 <button
                   type="button"
                   onClick={() => setStep(5)}
-                  className="px-4 py-2 rounded-lg border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-medium text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-1.5 transition-colors"
+                  className="w-full sm:w-auto px-4 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-xs font-semibold text-slate-600 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
                 >
                   <ArrowLeft className="w-4 h-4" /> Edit Details
                 </button>
-                <button
-                  type="button"
-                  disabled={isSubmitting}
-                  onClick={handleSaveVehicle}
-                  className="px-6 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium text-xs flex items-center gap-2 transition-colors cursor-pointer shadow-xs disabled:opacity-50"
-                >
-                  {isSubmitting ? 'Saving Vehicle...' : 'Save & Calculate Health Score'}
-                  <Check className="w-4 h-4" />
-                </button>
+
+                <div className="flex items-center gap-2.5 w-full sm:w-auto justify-end">
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => handleSaveVehicle(true)}
+                    className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl border border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/40 text-xs font-semibold flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Save &amp; Add Another</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    disabled={isSubmitting}
+                    onClick={() => handleSaveVehicle(false)}
+                    className="flex-1 sm:flex-none px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-sm shadow-blue-500/20 disabled:opacity-50"
+                  >
+                    {isSubmitting ? (
+                      'Saving to Garage...'
+                    ) : (
+                      <>
+                        <span>Save to Garage</span>
+                        <Check className="w-4 h-4" />
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}

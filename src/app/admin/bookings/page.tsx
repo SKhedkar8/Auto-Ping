@@ -21,7 +21,8 @@ import {
   User,
   Wrench,
   X,
-  XCircle
+  XCircle,
+  FileText
 } from 'lucide-react';
 import { Booking } from '@/lib/types';
 
@@ -428,6 +429,24 @@ export default function AdminBookingsPage() {
                           className="px-2.5 py-1 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-semibold text-[10px] shadow-xs transition-colors cursor-pointer"
                         >
                           Record Complete
+                        </button>
+                      )}
+
+                      {b.status === 'COMPLETED' && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.dispatchEvent(
+                              new CustomEvent('autoping_open_bill', {
+                                detail: { bookingId: b.id, invoice: b.invoice },
+                              })
+                            );
+                          }}
+                          className="px-2.5 py-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-400 border border-blue-200 dark:border-blue-800 hover:bg-blue-100 dark:hover:bg-blue-900/40 font-semibold text-[10px] shadow-xs transition-colors cursor-pointer flex items-center gap-1"
+                          title="View Generated Tax Invoice & Bill"
+                        >
+                          <FileText className="w-3 h-3" />
+                          Bill
                         </button>
                       )}
 

@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import { calculateVehicleHealth } from './health';
 import { SEED_BRANDS, SEED_CENTERS, SEED_MODELS, SEED_SERVICES, SEED_USERS } from './data/seed';
-import { Booking, Brand, Notification, ServiceCenter, ServiceRecord, ServiceType, Slot, User, Vehicle, VehicleModel } from './types';
+import { Booking, Brand, InvoiceLineItem, Notification, ServiceCenter, ServiceInvoice, ServiceRecord, ServiceType, Slot, User, Vehicle, VehicleModel } from './types';
 
 export interface DatabaseSchema {
   users: User[];
@@ -156,7 +156,7 @@ function generateInitialData(): DatabaseSchema {
       id: 'book-shreyas-1',
       bookingCode: 'AP-20261012-001',
       userId: 'user-customer-1',
-      userName: 'Shreyas Patil',
+      userName: 'Shreyas',
       userPhone: '9876543210',
       userEmail: 'shreyas@example.com',
       vehicleId: 'veh-creta-1',
@@ -842,14 +842,117 @@ export function rescheduleBooking(id: string, newSlotId: string, newDate: string
   return booking;
 }
 
+export function generateServiceInvoice(
+  booking: Booking,
+  finalCost: number,
+  finalKm: number,
+  servicesDone: string[] = [],
+  notes?: string
+): ServiceInvoice {
+  const invoiceNum = `INV-2026-${Math.floor(1000 + Math.random() * 9000)}`;
+  const grandTotal = Math.max(finalCost || 3800, 500);
+  const subtotal = Math.round(grandTotal / 1.18);
+  const cgstAmount = Math.round(subtotal * 0.09);
+  const sgstAmount = grandTotal - subtotal - cgstAmount;
+  const totalGst = cgstAmount + sgstAmount;
+
+  const effectiveServices = servicesDone.length ? servicesDone : booking.services;
+  const items: InvoiceLineItem[] = [];
+
+  const oilCost = Math.round(subtotal * 0.36);
+  items.push({
+    id: 'item-1',
+    name: 'Engine Oil Replacement (Fully Synthetic 5W-30 / 3.5L)',
+    category: 'CONSUMABLE',
+    quantity: 1,
+    unitPrice: oilCost,
+    totalPrice: oilCost,
+  });
+
+  const filterCost = Math.round(subtotal * 0.12);
+  items.push({
+    id: 'item-2',
+    name: 'OEM Engine Oil Filter & High-Temp Sump Washer Kit',
+    category: 'PART',
+    quantity: 1,
+    unitPrice: filterCost,
+    totalPrice: filterCost,
+  });
+
+  const laborCost = Math.round(subtotal * 0.28);
+  items.push({
+    id: 'item-3',
+    name: `${effectiveServices[0] || 'Periodic Scheduled Maintenance'} Labor Charges`,
+    category: 'LABOR',
+    quantity: 1,
+    unitPrice: laborCost,
+    totalPrice: laborCost,
+  });
+
+  const inspectionCost = Math.round(subtotal * 0.14);
+  items.push({
+    id: 'item-4',
+    name: 'Comprehensive 40-Point Electronic Diagnostic & Health Inspection',
+    category: 'INSPECTION',
+    quantity: 1,
+    unitPrice: inspectionCost,
+    totalPrice: inspectionCost,
+  });
+
+  const currentTotal = items.reduce((acc, it) => acc + it.totalPrice, 0);
+  const remainder = subtotal - currentTotal;
+  items.push({
+    id: 'item-5',
+    name: 'Brake Caliper Greasing, High-Pressure Foam Wash & Shop Consumables',
+    category: 'SERVICE',
+    quantity: 1,
+    unitPrice: remainder,
+    totalPrice: remainder,
+  });
+
+  return {
+    invoiceNumber: invoiceNum,
+    bookingId: booking.id,
+    bookingCode: booking.bookingCode,
+    date: booking.serviceDate || new Date().toISOString().split('T')[0],
+    timeIn: booking.serviceTime || '09:30 AM',
+    timeOut: '04:45 PM',
+    centerName: booking.centerName,
+    centerAddress: booking.centerAddress,
+    centerPhone: '+91 98201 54321',
+    centerGstin: '27AABCA9182K1ZX',
+    customerName: booking.userName,
+    customerPhone: booking.userPhone,
+    customerEmail: booking.userEmail,
+    vehicleName: booking.vehicleName,
+    vehicleReg: booking.vehicleReg,
+    odometerKm: finalKm,
+    items,
+    subtotal,
+    cgstRate: 9,
+    cgstAmount,
+    sgstRate: 9,
+    sgstAmount,
+    totalGst,
+    grandTotal,
+    paymentStatus: 'PAID',
+    paymentMode: 'Online UPI / Card (Verified)',
+    notes: notes || 'Periodic scheduled maintenance completed with genuine OEM components. Next recommended service in 10,000 km or 12 months.',
+  };
+}
+
 export function completeBooking(id: string, finalCost: number, finalKm: number, servicesDone: string[], notes?: string): Booking | null {
   const db = getDatabase();
   const booking = db.bookings.find((b) => b.id === id);
   if (!booking) return null;
 
+  // Generate detailed tax invoice with price breakup, GST, and in/out times
+  const invoice = generateServiceInvoice(booking, finalCost, finalKm, servicesDone, notes);
+
   booking.status = 'COMPLETED';
   booking.finalCost = finalCost;
   booking.finalKm = finalKm;
+  booking.invoice = invoice;
   booking.updatedAt = new Date().toISOString();
 
   // Create ServiceRecord
@@ -900,21 +1003,41 @@ export function completeBooking(id: string, finalCost: number, finalKm: number, 
     slot.booked -= 1;
   }
 
-  // Create notification
+  // Create notification with bill reference
   db.notifications.unshift({
     id: `notif-${Date.now()}`,
     userId: booking.userId,
     type: 'SERVICE_COMPLETED',
-    title: 'Service Completed! ✅',
-    message: `Your ${booking.vehicleName} service at ${booking.centerName} is complete. Health score updated to ${vehicle?.healthScore || 100}%.`,
+    title: 'Service Completed & Bill Generated! 📄',
+    message: `Your ${booking.vehicleName} service at ${booking.centerName} is complete. Your invoice of ₹${finalCost.toLocaleString()} (incl. GST) is ready. Click to view detailed bill.`,
     vehicleId: booking.vehicleId,
     bookingId: booking.id,
+    invoiceId: invoice.invoiceNumber,
     isRead: false,
     createdAt: new Date().toISOString(),
   });
 
   saveDatabase(db);
   return booking;
+}
+
+export function getInvoiceByBookingId(bookingId: string): ServiceInvoice | null {
+  const db = getDatabase();
+  const booking = db.bookings.find((b) => b.id === bookingId);
+  if (!booking) return null;
+  if (booking.invoice) return booking.invoice;
+  if (booking.status === 'COMPLETED') {
+    booking.invoice = generateServiceInvoice(
+      booking,
+      booking.finalCost || 3800,
+      booking.finalKm || 20000,
+      booking.services,
+      booking.notes
+    );
+    saveDatabase(db);
+    return booking.invoice;
+  }
+  return null;
 }
 
 // Service Records

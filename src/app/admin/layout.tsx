@@ -250,7 +250,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
               disabled={isSwitchingRole}
               onClick={() => {
                 if (isSwitchingRole) return;
+                setClientSession(DEMO_CUSTOMER_USER);
                 switchUserRoleWithAnimation('CUSTOMER', '/dashboard');
+                // Bulletproof navigation fallback if animation handler does not route
+                setTimeout(() => {
+                  if (typeof window !== 'undefined' && window.location.pathname.startsWith('/admin')) {
+                    window.location.href = '/dashboard';
+                  }
+                }, 1600);
               }}
               className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all duration-150 ${
                 isSwitchingRole ? 'opacity-60 cursor-not-allowed' : 'hover:opacity-80 cursor-pointer'

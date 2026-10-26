@@ -27,14 +27,17 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
+  Star,
   Wrench,
   X
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
+import CitySelector from '@/components/CitySelector';
 import { getClientSession } from '@/lib/auth';
-import { Booking, User, Vehicle } from '@/lib/types';
+import { Booking, ServiceCenter, User, Vehicle } from '@/lib/types';
+import { CITY_MAP } from '@/lib/data/cities';
 
 // Vehicle image map for known models
 const MODEL_IMAGE_MAP: Record<string, string> = {
@@ -90,6 +93,12 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [timeGreeting, setTimeGreeting] = useState('Good day');
 
+  // City & Division selector
+  const [selectedCity, setSelectedCity] = useState('Pune');
+  const [selectedDivision, setSelectedDivision] = useState<string | undefined>(undefined);
+  const [nearbyCenters, setNearbyCenters] = useState<ServiceCenter[]>([]);
+  const [centersLoading, setCentersLoading] = useState(false);
+
   // Search, filter, and sorting states
   const [searchQuery, setSearchQuery] = useState('');
   const [typeFilter, setTypeFilter] = useState<'ALL' | 'CAR' | 'TWO_WHEELER'>('ALL');
@@ -111,15 +120,39 @@ export default function DashboardPage() {
     else if (hour < 17) setTimeGreeting('Good afternoon');
     else setTimeGreeting('Good evening');
 
+    // Set initial city from user's preferred city
+    const userCity = session?.preferredCity || session?.city || 'Pune';
+    setSelectedCity(userCity);
+
     fetchDashboardData(session?.id || 'user-customer-1');
+    fetchNearbyCenters(userCity);
   }, []);
+
+  const fetchNearbyCenters = async (city: string) => {
+    setCentersLoading(true);
+    try {
+      const res = await fetch(`/api/centers?city=${encodeURIComponent(city)}`);
+      const json = await res.json();
+      setNearbyCenters(json.data || []);
+    } catch {
+      setNearbyCenters([]);
+    } finally {
+      setCentersLoading(false);
+    }
+  };
+
+  const handleCityChange = (city: string, division?: string) => {
+    setSelectedCity(city);
+    setSelectedDivision(division);
+    fetchNearbyCenters(city);
+  };
 
   const fetchDashboardData = async (userId: string) => {
     setIsLoading(true);
     try {
       const [vehRes, bookRes] = await Promise.all([
-        fetch(`/api/vehicles?userId=${userId}`),
-        fetch(`/api/bookings?userId=${userId}`),
+        fetch(`/api/vehicles?userId=${userId}`, { cache: 'no-store' }),
+        fetch(`/api/bookings?userId=${userId}`, { cache: 'no-store' }),
       ]);
 
       const vehData = await vehRes.json();
@@ -234,7 +267,14 @@ export default function DashboardPage() {
             </p>
           </div>
 
-          <div className="flex items-center gap-3 self-start sm:self-center shrink-0 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2.5 self-start sm:self-center w-full sm:w-auto">
+            {/* City Selector */}
+            <CitySelector
+              selectedCity={selectedCity}
+              selectedDivision={selectedDivision}
+              onCityChange={handleCityChange}
+            />
+
             <a
               href="/onboarding/vehicle"
               className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl bg-white dark:bg-slate-900 hover:bg-slate-50 dark:hover:bg-slate-800 border border-slate-300 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-500 text-xs font-semibold text-slate-700 dark:text-slate-200 shadow-2xs inline-flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -980,6 +1020,145 @@ export default function DashboardPage() {
                   <span className="font-semibold text-slate-600 dark:text-slate-400">OBD-II Profile Active</span>
                 </div>
               </div>
+            </div>
+
+            {/* ==================================================
+                NEARBY SERVICE CENTERS (City-filtered)
+                ================================================== */}
+            <div>
+              <div className="flex items-center justify-between mb-3 px-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-500 dark:text-slate-400">
+                    Service Centers in {selectedCity}
+                  </span>
+                  {selectedDivision && (
+                    <span
+                      className="px-2 py-0.5 rounded-lg text-[10px] font-bold"
+                      style={{
+                        background: `${CITY_MAP[selectedCity]?.accentColor}18`,
+                        color: CITY_MAP[selectedCity]?.accentColor,
+                      }}
+                    >
+                      {selectedDivision}
+                    </span>
+                  )}
+                </div>
+                <a
+                  href={`/services/book?city=${encodeURIComponent(selectedCity)}`}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline flex items-center gap-1"
+                >
+                  View All <ChevronRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+
+              {centersLoading ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 animate-pulse h-36" />
+                  ))}
+                </div>
+              ) : nearbyCenters.length === 0 ? (
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-8 text-center border border-slate-200 dark:border-slate-800">
+                  <MapPin className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                  <p className="text-xs font-semibold text-slate-700 dark:text-slate-300">
+                    No service centers found in {selectedCity}.
+                  </p>
+                  <p className="text-xs text-slate-400 mt-1">Try selecting a different city.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {nearbyCenters.slice(0, 6).map((center) => {
+                    const accentColor = CITY_MAP[selectedCity]?.accentColor || '#3b82f6';
+                    const typeColors: Record<string, string> = {
+                      AUTHORIZED: '#10b981',
+                      MULTI_BRAND: '#3b82f6',
+                      LOCAL: '#f59e0b',
+                    };
+                    const typeLabels: Record<string, string> = {
+                      AUTHORIZED: 'Authorized',
+                      MULTI_BRAND: 'Multi-Brand',
+                      LOCAL: 'Local Expert',
+                    };
+                    return (
+                      <div
+                        key={center.id}
+                        className="group bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200/90 dark:border-slate-800 shadow-xs hover:shadow-md hover:border-blue-300 dark:hover:border-blue-700 transition-all duration-150 flex flex-col gap-3"
+                      >
+                        {/* Header */}
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1 min-w-0">
+                            <h4 className="text-xs font-bold text-slate-900 dark:text-white leading-snug truncate">
+                              {center.name}
+                            </h4>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-3 h-3 shrink-0" />
+                              <span className="truncate">{center.address.split(',').slice(-2).join(',').trim()}</span>
+                            </p>
+                          </div>
+                          <span
+                            className="text-[9px] font-bold px-1.5 py-0.5 rounded-lg shrink-0"
+                            style={{
+                              background: `${typeColors[center.type]}18`,
+                              color: typeColors[center.type],
+                            }}
+                          >
+                            {typeLabels[center.type]}
+                          </span>
+                        </div>
+
+                        {/* Rating + Distance */}
+                        <div className="flex items-center gap-3 text-[11px]">
+                          <div className="flex items-center gap-1 font-semibold text-amber-600 dark:text-amber-400">
+                            <Star className="w-3 h-3 fill-current" />
+                            {center.rating.toFixed(1)}
+                            <span className="text-slate-400 font-normal">({center.reviewCount})</span>
+                          </div>
+                          {center.distanceKm && (
+                            <span className="text-slate-400">· {center.distanceKm} km away</span>
+                          )}
+                          {center.autoConfirm && (
+                            <span className="ml-auto text-[9px] font-bold text-emerald-600 dark:text-emerald-400 bg-emerald-50 dark:bg-emerald-900/30 px-1.5 py-0.5 rounded-lg">
+                              Instant Confirm
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Services preview */}
+                        <div className="flex flex-wrap gap-1">
+                          {center.servicesOffered.slice(0, 3).map((s) => (
+                            <span
+                              key={s}
+                              className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400"
+                            >
+                              {s}
+                            </span>
+                          ))}
+                          {center.servicesOffered.length > 3 && (
+                            <span className="text-[9px] text-slate-400">
+                              +{center.servicesOffered.length - 3} more
+                            </span>
+                          )}
+                        </div>
+
+                        {/* CTA */}
+                        <a
+                          href={`/services/book?centerId=${center.id}`}
+                          className="flex items-center justify-center gap-1.5 w-full py-2 rounded-xl text-[11px] font-bold transition-all duration-150
+                            border hover:opacity-90 active:scale-95"
+                          style={{
+                            borderColor: `${accentColor}60`,
+                            color: accentColor,
+                            background: `${accentColor}0d`,
+                          }}
+                        >
+                          <Wrench className="w-3 h-3" />
+                          Book Here
+                        </a>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
             </div>
           </div>
         )}

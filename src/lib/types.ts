@@ -168,8 +168,48 @@ export interface Booking {
   cancelReason?: string;
   finalCost?: number;
   finalKm?: number;
+  invoice?: ServiceInvoice;
   createdAt: string;
   updatedAt: string;
+}
+
+export interface InvoiceLineItem {
+  id: string;
+  name: string;
+  category: 'PART' | 'LABOR' | 'CONSUMABLE' | 'INSPECTION' | 'SERVICE';
+  quantity: number;
+  unitPrice: number;
+  totalPrice: number;
+}
+
+export interface ServiceInvoice {
+  invoiceNumber: string;
+  bookingId: string;
+  bookingCode: string;
+  date: string;
+  timeIn: string; // e.g. "09:30 AM"
+  timeOut: string; // e.g. "04:45 PM"
+  centerName: string;
+  centerAddress: string;
+  centerPhone?: string;
+  centerGstin?: string;
+  customerName: string;
+  customerPhone: string;
+  customerEmail: string;
+  vehicleName: string;
+  vehicleReg: string;
+  odometerKm: number;
+  items: InvoiceLineItem[];
+  subtotal: number;
+  cgstRate: number; // e.g. 9
+  cgstAmount: number;
+  sgstRate: number; // e.g. 9
+  sgstAmount: number;
+  totalGst: number;
+  grandTotal: number;
+  paymentStatus: 'PAID' | 'DUE';
+  paymentMode: string;
+  notes?: string;
 }
 
 export interface ServiceRecord {
@@ -192,6 +232,7 @@ export interface Notification {
   message: string;
   vehicleId?: string;
   bookingId?: string;
+  invoiceId?: string;
   isRead: boolean;
   dedupeKey?: string;
   createdAt: string;

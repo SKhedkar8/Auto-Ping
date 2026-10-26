@@ -11,7 +11,8 @@ import {
   Filter,
   Info,
   Sparkles,
-  Wrench
+  Wrench,
+  FileText
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -179,6 +180,28 @@ export default function NotificationsPage() {
                           )}
                         </div>
                         <p className="text-xs text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">{notif.message}</p>
+
+                        {/* Bill / Invoice Action Button for completed service */}
+                        {notif.type === 'SERVICE_COMPLETED' && notif.bookingId && (
+                          <div className="mt-2.5">
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                if (!notif.isRead) handleMarkRead(notif.id);
+                                window.dispatchEvent(
+                                  new CustomEvent('autoping_open_bill', {
+                                    detail: { bookingId: notif.bookingId },
+                                  })
+                                );
+                              }}
+                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-xs transition-all cursor-pointer hover:scale-[1.02] active:scale-95"
+                            >
+                              <FileText className="w-3.5 h-3.5" />
+                              <span>View Bill & Price Breakup</span>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
 

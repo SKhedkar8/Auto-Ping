@@ -1,8 +1,10 @@
 import type { Metadata, Viewport } from "next";
+import Script from "next/script";
 import "./globals.css";
 import DarkModeProvider from "@/components/DarkModeProvider";
 import PwaRegister from "@/components/PwaRegister";
 import AutomotiveStartupIntro from "@/components/AutomotiveStartupIntro";
+import GlobalBillModal from "@/components/GlobalBillModal";
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -43,27 +45,17 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
-        <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png" />
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              (function() {
-                try {
-                  if (!sessionStorage.getItem('autoping_intro_played')) {
-                    document.documentElement.classList.add('autoping-intro-active');
-                  }
-                } catch (e) {}
-              })();
-            `,
-          }}
-        />
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased" suppressHydrationWarning>
+        {/* Inline script to detect intro state before first paint — avoids FOUC */}
+        <Script
+          id="autoping-intro-check"
+          strategy="beforeInteractive"
+        >{`(function(){try{if(!sessionStorage.getItem('autoping_intro_played')){document.documentElement.classList.add('autoping-intro-active');}}catch(e){}})();`}</Script>
         <DarkModeProvider>
           <AutomotiveStartupIntro />
           {children}
+          <GlobalBillModal />
           <PwaRegister />
         </DarkModeProvider>
       </body>
