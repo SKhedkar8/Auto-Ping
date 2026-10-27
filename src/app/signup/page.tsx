@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowRight, Car, Check, Lock, Mail, MapPin, Phone, Shield, User } from 'lucide-react';
+import { ArrowRight, Car, Check, Download, Lock, Mail, MapPin, Phone, Shield, User } from 'lucide-react';
 import { setClientSession } from '@/lib/auth';
 import { CITIES } from '@/lib/data/cities';
 
@@ -187,6 +187,14 @@ export default function SignupPage() {
               Sign In
             </a>
           </div>
+          <button
+            type="button"
+            onClick={() => window.dispatchEvent(new CustomEvent('autoping_trigger_pwa_install'))}
+            className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg border border-slate-200 py-2.5 text-xs font-semibold text-slate-700 transition-colors hover:bg-slate-50 dark:border-slate-700 dark:text-slate-200 dark:hover:bg-slate-800"
+          >
+            <Download className="h-4 w-4" />
+            Install AutoPing App
+          </button>
         </div>
       </div>
     </div>

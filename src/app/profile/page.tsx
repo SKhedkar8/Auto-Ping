@@ -29,9 +29,19 @@ import Chatbot from '@/components/Chatbot';
 import { clearClientSession, getClientSession, setClientSession } from '@/lib/auth';
 import { User } from '@/lib/types';
 import { useRouter } from 'next/navigation';
+import { ColorTheme, useDarkMode } from '@/components/DarkModeProvider';
+
+const COLOR_THEMES: { id: ColorTheme; label: string; color: string }[] = [
+  { id: 'blue', label: 'Blue', color: '#2563EB' },
+  { id: 'teal', label: 'Teal', color: '#0F9B8E' },
+  { id: 'green', label: 'Green', color: '#39834A' },
+  { id: 'orange', label: 'Orange', color: '#D97706' },
+  { id: 'rose', label: 'Rose', color: '#D64B69' },
+];
 
 export default function ProfilePage() {
   const router = useRouter();
+  const { colorTheme, setColorTheme } = useDarkMode();
   const [user, setUser] = useState<User | null>(null);
   const [photoPreview, setPhotoPreview] = useState<string>('');
   const [vehicleCount, setVehicleCount] = useState<number>(0);
@@ -471,6 +481,41 @@ export default function ProfilePage() {
                   </div>
                 </div>
               </div>
+
+              {/* Appearance Preferences */}
+              <section aria-labelledby="appearance-heading" className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
+                <div className="border-b border-slate-100 dark:border-slate-800 pb-3 mb-5">
+                  <h3 id="appearance-heading" className="font-bold text-sm text-slate-900 dark:text-white">
+                    Color Theme
+                  </h3>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                    Choose an accent color for buttons, links, and highlights across AutoPing.
+                  </p>
+                </div>
+                <div className="flex flex-wrap gap-3" role="group" aria-label="Website color theme">
+                  {COLOR_THEMES.map((theme) => (
+                    <button
+                      key={theme.id}
+                      type="button"
+                      onClick={() => setColorTheme(theme.id)}
+                      aria-label={`${theme.label} theme`}
+                      aria-pressed={colorTheme === theme.id}
+                      className={`inline-flex items-center gap-2 rounded-lg border px-3 py-2 text-xs font-semibold transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 ${
+                        colorTheme === theme.id
+                          ? 'border-slate-400 dark:border-slate-500 bg-slate-50 dark:bg-slate-800'
+                          : 'border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800'
+                      }`}
+                    >
+                      <span className="h-4 w-4 rounded-full border border-black/10" style={{ backgroundColor: theme.color }} />
+                      <span className="text-slate-700 dark:text-slate-200">{theme.label}</span>
+                      {colorTheme === theme.id && <Check className="h-3.5 w-3.5 text-slate-600 dark:text-slate-300" />}
+                    </button>
+                  ))}
+                </div>
+                <div className="sr-only" aria-live="polite">
+                  {COLOR_THEMES.find((theme) => theme.id === colorTheme)?.label} theme selected
+                </div>
+              </section>
 
               {/* Communication and Reminder Preferences */}
               <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border border-slate-200/90 dark:border-slate-800 shadow-xs">
