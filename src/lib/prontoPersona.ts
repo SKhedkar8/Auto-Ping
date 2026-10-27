@@ -138,8 +138,8 @@ export function getPersonaPrompt(characterId?: string): string {
       path.join(process.cwd(), '.agents', 'rules', 'persona.md'),
     ];
     for (const p of candidates) {
-      if (fs.existsSync(p)) {
-        const content = fs.readFileSync(p, 'utf8').trim();
+      if (fs.existsSync(/*turbopackIgnore: true*/ p)) {
+        const content = fs.readFileSync(/*turbopackIgnore: true*/ p, 'utf8').trim();
         if (content) return content;
       }
     }

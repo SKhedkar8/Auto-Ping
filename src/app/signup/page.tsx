@@ -4,6 +4,7 @@ import React, { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Car, Check, Lock, Mail, MapPin, Phone, Shield, User } from 'lucide-react';
 import { setClientSession } from '@/lib/auth';
+import { CITIES } from '@/lib/data/cities';
 
 export default function SignupPage() {
   const router = useRouter();
@@ -143,12 +144,13 @@ export default function SignupPage() {
                   <select
                     value={formData.preferredCity}
                     onChange={(e) => setFormData({ ...formData, preferredCity: e.target.value, city: e.target.value })}
-                    className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden focus:border-blue-500"
+                    className="w-full bg-slate-50/60 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 rounded-lg pl-8 pr-3 py-2 text-xs text-slate-900 dark:text-slate-100 focus:outline-hidden focus:border-blue-500 cursor-pointer"
                   >
-                    <option value="Pune">Pune</option>
-                    <option value="Mumbai">Mumbai</option>
-                    <option value="Bengaluru">Bengaluru</option>
-                    <option value="Delhi">Delhi NCR</option>
+                    {CITIES.map((c) => (
+                      <option key={c.id} value={c.name}>
+                        {c.name}
+                      </option>
+                    ))}
                   </select>
                 </div>
               </div>

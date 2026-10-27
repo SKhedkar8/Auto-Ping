@@ -1,5 +1,4 @@
 import type { Metadata, Viewport } from "next";
-import Script from "next/script";
 import "./globals.css";
 import DarkModeProvider from "@/components/DarkModeProvider";
 import PwaRegister from "@/components/PwaRegister";
@@ -47,11 +46,6 @@ export default function RootLayout({
         />
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased" suppressHydrationWarning>
-        {/* Inline script to detect intro state before first paint — avoids FOUC */}
-        <Script
-          id="autoping-intro-check"
-          strategy="beforeInteractive"
-        >{`(function(){try{if(!sessionStorage.getItem('autoping_intro_played')){document.documentElement.classList.add('autoping-intro-active');}}catch(e){}})();`}</Script>
         <DarkModeProvider>
           <AutomotiveStartupIntro />
           {children}
