@@ -2,15 +2,13 @@ import { User } from './types';
 
 export const DEMO_CUSTOMER_USER: User = {
   id: 'user-customer-1',
-  name: 'Shreyas',
-  email: 'shreyas@example.com',
-  mobile: '9876543210',
+  name: 'User',
+  email: 'User@gmail.com',
+  mobile: '123456789',
   role: 'CUSTOMER',
   city: 'Pune',
   preferredCity: 'Pune',
-  address: 'Flat 402, Rohan Viti, Baner',
   isActive: true,
-  photoUrl: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150&auto=format&fit=crop&q=80',
   createdAt: '2026-02-15T10:00:00.000Z',
 };
 
@@ -33,14 +31,18 @@ export function getClientSession(): User | null {
   if (typeof window === 'undefined') return null;
   const stored = localStorage.getItem(SESSION_KEY);
   if (!stored) {
-    // Default to Shreyas for seamless instant demo inspection
+    // Keep demo access generic until a visitor signs in or creates an account.
     localStorage.setItem(SESSION_KEY, JSON.stringify(DEMO_CUSTOMER_USER));
     return DEMO_CUSTOMER_USER;
   }
   try {
     const user: User = JSON.parse(stored);
-    if (user && user.name === 'Shreyas Patil') {
-      user.name = 'Shreyas';
+    if (user && (user.email?.toLowerCase() === 'shreyas@example.com' || user.name?.toLowerCase().startsWith('shreyas'))) {
+      user.name = DEMO_CUSTOMER_USER.name;
+      user.email = DEMO_CUSTOMER_USER.email;
+      user.mobile = DEMO_CUSTOMER_USER.mobile;
+      delete user.address;
+      delete user.photoUrl;
       localStorage.setItem(SESSION_KEY, JSON.stringify(user));
     }
     return user;

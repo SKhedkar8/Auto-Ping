@@ -21,7 +21,7 @@ import { DEMO_ADMIN_USER, DEMO_CUSTOMER_USER, setClientSession } from '@/lib/aut
 
 export default function LoginPage() {
   const router = useRouter();
-  const [identifier, setIdentifier] = useState('shreyas@example.com');
+  const [identifier, setIdentifier] = useState('User@gmail.com');
   const [password, setPassword] = useState('Demo@1234');
   const [showPassword, setShowPassword] = useState(false);
   const [userRole, setUserRole] = useState<'CUSTOMER' | 'ADMIN'>('CUSTOMER');
@@ -34,7 +34,7 @@ export default function LoginPage() {
 
     const cleanId = identifier.trim();
     const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanId);
-    const isMobile = /^[6-9]\d{9}$/.test(cleanId);
+    const isMobile = /^[6-9]\d{9}$/.test(cleanId) || cleanId === '123456789';
 
     if (!isEmail && !isMobile) {
       setError('Please enter a valid email address or 10-digit Indian mobile number.');
@@ -60,19 +60,17 @@ export default function LoginPage() {
         setClientSession(data.data);
         router.push(userRole === 'ADMIN' ? '/admin' : '/dashboard');
       } else {
-        setClientSession(userRole === 'ADMIN' ? DEMO_ADMIN_USER : DEMO_CUSTOMER_USER);
-        router.push(userRole === 'ADMIN' ? '/admin' : '/dashboard');
+        setError(data.error || 'Unable to sign in. Please check your details and try again.');
       }
     } catch {
       setIsLoading(false);
-      setClientSession(userRole === 'ADMIN' ? DEMO_ADMIN_USER : DEMO_CUSTOMER_USER);
-      router.push(userRole === 'ADMIN' ? '/admin' : '/dashboard');
+      setError('Unable to connect. Please try again.');
     }
   };
 
   const handleDemoLogin = (role: 'CUSTOMER' | 'ADMIN') => {
     if (role === 'CUSTOMER') {
-      setIdentifier('shreyas@example.com');
+      setIdentifier('User@gmail.com');
       setPassword('Demo@1234');
       setUserRole('CUSTOMER');
       setClientSession(DEMO_CUSTOMER_USER);
@@ -221,7 +219,7 @@ export default function LoginPage() {
                   type="text"
                   value={identifier}
                   onChange={(e) => setIdentifier(e.target.value)}
-                  placeholder="name@example.com or 9876543210"
+                  placeholder="User@gmail.com or 123456789"
                   className="w-full pl-10 pr-4 py-3 rounded-2xl bg-white/[0.05] border border-white/[0.1] text-sm text-white placeholder-slate-500 focus:outline-hidden focus:border-blue-400 focus:ring-2 focus:ring-blue-400/20 transition-all font-sans"
                   required
                 />

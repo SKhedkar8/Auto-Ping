@@ -25,8 +25,8 @@ export async function POST(request: Request) {
     }
 
     // If identifier is demo customer
-    if (identifier.toLowerCase() === 'shreyas@example.com' || identifier === '9876543210') {
-      const demoUser = getUserByEmailOrMobile('shreyas@example.com');
+    if (identifier.toLowerCase() === 'user@gmail.com' || identifier === '123456789') {
+      const demoUser = getUserByEmailOrMobile('User@gmail.com');
       return NextResponse.json({ data: demoUser });
     }
 

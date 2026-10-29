@@ -62,7 +62,7 @@ function generateInitialData(): DatabaseSchema {
   const centers = [...SEED_CENTERS];
   const slots = generateInitialSlots(centers);
 
-  // Generate Demo Vehicles for Shreyas
+  // Generate demo vehicles for the sample customer.
   const cretaHealth = calculateVehicleHealth({
     vehicleType: 'CAR',
     currentKm: 18500,
@@ -136,7 +136,7 @@ function generateInitialData(): DatabaseSchema {
     },
   ];
 
-  // Pick a slot for Shreyas's upcoming booking
+  // Pick a slot for the sample customer's upcoming booking.
   const targetDate = new Date();
   targetDate.setDate(targetDate.getDate() + 14); // 2 weeks out
   const targetDateStr = targetDate.toISOString().split('T')[0];
@@ -153,12 +153,12 @@ function generateInitialData(): DatabaseSchema {
 
   const bookings: Booking[] = [
     {
-      id: 'book-shreyas-1',
+      id: 'book-user-1',
       bookingCode: 'AP-20261012-001',
       userId: 'user-customer-1',
-      userName: 'Shreyas',
-      userPhone: '9876543210',
-      userEmail: 'shreyas@example.com',
+      userName: 'User',
+      userPhone: '123456789',
+      userEmail: 'User@gmail.com',
       vehicleId: 'veh-creta-1',
       vehicleName: 'Hyundai Creta (2024)',
       vehicleReg: 'MH12AB1234',
@@ -294,9 +294,9 @@ function generateInitialData(): DatabaseSchema {
       title: 'Booking Confirmed (AP-20261012-001)',
       message: `Your service is scheduled for ${targetDateStr} at 10:30 AM at Hyundai Motor Plaza Pune.`,
       vehicleId: 'veh-creta-1',
-      bookingId: 'book-shreyas-1',
+      bookingId: 'book-user-1',
       isRead: false,
-      dedupeKey: 'book-shreyas-1-CONFIRMED',
+      dedupeKey: 'book-user-1-CONFIRMED',
       createdAt: new Date().toISOString(),
     },
     {
