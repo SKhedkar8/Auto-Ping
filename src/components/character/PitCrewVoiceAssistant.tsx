@@ -11,10 +11,39 @@ import {
   Sparkles,
   Flame,
   ChevronLeft,
+  ArrowRight,
 } from 'lucide-react';
 import CartoonCarAvatar from './CartoonCarAvatar';
 import { playCarSound, CHARACTER_VOICE_PROFILES } from '@/lib/characterVoice';
 import { CHARACTERS, CharacterDef } from '@/lib/characterData';
+
+const CHARACTER_CATEGORIES: Record<string, 'CHAMPIONS' | 'SCUDERIA' | 'MECHANICS' | 'TECH'> = {
+  mcqueen: 'CHAMPIONS',
+  king: 'CHAMPIONS',
+  chick: 'CHAMPIONS',
+  schumacher: 'SCUDERIA',
+  sally: 'SCUDERIA',
+  doc: 'MECHANICS',
+  mater: 'MECHANICS',
+  sarge: 'MECHANICS',
+  cruz: 'TECH',
+  holley: 'TECH',
+  finn: 'TECH',
+};
+
+const CHARACTER_TAGS: Record<string, { tag: string; badge: string }> = {
+  schumacher: { tag: 'Scuderia Ferrari F430', badge: 'Rosso Corsa' },
+  mcqueen: { tag: '#95 Rust-eze Champion', badge: 'Piston Cup' },
+  mater: { tag: 'Tow Mater Recovery', badge: 'Radiator Springs' },
+  sally: { tag: 'Porsche 911 Carrera', badge: 'Precision GT' },
+  cruz: { tag: '#51 Rust-eze Racing Tech', badge: 'Aero Dynamics' },
+  holley: { tag: 'C.H.R.O.M.E Diagnostics', badge: 'Secret Intel' },
+  finn: { tag: 'British Intelligence Master', badge: 'MI-6 Class' },
+  doc: { tag: '#51 Fabulous Hudson Hornet', badge: 'Grand Master' },
+  king: { tag: '#43 Dinoco Racing Legend', badge: 'Hall of Fame' },
+  chick: { tag: '#86 Piston Cup Champion', badge: 'HTB Racing' },
+  sarge: { tag: '1942 Willys MB Surplus', badge: 'Tactical Prep' },
+};
 
 interface ChatMessage {
   id: string;
@@ -35,6 +64,7 @@ function buildWelcome(char: CharacterDef): ChatMessage {
 
 export default function PitCrewVoiceAssistant() {
   const [selectedChar, setSelectedChar] = useState<CharacterDef | null>(null);
+  const [voiceCategory, setVoiceCategory] = useState<'ALL' | 'CHAMPIONS' | 'SCUDERIA' | 'MECHANICS' | 'TECH'>('ALL');
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
@@ -280,50 +310,191 @@ export default function PitCrewVoiceAssistant() {
 
   // ── CHARACTER PICKER (shown when no character selected) ──
   if (!selectedChar) {
+    const filteredChars = CHARACTERS.filter((c) => {
+      if (voiceCategory === 'ALL') return true;
+      return CHARACTER_CATEGORIES[c.id] === voiceCategory;
+    });
+
+    const handleAudioPreview = (e: React.MouseEvent, char: CharacterDef) => {
+      e.stopPropagation();
+      if (char.id === 'schumacher') {
+        playCarSound('ferrari_rev');
+      } else {
+        const profile = CHARACTER_VOICE_PROFILES[char.id];
+        const sound = profile?.signatureSound || 'rev';
+        playCarSound(sound as any);
+      }
+    };
+
     return (
-      <div className="w-full max-w-4xl mx-auto px-2 py-4">
-        <div className="text-center mb-6">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-bold bg-red-500/10 text-red-600 dark:text-red-400 border border-red-500/20 uppercase tracking-wider mb-3">
-            <Sparkles className="w-3.5 h-3.5" />
-            Voice AI Assistant
-          </span>
-          <h2 className="text-2xl sm:text-3xl font-bold text-[#1d1d1f] dark:text-[#f5f5f7] tracking-tight">
-            Choose Your AI Character
+      <div className="w-full max-w-5xl mx-auto px-2 py-3">
+        {/* ── Header ── */}
+        <div className="text-center mb-6 relative">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase bg-gradient-to-r from-red-500/10 via-rose-500/10 to-amber-500/10 text-red-600 dark:text-red-400 border border-red-500/20 shadow-xs mb-3">
+            <Sparkles className="w-3.5 h-3.5 text-red-600 animate-pulse" />
+            Gemini-Powered Voice AI
+          </div>
+
+          <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
+            Choose Your{' '}
+            <span className="bg-gradient-to-r from-red-600 via-rose-500 to-amber-500 bg-clip-text text-transparent">
+              Voice Co-Pilot
+            </span>
           </h2>
-          <p className="text-[13px] text-[#86868b] mt-1 max-w-sm mx-auto">
-            Each character speaks in their own voice and personality. Talk to them using your mic or keyboard!
+
+          <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-lg mx-auto">
+            Conversational AI with genuine Pixar character voices and engine signatures. Speak naturally using your microphone!
           </p>
+
+          {/* ── Category Filter Pills ── */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+            {[
+              { id: 'ALL', label: 'All Voices', count: 10, icon: '🏁' },
+              { id: 'CHAMPIONS', label: 'Cup Champions', count: 3, icon: '🏆' },
+              { id: 'SCUDERIA', label: 'Scuderia & GT', count: 2, icon: '🏎️' },
+              { id: 'MECHANICS', label: 'Master Mechanics', count: 3, icon: '🔧' },
+              { id: 'TECH', label: 'Tech & Intel', count: 3, icon: '⚡' },
+            ].map((cat) => {
+              const isActive = voiceCategory === cat.id;
+              return (
+                <button
+                  key={cat.id}
+                  type="button"
+                  onClick={() => setVoiceCategory(cat.id as any)}
+                  className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                    isActive
+                      ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20 dark:bg-white dark:text-slate-900'
+                      : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600 dark:bg-white/10 dark:hover:bg-white/15 dark:text-slate-300'
+                  }`}
+                >
+                  <span>{cat.icon}</span>
+                  <span>{cat.label}</span>
+                  <span
+                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                      isActive
+                        ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                        : 'bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-slate-400'
+                    }`}
+                  >
+                    {cat.count}
+                  </span>
+                </button>
+              );
+            })}
+          </div>
         </div>
 
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-          {CHARACTERS.map((char) => (
-            <button
-              key={char.id}
-              type="button"
-              onClick={() => handleSelectCharacter(char)}
-              className="group relative flex flex-col items-center text-center p-3 rounded-2xl bg-white dark:bg-[#1C1C1E] border-2 border-black/8 dark:border-white/8 hover:border-red-500 hover:shadow-xl hover:shadow-red-500/10 transition-all duration-200 cursor-pointer"
-            >
-              {/* Character image */}
-              <div className="w-full aspect-square rounded-xl overflow-hidden mb-2 bg-slate-100 dark:bg-slate-800">
-                <img
-                  src={char.image}
-                  alt={char.name}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-              </div>
-              <h4 className="font-bold text-[12px] text-[#1d1d1f] dark:text-[#f5f5f7] leading-tight line-clamp-2">
-                {char.name}
-              </h4>
-              <p className="text-[10px] text-[#86868b] mt-0.5 line-clamp-1">{char.title}</p>
+        {/* ── Voice Character Cards Grid ── */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
+          {filteredChars.map((char) => {
+            const tagInfo = CHARACTER_TAGS[char.id];
+            return (
               <div
-                className="mt-2 w-full py-1.5 rounded-lg text-[11px] font-semibold text-white transition-colors"
-                style={{ backgroundColor: char.color }}
+                key={char.id}
+                onClick={() => handleSelectCharacter(char)}
+                className="group relative cursor-pointer flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 bg-white dark:bg-[#18181b] border border-slate-200/80 dark:border-white/10 hover:border-transparent text-left"
+                style={{
+                  boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 6px -1px rgba(0,0,0,0.02)',
+                }}
+                onMouseEnter={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 35px -10px ${char.color}40, 0 0 0 1.5px ${char.color}`;
+                }}
+                onMouseLeave={(e) => {
+                  (e.currentTarget as HTMLDivElement).style.boxShadow =
+                    '0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 6px -1px rgba(0,0,0,0.02)';
+                }}
               >
-                Chat 🎙️
+                {/* Image Stage */}
+                <div
+                  className="relative w-full aspect-[4/3] overflow-hidden"
+                  style={{
+                    background: `radial-gradient(circle at 50% 25%, ${char.color}22 0%, #F8FAFC 85%)`,
+                  }}
+                >
+                  {/* Top color accent line */}
+                  <div
+                    className="absolute top-0 left-0 right-0 h-1 z-10"
+                    style={{ background: `linear-gradient(90deg, ${char.color}, ${char.color}60)` }}
+                  />
+
+                  {/* Top floating badges */}
+                  <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                    <span
+                      className="pointer-events-auto px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-xs flex items-center gap-1"
+                      style={{
+                        backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                        color: char.color,
+                        border: `1px solid ${char.color}35`,
+                      }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: char.color }} />
+                      {tagInfo?.badge || 'Voice AI'}
+                    </span>
+
+                    {/* Sound preview button */}
+                    <button
+                      type="button"
+                      onClick={(e) => handleAudioPreview(e, char)}
+                      title="Preview Character Sound"
+                      className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-slate-700 hover:text-red-600 shadow-sm transition-all duration-200 active:scale-90 hover:scale-110"
+                    >
+                      <Volume2 className="w-3 h-3" />
+                    </button>
+                  </div>
+
+                  {/* Artwork image */}
+                  <img
+                    src={char.image}
+                    alt={char.name}
+                    className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                  />
+
+                  {/* Frosted quote strip */}
+                  <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-end">
+                    <p className="text-white text-[9.5px] font-medium italic leading-snug line-clamp-2 drop-shadow-xs">
+                      {char.quote}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Card Body */}
+                <div className="p-3 flex flex-col justify-between flex-1 gap-2 bg-white dark:bg-[#18181b]">
+                  <div>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: char.color }} />
+                      <h4 className="font-extrabold text-[12.5px] text-slate-900 dark:text-white leading-tight line-clamp-1 group-hover:text-red-600 transition-colors">
+                        {char.name}
+                      </h4>
+                    </div>
+                    <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight line-clamp-1">
+                      {char.title}
+                    </p>
+                  </div>
+
+                  {/* Premium CTA Button */}
+                  <button
+                    type="button"
+                    className="w-full py-2 px-3 rounded-xl text-[11px] font-bold text-white transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 shadow-sm group-hover:shadow-md group-hover:brightness-105"
+                    style={{
+                      background: `linear-gradient(135deg, ${char.color}, ${char.color}d0)`,
+                      boxShadow: `0 3px 10px -2px ${char.color}50`,
+                    }}
+                  >
+                    <Mic className="w-3 h-3" />
+                    <span>Talk Voice AI</span>
+                    <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                  </button>
+                </div>
               </div>
-            </button>
-          ))}
+            );
+          })}
         </div>
+
+        {/* ── Footer hint ── */}
+        <p className="text-center text-[11px] text-slate-400 mt-6 flex items-center justify-center gap-1.5">
+          <span>🎙️</span>
+          <span>Web Speech API & Gemini Neural Voice • Works with speech or text input</span>
+        </p>
       </div>
     );
   }

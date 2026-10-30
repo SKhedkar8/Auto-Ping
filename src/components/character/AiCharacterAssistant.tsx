@@ -18,16 +18,47 @@ import {
   Shield,
   Car,
   Wrench,
-  Download
+  Download,
+  Flame,
+  Trophy,
+  Radio
 } from 'lucide-react';
 import { CHARACTERS, CharacterDef } from '@/lib/characterData';
-import { playCarSound, speakDialogue, stopSpeaking } from '@/lib/characterVoice';
+import { playCarSound, speakDialogue, stopSpeaking, CHARACTER_VOICE_PROFILES } from '@/lib/characterVoice';
 import { playCelebrationFanfare } from '@/lib/celebrationAudio';
 import InteractiveCharacterStage from './InteractiveCharacterStage';
 import PitCrewVoiceAssistant from './PitCrewVoiceAssistant';
 import { getClientSession } from '@/lib/auth';
 import { ServiceCenter, Vehicle } from '@/lib/types';
 import { validateServiceInput } from '@/lib/serviceGuardrail';
+
+const CHARACTER_CATEGORIES: Record<string, 'CHAMPIONS' | 'SCUDERIA' | 'MECHANICS' | 'TECH'> = {
+  mcqueen: 'CHAMPIONS',
+  king: 'CHAMPIONS',
+  chick: 'CHAMPIONS',
+  schumacher: 'SCUDERIA',
+  sally: 'SCUDERIA',
+  doc: 'MECHANICS',
+  mater: 'MECHANICS',
+  sarge: 'MECHANICS',
+  cruz: 'TECH',
+  holley: 'TECH',
+  finn: 'TECH',
+};
+
+const CHARACTER_TAGS: Record<string, { tag: string; badge: string }> = {
+  schumacher: { tag: 'Scuderia Ferrari F430', badge: 'Rosso Corsa' },
+  mcqueen: { tag: '#95 Rust-eze Champion', badge: 'Piston Cup' },
+  mater: { tag: 'Tow Mater Recovery', badge: 'Radiator Springs' },
+  sally: { tag: 'Porsche 911 Carrera', badge: 'Precision GT' },
+  cruz: { tag: '#51 Rust-eze Racing Tech', badge: 'Aero Dynamics' },
+  holley: { tag: 'C.H.R.O.M.E Diagnostics', badge: 'Secret Intel' },
+  finn: { tag: 'British Intelligence Master', badge: 'MI-6 Class' },
+  doc: { tag: '#51 Fabulous Hudson Hornet', badge: 'Grand Master' },
+  king: { tag: '#43 Dinoco Racing Legend', badge: 'Hall of Fame' },
+  chick: { tag: '#86 Piston Cup Champion', badge: 'HTB Racing' },
+  sarge: { tag: '1942 Willys MB Surplus', badge: 'Tactical Prep' },
+};
 
 interface AiCharacterAssistantProps {
   isOpen: boolean;
@@ -62,10 +93,21 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
   const [assistantMode, setAssistantMode] = useState<'PRONTO' | 'TOUR'>('PRONTO');
   const [selectedChar, setSelectedChar] = useState<CharacterDef>(CHARACTERS[0]);
   const [step, setStep] = useState<SceneStep>('SELECT_CHARACTER');
+  const [activeCategory, setActiveCategory] = useState<'ALL' | 'CHAMPIONS' | 'SCUDERIA' | 'MECHANICS' | 'TECH'>('ALL');
   const [dialogue, setDialogue] = useState('');
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [voiceEnabled, setVoiceEnabled] = useState(true);
   const [sceneState, setSceneState] = useState<'entrance' | 'idle' | 'driving' | 'happy' | 'thinking'>('idle');
+
+  const handleAudioPreview = (e: React.MouseEvent, char: CharacterDef) => {
+    e.stopPropagation();
+    if (char.id === 'schumacher') {
+      playCarSound('ferrari_rev');
+    } else {
+      const sound = CHARACTER_VOICE_PROFILES[char.id]?.signatureSound || 'rev';
+      playCarSound(sound as any);
+    }
+  };
 
   // User input & Session memory
   const [customInput, setCustomInput] = useState('');
@@ -274,7 +316,7 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
 
   return (
     <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-2 sm:p-4 overflow-y-auto">
-      <div className="relative w-full max-w-4xl bg-white dark:bg-[#121214] rounded-3xl shadow-2xl border border-black/10 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden my-auto apple-scale-in">
+      <div className="relative w-full max-w-5xl bg-white dark:bg-[#121214] rounded-3xl shadow-2xl border border-black/10 dark:border-white/10 flex flex-col max-h-[92vh] overflow-hidden my-auto apple-scale-in">
         {/* ── Top Bar ── */}
         <div className="px-5 py-3.5 bg-[#F5F5F7] dark:bg-[#1A1A1C] border-b border-black/[0.08] dark:border-white/[0.08] flex items-center justify-between shrink-0">
           <div className="flex items-center gap-2.5">
@@ -377,111 +419,183 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
           {/* ══════════════════════════════════════════════
               SCENE 0: CHARACTER SELECTION SCREEN
               ══════════════════════════════════════════════ */}
-          {step === 'SELECT_CHARACTER' && (
-            <div className="py-2">
-              {/* ── Cinematic header ── */}
-              <div className="text-center mb-8 relative">
-                {/* Decorative racing stripes */}
-                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-2 opacity-[0.06] pointer-events-none select-none">
-                  {Array.from({ length: 12 }).map((_, i) => (
-                    <div key={i} className="h-24 w-1 rounded-full" style={{ background: i % 2 === 0 ? '#0071E3' : '#E11D48', transform: `rotate(-15deg)` }} />
-                  ))}
-                </div>
+          {step === 'SELECT_CHARACTER' && (() => {
+            const filteredChars = CHARACTERS.filter((c) => {
+              if (activeCategory === 'ALL') return true;
+              return CHARACTER_CATEGORIES[c.id] === activeCategory;
+            });
 
-                <div className="relative inline-flex flex-col items-center gap-3">
-                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em]"
-                    style={{ background: 'linear-gradient(135deg, rgba(0,113,227,0.12), rgba(225,29,72,0.08))', border: '1px solid rgba(0,113,227,0.2)', color: '#0071E3' }}>
-                    <Sparkles className="w-3.5 h-3.5" />
-                    Choose Your Guide
-                  </span>
+            return (
+              <div className="py-2">
+                {/* ── Cinematic Hero Header ── */}
+                <div className="text-center mb-6 relative">
+                  <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold tracking-wider uppercase bg-gradient-to-r from-blue-500/10 via-purple-500/10 to-rose-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20 shadow-xs mb-3">
+                    <Sparkles className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400 animate-pulse" />
+                    Radiator Springs & Piston Cup Legends
+                  </div>
 
-                  <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
+                  <h2 className="text-2xl sm:text-4xl font-black tracking-tight text-slate-900 dark:text-white">
                     Pick Your{' '}
-                    <span style={{ background: 'linear-gradient(135deg, #0071E3, #E11D48)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                    <span className="bg-gradient-to-r from-blue-600 via-indigo-600 to-rose-600 bg-clip-text text-transparent">
                       AI Co-Pilot
                     </span>
                   </h2>
 
-                  <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-sm">
-                    Each character has a unique personality, voice, and automotive expertise.
+                  <p className="text-[13px] text-slate-500 dark:text-slate-400 mt-1.5 max-w-lg mx-auto">
+                    Each character has a unique voice, engine sound, and automotive expertise. Tap the speaker to hear them!
                   </p>
+
+                  {/* ── Category Filter Pills ── */}
+                  <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+                    {[
+                      { id: 'ALL', label: 'All Legends', count: 10, icon: '🏁' },
+                      { id: 'CHAMPIONS', label: 'Cup Champions', count: 3, icon: '🏆' },
+                      { id: 'SCUDERIA', label: 'Scuderia & GT', count: 2, icon: '🏎️' },
+                      { id: 'MECHANICS', label: 'Master Mechanics', count: 3, icon: '🔧' },
+                      { id: 'TECH', label: 'Tech & Intel', count: 3, icon: '⚡' },
+                    ].map((cat) => {
+                      const isActive = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          type="button"
+                          onClick={() => setActiveCategory(cat.id as any)}
+                          className={`px-3.5 py-1.5 rounded-full text-xs font-semibold transition-all duration-200 flex items-center gap-1.5 cursor-pointer ${
+                            isActive
+                              ? 'bg-slate-900 text-white shadow-md shadow-slate-900/20 dark:bg-white dark:text-slate-900'
+                              : 'bg-slate-100 hover:bg-slate-200/80 text-slate-600 dark:bg-white/10 dark:hover:bg-white/15 dark:text-slate-300'
+                          }`}
+                        >
+                          <span>{cat.icon}</span>
+                          <span>{cat.label}</span>
+                          <span
+                            className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
+                              isActive
+                                ? 'bg-white/20 text-white dark:bg-slate-900/20 dark:text-slate-900'
+                                : 'bg-slate-200/70 text-slate-600 dark:bg-white/10 dark:text-slate-400'
+                            }`}
+                          >
+                            {cat.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
-              {/* ── Character Cards Grid ── */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
-                {CHARACTERS.map((char) => (
-                  <div
-                    key={char.id}
-                    onClick={() => handleSelectCharacter(char)}
-                    className="group relative cursor-pointer flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
-                    style={{
-                      background: '#fff',
-                      border: `2px solid rgba(0,0,0,0.07)`,
-                      boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
-                    }}
-                    onMouseEnter={e => {
-                      (e.currentTarget as HTMLDivElement).style.border = `2px solid ${char.color}`;
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 30px ${char.color}30`;
-                    }}
-                    onMouseLeave={e => {
-                      (e.currentTarget as HTMLDivElement).style.border = '2px solid rgba(0,0,0,0.07)';
-                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
-                    }}
-                  >
-                    {/* Image area with color top-bar */}
-                    <div className="relative w-full aspect-square overflow-hidden"
-                      style={{ background: `linear-gradient(180deg, ${char.color}15 0%, #f8f9fa 100%)` }}>
-                      {/* Color top accent bar */}
-                      <div className="absolute top-0 left-0 right-0 h-1 z-10"
-                        style={{ background: `linear-gradient(90deg, ${char.color}, ${char.color}80)` }} />
-
-                      <img
-                        src={char.image}
-                        alt={char.name}
-                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                      />
-
-                      {/* Hover overlay with quote */}
-                      <div className="absolute inset-0 flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
-                        style={{ background: `linear-gradient(to top, ${char.color}ee 0%, transparent 60%)` }}>
-                        <p className="text-white text-[9px] font-medium italic leading-tight line-clamp-2">
-                          {char.quote}
-                        </p>
-                      </div>
-                    </div>
-
-                    {/* Card body */}
-                    <div className="p-3 flex flex-col gap-1.5 flex-1">
-                      <h4 className="font-bold text-[12px] text-slate-900 leading-tight line-clamp-2">
-                        {char.name}
-                      </h4>
-                      <p className="text-[10px] text-slate-400 leading-tight line-clamp-2 flex-1">
-                        {char.title}
-                      </p>
-
-                      {/* Select button with character color */}
-                      <button
-                        type="button"
-                        className="mt-1.5 w-full py-2 rounded-xl text-[11px] font-bold text-white transition-all duration-200 group-hover:shadow-lg active:scale-95"
+                {/* ── Character Cards Grid ── */}
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3.5 sm:gap-4">
+                  {filteredChars.map((char) => {
+                    const tagInfo = CHARACTER_TAGS[char.id];
+                    return (
+                      <div
+                        key={char.id}
+                        onClick={() => handleSelectCharacter(char)}
+                        className="group relative cursor-pointer flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-2 bg-white dark:bg-[#18181b] border border-slate-200/80 dark:border-white/10 hover:border-transparent text-left"
                         style={{
-                          background: `linear-gradient(135deg, ${char.color}, ${char.color}cc)`,
-                          boxShadow: `0 2px 8px ${char.color}30`
+                          boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 6px -1px rgba(0,0,0,0.02)',
+                        }}
+                        onMouseEnter={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.boxShadow = `0 20px 35px -10px ${char.color}40, 0 0 0 1.5px ${char.color}`;
+                        }}
+                        onMouseLeave={(e) => {
+                          (e.currentTarget as HTMLDivElement).style.boxShadow =
+                            '0 4px 20px -2px rgba(0,0,0,0.05), 0 2px 6px -1px rgba(0,0,0,0.02)';
                         }}
                       >
-                        Select 🚗
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                        {/* Image Stage */}
+                        <div
+                          className="relative w-full aspect-[4/3] overflow-hidden"
+                          style={{
+                            background: `radial-gradient(circle at 50% 25%, ${char.color}22 0%, #F8FAFC 85%)`,
+                          }}
+                        >
+                          {/* Top ambient color accent line */}
+                          <div
+                            className="absolute top-0 left-0 right-0 h-1 z-10"
+                            style={{ background: `linear-gradient(90deg, ${char.color}, ${char.color}60)` }}
+                          />
 
-              {/* ── Footer hint ── */}
-              <p className="text-center text-[11px] text-slate-400 mt-6">
-                🏁 You can switch characters at any time during your session
-              </p>
-            </div>
-          )}
+                          {/* Top floating badges */}
+                          <div className="absolute top-2.5 left-2.5 right-2.5 z-20 flex items-center justify-between pointer-events-none">
+                            <span
+                              className="pointer-events-auto px-2 py-0.5 rounded-full text-[9px] font-extrabold uppercase tracking-wider backdrop-blur-md shadow-xs flex items-center gap-1"
+                              style={{
+                                backgroundColor: 'rgba(255, 255, 255, 0.94)',
+                                color: char.color,
+                                border: `1px solid ${char.color}35`,
+                              }}
+                            >
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: char.color }} />
+                              {tagInfo?.badge || 'Legend'}
+                            </span>
+
+                            {/* Sound preview button */}
+                            <button
+                              type="button"
+                              onClick={(e) => handleAudioPreview(e, char)}
+                              title="Listen to Engine Rev & Voice"
+                              className="pointer-events-auto p-1.5 rounded-full bg-white/90 hover:bg-white text-slate-700 hover:text-blue-600 shadow-sm transition-all duration-200 active:scale-90 hover:scale-110"
+                            >
+                              <Volume2 className="w-3 h-3" />
+                            </button>
+                          </div>
+
+                          {/* Artwork image */}
+                          <img
+                            src={char.image}
+                            alt={char.name}
+                            className="w-full h-full object-cover transition-transform duration-500 ease-out group-hover:scale-108"
+                          />
+
+                          {/* Frosted quote strip */}
+                          <div className="absolute inset-x-0 bottom-0 p-2 bg-gradient-to-t from-black/85 via-black/50 to-transparent flex items-end">
+                            <p className="text-white text-[9.5px] font-medium italic leading-snug line-clamp-2 drop-shadow-xs">
+                              {char.quote}
+                            </p>
+                          </div>
+                        </div>
+
+                        {/* Card Body */}
+                        <div className="p-3 flex flex-col justify-between flex-1 gap-2 bg-white dark:bg-[#18181b]">
+                          <div>
+                            <div className="flex items-center gap-1.5 mb-1">
+                              <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: char.color }} />
+                              <h4 className="font-extrabold text-[12.5px] text-slate-900 dark:text-white leading-tight line-clamp-1 group-hover:text-blue-600 transition-colors">
+                                {char.name}
+                              </h4>
+                            </div>
+                            <p className="text-[10px] text-slate-500 dark:text-slate-400 font-medium leading-tight line-clamp-1">
+                              {char.title}
+                            </p>
+                          </div>
+
+                          {/* Premium CTA Button */}
+                          <button
+                            type="button"
+                            className="w-full py-2 px-3 rounded-xl text-[11px] font-bold text-white transition-all duration-200 flex items-center justify-center gap-1.5 active:scale-95 shadow-sm group-hover:shadow-md group-hover:brightness-105"
+                            style={{
+                              background: `linear-gradient(135deg, ${char.color}, ${char.color}d0)`,
+                              boxShadow: `0 3px 10px -2px ${char.color}50`,
+                            }}
+                          >
+                            <span>Select Co-Pilot</span>
+                            <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* ── Footer hint ── */}
+                <p className="text-center text-[11px] text-slate-400 mt-6 flex items-center justify-center gap-1.5">
+                  <span>🏁</span>
+                  <span>You can switch characters at any time during your service session</span>
+                </p>
+              </div>
+            );
+          })()}
 
           {/* ══════════════════════════════════════════════
               SCENE 1: ENTRANCE & GREETING
