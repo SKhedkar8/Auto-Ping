@@ -379,49 +379,107 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
               ══════════════════════════════════════════════ */}
           {step === 'SELECT_CHARACTER' && (
             <div className="py-2">
-              <div className="text-center mb-6">
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[11px] font-semibold bg-[#0071E3]/10 text-[#0071E3] dark:text-[#2997FF] mb-2 uppercase tracking-wider">
-                  <Sparkles className="w-3.5 h-3.5" />
-                  Choose Your Guide
-                </span>
-                <h2 className="text-2xl sm:text-3xl font-bold tracking-tight text-[#1d1d1f] dark:text-[#f5f5f7]">
-                  Choose your AI Assistant
-                </h2>
-                <p className="text-[13px] text-[#86868b] max-w-md mx-auto mt-1">
-                  Select your favorite automotive character. Each has a unique personality, dialogue voice, and service expertise!
-                </p>
+              {/* ── Cinematic header ── */}
+              <div className="text-center mb-8 relative">
+                {/* Decorative racing stripes */}
+                <div className="absolute inset-x-0 top-1/2 -translate-y-1/2 flex items-center justify-center gap-2 opacity-[0.06] pointer-events-none select-none">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <div key={i} className="h-24 w-1 rounded-full" style={{ background: i % 2 === 0 ? '#0071E3' : '#E11D48', transform: `rotate(-15deg)` }} />
+                  ))}
+                </div>
+
+                <div className="relative inline-flex flex-col items-center gap-3">
+                  <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.12em]"
+                    style={{ background: 'linear-gradient(135deg, rgba(0,113,227,0.12), rgba(225,29,72,0.08))', border: '1px solid rgba(0,113,227,0.2)', color: '#0071E3' }}>
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Choose Your Guide
+                  </span>
+
+                  <h2 className="text-3xl sm:text-4xl font-black tracking-tight text-[#1d1d1f] dark:text-white">
+                    Pick Your{' '}
+                    <span style={{ background: 'linear-gradient(135deg, #0071E3, #E11D48)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                      AI Co-Pilot
+                    </span>
+                  </h2>
+
+                  <p className="text-[13px] text-slate-500 dark:text-slate-400 max-w-sm">
+                    Each character has a unique personality, voice, and automotive expertise.
+                  </p>
+                </div>
               </div>
 
-              {/* 10 Character Cards Grid from user's master artwork */}
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3 sm:gap-4">
+              {/* ── Character Cards Grid ── */}
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4">
                 {CHARACTERS.map((char) => (
                   <div
                     key={char.id}
                     onClick={() => handleSelectCharacter(char)}
-                    className="group relative cursor-pointer rounded-2xl bg-white dark:bg-[#1C1C1E] border-2 border-black/10 dark:border-white/10 hover:border-[#0071E3] hover:shadow-xl transition-all duration-200 overflow-hidden flex flex-col p-2.5 text-center"
+                    className="group relative cursor-pointer flex flex-col rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 hover:shadow-2xl"
+                    style={{
+                      background: '#fff',
+                      border: `2px solid rgba(0,0,0,0.07)`,
+                      boxShadow: '0 2px 12px rgba(0,0,0,0.06)'
+                    }}
+                    onMouseEnter={e => {
+                      (e.currentTarget as HTMLDivElement).style.border = `2px solid ${char.color}`;
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = `0 8px 30px ${char.color}30`;
+                    }}
+                    onMouseLeave={e => {
+                      (e.currentTarget as HTMLDivElement).style.border = '2px solid rgba(0,0,0,0.07)';
+                      (e.currentTarget as HTMLDivElement).style.boxShadow = '0 2px 12px rgba(0,0,0,0.06)';
+                    }}
                   >
-                    <div className="relative w-full aspect-square rounded-xl overflow-hidden mb-2.5 bg-slate-100 dark:bg-slate-800 border border-black/5 dark:border-white/5">
+                    {/* Image area with color top-bar */}
+                    <div className="relative w-full aspect-square overflow-hidden"
+                      style={{ background: `linear-gradient(180deg, ${char.color}15 0%, #f8f9fa 100%)` }}>
+                      {/* Color top accent bar */}
+                      <div className="absolute top-0 left-0 right-0 h-1 z-10"
+                        style={{ background: `linear-gradient(90deg, ${char.color}, ${char.color}80)` }} />
+
                       <img
                         src={char.image}
                         alt={char.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                       />
+
+                      {/* Hover overlay with quote */}
+                      <div className="absolute inset-0 flex items-end p-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300"
+                        style={{ background: `linear-gradient(to top, ${char.color}ee 0%, transparent 60%)` }}>
+                        <p className="text-white text-[9px] font-medium italic leading-tight line-clamp-2">
+                          {char.quote}
+                        </p>
+                      </div>
                     </div>
-                    <h4 className="font-bold text-[13px] text-[#1d1d1f] dark:text-[#f5f5f7] truncate">
-                      {char.name}
-                    </h4>
-                    <p className="text-[10px] text-[#86868b] truncate mt-0.5 mb-2">
-                      {char.title}
-                    </p>
-                    <button
-                      type="button"
-                      className="mt-auto w-full py-1.5 rounded-lg text-[11px] font-semibold bg-[#0071E3] text-white group-hover:bg-[#0077ED] transition-colors shadow-xs"
-                    >
-                      Choose 🚗
-                    </button>
+
+                    {/* Card body */}
+                    <div className="p-3 flex flex-col gap-1.5 flex-1">
+                      <h4 className="font-bold text-[12px] text-slate-900 leading-tight line-clamp-2">
+                        {char.name}
+                      </h4>
+                      <p className="text-[10px] text-slate-400 leading-tight line-clamp-2 flex-1">
+                        {char.title}
+                      </p>
+
+                      {/* Select button with character color */}
+                      <button
+                        type="button"
+                        className="mt-1.5 w-full py-2 rounded-xl text-[11px] font-bold text-white transition-all duration-200 group-hover:shadow-lg active:scale-95"
+                        style={{
+                          background: `linear-gradient(135deg, ${char.color}, ${char.color}cc)`,
+                          boxShadow: `0 2px 8px ${char.color}30`
+                        }}
+                      >
+                        Select 🚗
+                      </button>
+                    </div>
                   </div>
                 ))}
               </div>
+
+              {/* ── Footer hint ── */}
+              <p className="text-center text-[11px] text-slate-400 mt-6">
+                🏁 You can switch characters at any time during your session
+              </p>
             </div>
           )}
 
