@@ -1141,35 +1141,35 @@ END:VCALENDAR`;
                 {m.card?.type === 'service_checkbox_picker' && (() => {
                   const totalEst = selectedCheckboxServices.reduce((sum, s) => sum + s.price, 0);
                   return (
-                    <div className="mt-3 w-full overflow-hidden rounded-2xl shadow-xl"
-                      style={{ background: 'linear-gradient(145deg, #0f0f13 0%, #16161e 50%, #0d1117 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+                    <div className="mt-3 w-full overflow-hidden rounded-2xl shadow-lg"
+                      style={{ background: '#ffffff', border: '1px solid rgba(0,0,0,0.08)' }}>
 
-                      {/* ── Premium gradient header ── */}
+                      {/* ── Premium light header ── */}
                       <div className="relative px-4 pt-4 pb-3 overflow-hidden"
-                        style={{ background: 'linear-gradient(135deg, rgba(0,113,227,0.25) 0%, rgba(0,113,227,0.08) 60%, rgba(88,28,235,0.1) 100%)' }}>
-                        {/* Decorative glow orbs */}
-                        <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20 blur-2xl pointer-events-none"
+                        style={{ background: 'linear-gradient(135deg, #EBF4FF 0%, #F0F7FF 60%, #F5F0FF 100%)' }}>
+                        {/* Decorative soft orbs */}
+                        <div className="absolute -top-6 -right-6 w-24 h-24 rounded-full opacity-30 blur-2xl pointer-events-none"
                           style={{ background: 'radial-gradient(circle, #0071E3, transparent)' }} />
-                        <div className="absolute top-0 left-8 w-12 h-12 rounded-full opacity-10 blur-xl pointer-events-none"
+                        <div className="absolute bottom-0 left-6 w-16 h-16 rounded-full opacity-15 blur-xl pointer-events-none"
                           style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
 
                         <div className="relative flex items-start justify-between gap-2">
                           <div>
-                            <div className="flex items-center gap-2 mb-0.5">
-                              <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[11px]"
+                            <div className="flex items-center gap-2 mb-1">
+                              <div className="w-6 h-6 rounded-lg flex items-center justify-center text-[13px] shadow-sm"
                                 style={{ background: 'linear-gradient(135deg, #0071E3, #2997FF)' }}>⚙️</div>
-                              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">AutoPing Services</span>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-500">AutoPing Services</span>
                             </div>
-                            <h4 className="text-[15px] font-bold text-white leading-tight tracking-tight">Choose Your Services</h4>
-                            <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Select everything you need — multi-select supported</p>
+                            <h4 className="text-[16px] font-bold text-slate-900 leading-tight tracking-tight">Choose Your Services</h4>
+                            <p className="text-[11px] text-slate-400 mt-0.5">Select everything you need — multi-select supported</p>
                           </div>
                           {selectedCheckboxServices.length > 0 && (
-                            <div className="shrink-0 flex flex-col items-end gap-1">
-                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
-                                style={{ background: 'linear-gradient(135deg, #0071E3, #0077ED)', boxShadow: '0 0 12px rgba(0,113,227,0.5)' }}>
+                            <div className="shrink-0 flex flex-col items-end gap-1 mt-0.5">
+                              <span className="px-3 py-1 rounded-full text-[11px] font-bold text-white shadow-sm"
+                                style={{ background: 'linear-gradient(135deg, #0071E3, #2997FF)', boxShadow: '0 2px 10px rgba(0,113,227,0.35)' }}>
                                 {selectedCheckboxServices.length} selected
                               </span>
-                              <span className="text-[10px] font-mono font-semibold text-emerald-400">
+                              <span className="text-[11px] font-mono font-semibold text-emerald-600">
                                 ₹{totalEst.toLocaleString('en-IN')} est.
                               </span>
                             </div>
@@ -1177,12 +1177,12 @@ END:VCALENDAR`;
                         </div>
                       </div>
 
-                      {/* ── Divider ── */}
-                      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)' }} />
+                      {/* ── Thin gradient divider ── */}
+                      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(0,113,227,0.15), transparent)' }} />
 
                       {/* ── Service Cards ── */}
                       <div className="p-3 space-y-2 max-h-80 overflow-y-auto"
-                        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.12) transparent' }}>
+                        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(0,0,0,0.1) transparent' }}>
                         {CHAT_SERVICE_CATALOG.map((s) => {
                           const isChecked = selectedCheckboxServices.some((item) => item.name === s.name);
                           // Unique accent color per icon type for variety
@@ -1196,12 +1196,12 @@ END:VCALENDAR`;
                               onClick={() => handleToggleCheckboxService(s)}
                               className="group relative w-full text-left flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer"
                               style={isChecked ? {
-                                background: 'linear-gradient(135deg, rgba(0,113,227,0.18) 0%, rgba(0,113,227,0.06) 100%)',
-                                border: '1.5px solid rgba(0,113,227,0.5)',
-                                boxShadow: '0 0 20px rgba(0,113,227,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
+                                background: 'linear-gradient(135deg, #EBF4FF 0%, #F5F9FF 100%)',
+                                border: '1.5px solid #0071E3',
+                                boxShadow: '0 2px 12px rgba(0,113,227,0.12)'
                               } : {
-                                background: 'rgba(255,255,255,0.03)',
-                                border: '1px solid rgba(255,255,255,0.07)',
+                                background: '#F8F9FA',
+                                border: '1px solid rgba(0,0,0,0.07)',
                               }}
                             >
                               {/* Recommended badge */}
@@ -1213,37 +1213,37 @@ END:VCALENDAR`;
                               )}
 
                               {/* Icon box */}
-                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-all duration-200"
-                                style={{ background: iconBg, border: isChecked ? '1px solid rgba(0,113,227,0.3)' : '1px solid rgba(255,255,255,0.08)',
-                                  boxShadow: isChecked ? '0 0 12px rgba(0,113,227,0.25)' : 'none' }}>
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-all duration-200 shadow-xs"
+                                style={{
+                                  background: isChecked ? 'linear-gradient(135deg, #EBF4FF, #DBEAFE)' : '#FFFFFF',
+                                  border: isChecked ? '1px solid rgba(0,113,227,0.25)' : '1px solid rgba(0,0,0,0.08)',
+                                }}>
                                 {s.icon}
                               </div>
 
-                              {/* Text content */}
+                              {/* Text */}
                               <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-1.5">
-                                  <h5 className="font-semibold text-[12px] truncate" style={{ color: isChecked ? '#fff' : 'rgba(255,255,255,0.88)' }}>
-                                    {s.name}
-                                  </h5>
-                                </div>
-                                <p className="text-[10px] mt-0.5 leading-relaxed line-clamp-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                <h5 className="font-semibold text-[12px] truncate" style={{ color: isChecked ? '#0071E3' : '#1d1d1f' }}>
+                                  {s.name}
+                                </h5>
+                                <p className="text-[10px] mt-0.5 leading-relaxed line-clamp-1 text-slate-400">
                                   {s.description}
                                 </p>
-                                <p className="text-[11px] font-bold mt-1.5" style={{ color: isChecked ? '#2997FF' : 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
+                                <p className="text-[11px] font-bold mt-1.5 font-mono" style={{ color: isChecked ? '#0071E3' : '#374151' }}>
                                   ₹{s.price.toLocaleString('en-IN')}
-                                  <span className="text-[9px] font-normal ml-1" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'inherit' }}>est. base</span>
+                                  <span className="text-[9px] font-normal text-slate-400 ml-1" style={{ fontFamily: 'inherit' }}>est. base</span>
                                 </p>
                               </div>
 
-                              {/* Premium ring checkbox */}
+                              {/* Circular check ring */}
                               <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 mt-1"
                                 style={isChecked ? {
                                   background: 'linear-gradient(135deg, #0071E3, #2997FF)',
                                   border: 'none',
-                                  boxShadow: '0 0 10px rgba(0,113,227,0.6)'
+                                  boxShadow: '0 2px 8px rgba(0,113,227,0.4)'
                                 } : {
-                                  background: 'transparent',
-                                  border: '2px solid rgba(255,255,255,0.2)'
+                                  background: '#fff',
+                                  border: '2px solid #D1D5DB'
                                 }}>
                                 {isChecked && (
                                   <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -1256,27 +1256,23 @@ END:VCALENDAR`;
                         })}
                       </div>
 
-                      {/* ── Footer: subtotal + custom + CTA ── */}
-                      <div className="px-3 pb-3 pt-0 space-y-2.5">
-                        {/* Divider */}
-                        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+                      {/* ── Footer ── */}
+                      <div className="px-3 pb-3 pt-1 space-y-2.5">
+                        <div className="h-px bg-slate-100" />
 
                         {/* Subtotal row */}
                         <div className="flex items-center justify-between">
                           <button
                             type="button"
                             onClick={() => startAddOtherServiceFlow(m.card?.data?.vehicle)}
-                            className="text-[10px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
-                            style={{ color: 'rgba(255,255,255,0.35)' }}
-                            onMouseEnter={e => (e.currentTarget.style.color = '#2997FF')}
-                            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+                            className="text-[10px] font-medium text-slate-400 hover:text-blue-600 flex items-center gap-1 cursor-pointer transition-colors"
                           >
                             <span>➕ Add custom repair</span>
                           </button>
                           <div className="text-right">
-                            <span className="text-[10px] mr-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Estimated Total</span>
+                            <span className="text-[10px] text-slate-400 mr-1">Estimated Total</span>
                             <span className="font-mono font-bold text-[14px]"
-                              style={{ color: totalEst > 0 ? '#34C759' : 'rgba(255,255,255,0.4)' }}>
+                              style={{ color: totalEst > 0 ? '#16a34a' : '#9CA3AF' }}>
                               {totalEst > 0 ? `₹${totalEst.toLocaleString('en-IN')}` : '—'}
                             </span>
                           </div>
@@ -1287,23 +1283,21 @@ END:VCALENDAR`;
                           type="button"
                           disabled={selectedCheckboxServices.length === 0}
                           onClick={() => confirmMultipleServicesForBooking(selectedCheckboxServices)}
-                          className="w-full py-3 px-4 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2.5 transition-all duration-200 relative overflow-hidden"
+                          className="w-full py-3 px-4 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2.5 transition-all duration-200"
                           style={selectedCheckboxServices.length > 0 ? {
-                            background: 'linear-gradient(135deg, #0071E3 0%, #2997FF 50%, #0071E3 100%)',
-                            backgroundSize: '200% 100%',
+                            background: 'linear-gradient(135deg, #0071E3 0%, #2997FF 100%)',
                             color: 'white',
                             cursor: 'pointer',
-                            boxShadow: '0 4px 20px rgba(0,113,227,0.45), 0 1px 0 rgba(255,255,255,0.15) inset'
+                            boxShadow: '0 4px 16px rgba(0,113,227,0.35), 0 1px 0 rgba(255,255,255,0.2) inset'
                           } : {
-                            background: 'rgba(255,255,255,0.06)',
-                            color: 'rgba(255,255,255,0.25)',
+                            background: '#F3F4F6',
+                            color: '#9CA3AF',
                             cursor: 'not-allowed'
                           }}
                         >
                           <span>Next Step: Proceed to Schedule</span>
                           {selectedCheckboxServices.length > 0 && (
-                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                              style={{ background: 'rgba(255,255,255,0.2)' }}>
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold bg-white/20 text-white">
                               {selectedCheckboxServices.length} service{selectedCheckboxServices.length > 1 ? 's' : ''}
                             </span>
                           )}
