@@ -28,6 +28,7 @@ import Footer from '@/components/Footer';
 import Chatbot from '@/components/Chatbot';
 import { clearClientSession, getClientSession, setClientSession } from '@/lib/auth';
 import { User } from '@/lib/types';
+import { CITIES } from '@/lib/data/cities';
 import { useRouter } from 'next/navigation';
 import { ColorTheme, useDarkMode } from '@/components/DarkModeProvider';
 
@@ -446,14 +447,11 @@ export default function ProfilePage() {
                         onChange={(e) => setFormData({ ...formData, preferredCity: e.target.value, city: e.target.value })}
                         className="w-full bg-white dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700 rounded-xl pl-10 pr-8 py-2.5 text-xs text-slate-900 dark:text-white focus:outline-hidden focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 transition-all cursor-pointer appearance-none"
                       >
-                        <option value="Pune">Pune, Maharashtra</option>
-                        <option value="Mumbai">Mumbai, Maharashtra</option>
-                        <option value="Bengaluru">Bengaluru, Karnataka</option>
-                        <option value="Delhi">Delhi NCR</option>
-                        <option value="Hyderabad">Hyderabad, Telangana</option>
-                        <option value="Chennai">Chennai, Tamil Nadu</option>
-                        <option value="Kolkata">Kolkata, West Bengal</option>
-                        <option value="Ahmedabad">Ahmedabad, Gujarat</option>
+                        {CITIES.map((c) => (
+                          <option key={c.id} value={c.name}>
+                            {c.displayName}, {c.state}
+                          </option>
+                        ))}
                       </select>
                       <div className="pointer-events-none absolute inset-y-0 right-0 flex items-center px-3 text-slate-400">
                         <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">

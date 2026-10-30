@@ -25,6 +25,7 @@ import {
 } from 'lucide-react';
 import { ServiceCenter, ServiceReview } from '@/lib/types';
 import { getCenterReviews } from '@/lib/data/reviews';
+import { ALL_CITY_NAMES } from '@/lib/data/cities';
 import AddReviewModal from './AddReviewModal';
 
 export type CenterWithDistance = ServiceCenter & { calculatedDistance?: number };
@@ -43,6 +44,26 @@ const CITY_COORDINATES: Record<string, { lat: number; lng: number; defaultZoom: 
   Mumbai: { lat: 19.0760, lng: 72.8777, defaultZoom: 11, label: 'Mumbai MMR' },
   Bengaluru: { lat: 12.9716, lng: 77.5946, defaultZoom: 11, label: 'Bengaluru Urban' },
   Delhi: { lat: 28.6139, lng: 77.2090, defaultZoom: 11, label: 'Delhi NCR' },
+  Hyderabad: { lat: 17.3850, lng: 78.4867, defaultZoom: 11, label: 'Hyderabad Cyberabad' },
+  Chennai: { lat: 13.0827, lng: 80.2707, defaultZoom: 11, label: 'Chennai Coast' },
+  Kolkata: { lat: 22.5726, lng: 88.3639, defaultZoom: 11, label: 'Greater Kolkata' },
+  Ahmedabad: { lat: 23.0225, lng: 72.5714, defaultZoom: 11, label: 'Ahmedabad Metro' },
+  Jaipur: { lat: 26.9124, lng: 75.7873, defaultZoom: 12, label: 'Jaipur Pink City' },
+  Chandigarh: { lat: 30.7333, lng: 76.7794, defaultZoom: 12, label: 'Chandigarh Tricity' },
+  Lucknow: { lat: 26.8467, lng: 80.9462, defaultZoom: 12, label: 'Lucknow Awadh' },
+  Surat: { lat: 21.1702, lng: 72.8311, defaultZoom: 12, label: 'Surat City' },
+  Indore: { lat: 22.7196, lng: 75.8577, defaultZoom: 12, label: 'Indore Malwa' },
+  Kochi: { lat: 9.9312, lng: 76.2673, defaultZoom: 12, label: 'Greater Kochi' },
+  Nagpur: { lat: 21.1458, lng: 79.0882, defaultZoom: 12, label: 'Nagpur Vidarbha' },
+  Bhopal: { lat: 23.2599, lng: 77.4126, defaultZoom: 12, label: 'Bhopal City of Lakes' },
+  Coimbatore: { lat: 11.0168, lng: 76.9558, defaultZoom: 12, label: 'Coimbatore Kongu' },
+  Visakhapatnam: { lat: 17.6868, lng: 83.2185, defaultZoom: 12, label: 'Visakhapatnam Port' },
+  Vadodara: { lat: 22.3072, lng: 73.1812, defaultZoom: 12, label: 'Vadodara Sanskari' },
+  Goa: { lat: 15.4909, lng: 73.8278, defaultZoom: 11, label: 'Goa Coastal Corridor' },
+  Nashik: { lat: 19.9975, lng: 73.7898, defaultZoom: 12, label: 'Nashik Godavari' },
+  Patna: { lat: 25.5941, lng: 85.1376, defaultZoom: 12, label: 'Patna Pataliputra' },
+  Bhubaneswar: { lat: 20.2961, lng: 85.8245, defaultZoom: 12, label: 'Bhubaneswar Smart City' },
+  Thiruvananthapuram: { lat: 8.5241, lng: 76.9366, defaultZoom: 12, label: 'Trivandrum Capital' },
 };
 
 // Range options in kilometers
@@ -148,7 +169,7 @@ export default function ServiceCentersMap({
 
   // Extract unique cities
   const cities = useMemo(() => {
-    const set = new Set(centers.map((c) => c.city));
+    const set = new Set([...centers.map((c) => c.city), ...ALL_CITY_NAMES]);
     return ['All Cities', ...Array.from(set)];
   }, [centers]);
 

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { ChevronDown, MapPin, X } from "lucide-react";
+import { ChevronDown, MapPin, X, Search } from "lucide-react";
 import { CITIES, CityMeta } from "@/lib/data/cities";
 
 interface CitySelectorProps {
@@ -19,6 +19,7 @@ export default function CitySelector({
   const [step, setStep] = useState<"city" | "division">("city");
   const [pendingCity, setPendingCity] = useState<CityMeta | null>(null);
   const [hoveredCity, setHoveredCity] = useState<string | null>(null);
+  const [searchQuery, setSearchQuery] = useState("");
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
   // Hide the entire city selector when the notification menu is open
   const [notifOpen, setNotifOpen] = useState(false);
@@ -200,92 +201,147 @@ export default function CitySelector({
             </button>
           </div>
 
-          {/* ── City Grid: 4 × 2 ── */}
-          {step === "city" && (
-            <>
-              <div className="p-4 grid grid-cols-4 gap-3">
-                {CITIES.map((city) => {
-                  const isActive = city.name === selectedCity;
-                  const isHov = hoveredCity === city.id;
-                  return (
-                    <button
-                      key={city.id}
-                      type="button"
-                      onClick={() => handleCityClick(city)}
-                      onMouseEnter={() => setHoveredCity(city.id)}
-                      onMouseLeave={() => setHoveredCity(null)}
-                      className="relative flex flex-col items-center gap-2 p-3 rounded-xl border
-                        text-center transition-all duration-150 cursor-pointer"
-                      style={
-                        isActive
-                          ? {
-                              border: `2px solid ${city.accentColor}`,
-                              background: `${city.accentColor}16`,
-                              boxShadow: `0 0 0 1px ${city.accentColor}30, 0 4px 14px ${city.accentColor}28`,
-                            }
-                          : isHov
-                          ? {
-                              border: `1px solid ${city.accentColor}55`,
-                              background: `${city.accentColor}0e`,
-                            }
-                          : {
-                              border: "1px solid",
-                              borderColor: "rgba(148,163,184,0.18)",
-                              background: "rgba(15,23,42,0.04)",
-                            }
-                      }
-                    >
-                      {/* Active dot */}
-                      {isActive && (
-                        <span
-                          className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
-                          style={{ background: city.accentColor }}
-                        />
-                      )}
+          {/* ── City Grid with Search ── */}
+          {step === "city" && (() => {
+            const filteredCities = CITIES.filter((c) => {
+              if (!searchQuery.trim()) return true;
+              const q = searchQuery.toLowerCase().trim();
+              return (
+                c.name.toLowerCase().includes(q) ||
+                c.displayName.toLowerCase().includes(q) ||
+                c.state.toLowerCase().includes(q) ||
+                c.stateCode.toLowerCase().includes(q)
+              );
+            });
 
-                      {/* Landmark SVG */}
-                      <div style={{ width: "100%", height: 50 }}>
-                        <svg
-                          viewBox={city.viewBox}
-                          width="100%"
-                          height="100%"
-                          style={{
-                            color: isActive || isHov ? city.accentColor : "#64748b",
-                            transition: "color 0.15s ease",
-                          }}
-                          aria-label={city.landmarkName}
-                          dangerouslySetInnerHTML={{ __html: city.landmarkSvg }}
-                        />
-                      </div>
-
-                      {/* City name */}
-                      <span
-                        className="text-[12px] font-bold leading-tight block"
-                        style={{ color: isActive || isHov ? city.accentColor : undefined }}
+            return (
+              <>
+                {/* Search Input */}
+                <div className="px-4 pt-3 pb-1 border-b border-slate-100 dark:border-slate-800/80">
+                  <div className="relative">
+                    <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                    <input
+                      type="text"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      placeholder="Search from 24+ cities or states (e.g. Jaipur, Kochi, MH)..."
+                      className="w-full bg-slate-50 dark:bg-slate-800/80 border border-slate-200 dark:border-slate-700/80 rounded-xl pl-8.5 pr-8 py-2 text-xs text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500"
+                    />
+                    {searchQuery && (
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5 cursor-pointer"
                       >
-                        {city.displayName}
-                      </span>
-                      <span className="text-[10px] text-slate-400 dark:text-slate-500 block -mt-1">
-                        {city.stateCode}
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
+                        <X className="w-3 h-3" />
+                      </button>
+                    )}
+                  </div>
+                </div>
 
-              {/* Landmark hint footer */}
-              <div className="px-5 py-3 border-t border-slate-100 dark:border-slate-800 flex items-center gap-2 bg-slate-50/60 dark:bg-slate-800/40">
-                <span className="text-base leading-none">🏛</span>
-                <span className="text-[11px] text-slate-400 dark:text-slate-500 transition-all">
-                  {hoveredCity
-                    ? CITIES.find((c) => c.id === hoveredCity)?.landmarkName
-                    : activeMeta
-                    ? `Currently: ${activeMeta.landmarkName}`
-                    : "Hover a city to preview its landmark"}
-                </span>
-              </div>
-            </>
-          )}
+                {/* Scrollable Grid of Cities */}
+                <div className="p-4 grid grid-cols-4 gap-3 max-h-[360px] overflow-y-auto">
+                  {filteredCities.length === 0 ? (
+                    <div className="col-span-4 py-8 text-center text-slate-400">
+                      <p className="text-xs font-semibold">No cities matching "{searchQuery}"</p>
+                      <button
+                        type="button"
+                        onClick={() => setSearchQuery("")}
+                        className="mt-2 text-[11px] text-blue-600 dark:text-blue-400 hover:underline font-bold"
+                      >
+                        Clear search filter
+                      </button>
+                    </div>
+                  ) : (
+                    filteredCities.map((city) => {
+                      const isActive = city.name === selectedCity;
+                      const isHov = hoveredCity === city.id;
+                      return (
+                        <button
+                          key={city.id}
+                          type="button"
+                          onClick={() => handleCityClick(city)}
+                          onMouseEnter={() => setHoveredCity(city.id)}
+                          onMouseLeave={() => setHoveredCity(null)}
+                          className="relative flex flex-col items-center gap-2 p-3 rounded-xl border
+                            text-center transition-all duration-150 cursor-pointer"
+                          style={
+                            isActive
+                              ? {
+                                  border: `2px solid ${city.accentColor}`,
+                                  background: `${city.accentColor}16`,
+                                  boxShadow: `0 0 0 1px ${city.accentColor}30, 0 4px 14px ${city.accentColor}28`,
+                                }
+                              : isHov
+                              ? {
+                                  border: `1px solid ${city.accentColor}55`,
+                                  background: `${city.accentColor}0e`,
+                                }
+                              : {
+                                  border: "1px solid",
+                                  borderColor: "rgba(148,163,184,0.18)",
+                                  background: "rgba(15,23,42,0.04)",
+                                }
+                          }
+                        >
+                          {/* Active dot */}
+                          {isActive && (
+                            <span
+                              className="absolute top-1.5 right-1.5 w-2 h-2 rounded-full"
+                              style={{ background: city.accentColor }}
+                            />
+                          )}
+
+                          {/* Landmark SVG */}
+                          <div style={{ width: "100%", height: 50 }}>
+                            <svg
+                              viewBox={city.viewBox}
+                              width="100%"
+                              height="100%"
+                              style={{
+                                color: isActive || isHov ? city.accentColor : "#64748b",
+                                transition: "color 0.15s ease",
+                              }}
+                              aria-label={city.landmarkName}
+                              dangerouslySetInnerHTML={{ __html: city.landmarkSvg }}
+                            />
+                          </div>
+
+                          {/* City name */}
+                          <span
+                            className="text-[12px] font-bold leading-tight block"
+                            style={{ color: isActive || isHov ? city.accentColor : undefined }}
+                          >
+                            {city.displayName}
+                          </span>
+                          <span className="text-[10px] text-slate-400 dark:text-slate-500 block -mt-1">
+                            {city.stateCode}
+                          </span>
+                        </button>
+                      );
+                    })
+                  )}
+                </div>
+
+                {/* Landmark hint footer */}
+                <div className="px-5 py-2.5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 bg-slate-50/60 dark:bg-slate-800/40">
+                  <div className="flex items-center gap-2">
+                    <span className="text-base leading-none">🏛</span>
+                    <span className="text-[11px] text-slate-400 dark:text-slate-500 transition-all">
+                      {hoveredCity
+                        ? CITIES.find((c) => c.id === hoveredCity)?.landmarkName
+                        : activeMeta
+                        ? `Currently: ${activeMeta.landmarkName}`
+                        : "Hover a city to preview its landmark"}
+                    </span>
+                  </div>
+                  <span className="text-[10px] font-bold text-slate-400">
+                    {CITIES.length} Cities
+                  </span>
+                </div>
+              </>
+            );
+          })()}
 
           {/* ── Division list ── */}
           {step === "division" && pendingCity && (

@@ -31,6 +31,7 @@ import PitCrewVoiceAssistant from './PitCrewVoiceAssistant';
 import { getClientSession } from '@/lib/auth';
 import { ServiceCenter, Vehicle } from '@/lib/types';
 import { validateServiceInput } from '@/lib/serviceGuardrail';
+import { ALL_CITY_NAMES } from '@/lib/data/cities';
 
 const CHARACTER_CATEGORIES: Record<string, 'CHAMPIONS' | 'SCUDERIA' | 'MECHANICS' | 'TECH'> = {
   mcqueen: 'CHAMPIONS',
@@ -86,7 +87,7 @@ const SERVICE_OPTIONS = [
   { id: 'other', label: 'Inspection / Other', icon: '🔍', price: '₹999' },
 ];
 
-const CITIES = ['Pune', 'Mumbai', 'Bangalore', 'Delhi NCR', 'Hyderabad'];
+const CITIES = ALL_CITY_NAMES;
 
 export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAssistantProps) {
   // Character & Speech state
@@ -733,18 +734,23 @@ export default function AiCharacterAssistant({ isOpen, onClose }: AiCharacterAss
 
                 {/* City selection pills */}
                 <div className="p-4 rounded-2xl bg-white dark:bg-[#1c1c1e] border border-black/10 dark:border-white/10 shadow-sm">
-                  <label className="block text-[11px] font-semibold uppercase tracking-wider text-[#86868b] mb-2.5">
-                    Select Your City
-                  </label>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex items-center justify-between mb-2.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-[#86868b]">
+                      Select Your City ({CITIES.length} Cities)
+                    </label>
+                    <span className="text-[11px] font-bold text-[#0071E3]">
+                      Selected: {selectedCity}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap gap-2 max-h-48 overflow-y-auto pr-1">
                     {CITIES.map((city) => (
                       <button
                         key={city}
                         type="button"
                         onClick={() => setSelectedCity(city)}
-                        className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-colors ${
+                        className={`px-3.5 py-1.5 rounded-full text-[12px] font-medium transition-all ${
                           selectedCity === city
-                            ? 'bg-[#0071E3] text-white shadow-xs'
+                            ? 'bg-[#0071E3] text-white shadow-xs font-semibold'
                             : 'bg-[#F5F5F7] dark:bg-[#2C2C2E] text-[#1d1d1f] dark:text-[#f5f5f7] hover:bg-black/5 dark:hover:bg-white/10'
                         }`}
                       >
