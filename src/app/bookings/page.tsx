@@ -11,10 +11,12 @@ import {
   MapPin,
   RefreshCw,
   RotateCcw,
-  Sparkles,
   Wrench,
   XCircle,
-  FileText
+  FileText,
+  LayoutGrid,
+  List,
+  Table
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -26,6 +28,7 @@ export default function BookingsPage() {
   const [bookings, setBookings] = useState<Booking[]>([]);
   const [activeTab, setActiveTab] = useState<'UPCOMING' | 'COMPLETED' | 'CANCELLED'>('UPCOMING');
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'list' | 'grid' | 'content'>('list');
 
   // Cancellation modal state
   const [cancellingBooking, setCancellingBooking] = useState<Booking | null>(null);
@@ -140,13 +143,58 @@ export default function BookingsPage() {
             </p>
           </div>
 
-          <a
-            href="/services/book"
-            className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs transition-colors flex items-center gap-1.5 self-start sm:self-auto"
-          >
-            <Wrench className="w-4 h-4" />
-            Book New Service
-          </a>
+          <div className="flex flex-wrap items-center gap-3 self-start sm:self-auto">
+            {/* View Mode Toggle: List, Grid, Content */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700/80 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('list')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'list'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="List Rows View"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">List</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Grid Cards View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('content')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'content'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Compact Table / Content View"
+              >
+                <Table className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Content</span>
+              </button>
+            </div>
+
+            <a
+              href="/services/book"
+              className="px-4 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-medium shadow-xs transition-colors flex items-center gap-1.5"
+            >
+              <Wrench className="w-4 h-4" />
+              Book New Service
+            </a>
+          </div>
         </div>
 
         {/* Tabs */}
@@ -185,7 +233,245 @@ export default function BookingsPage() {
               Book Service Now
             </a>
           </div>
+        ) : viewMode === 'content' ? (
+          /* CONTENT / COMPACT TABLE VIEW */
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold">
+                    <th className="py-3 px-4">Booking Code</th>
+                    <th className="py-3 px-4">Vehicle</th>
+                    <th className="py-3 px-4">Workshop</th>
+                    <th className="py-3 px-4">Date & Time</th>
+                    <th className="py-3 px-4">Services</th>
+                    <th className="py-3 px-4">Cost</th>
+                    <th className="py-3 px-4">Status</th>
+                    <th className="py-3 px-4 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                  {filteredBookings.map((booking) => {
+                    const isConfirmed = booking.status === 'CONFIRMED';
+                    const isPending = booking.status === 'PENDING';
+                    const isCompleted = booking.status === 'COMPLETED';
+                    const isCancelled = booking.status === 'CANCELLED';
+                    return (
+                      <tr key={booking.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                        <td className="py-3 px-4">
+                          <span className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 px-2 py-0.5 rounded">
+                            {booking.bookingCode}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4">
+                          <p className="font-bold text-slate-900 dark:text-white">{booking.vehicleName}</p>
+                          <span className="text-[10px] text-slate-400 font-mono">{booking.vehicleReg}</span>
+                        </td>
+                        <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
+                          {booking.centerName}
+                        </td>
+                        <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
+                          {booking.serviceDate} • {booking.serviceTime}
+                        </td>
+                        <td className="py-3 px-4 text-slate-600 dark:text-slate-400 max-w-[200px] truncate">
+                          {booking.services.join(', ')}
+                        </td>
+                        <td className="py-3 px-4 font-mono font-bold text-slate-900 dark:text-white">
+                          {isCompleted && booking.finalCost
+                            ? `₹${booking.finalCost.toLocaleString()}`
+                            : `₹${booking.estimatedCostMin.toLocaleString()} – ₹${booking.estimatedCostMax.toLocaleString()}`}
+                        </td>
+                        <td className="py-3 px-4">
+                          <span
+                            className={`px-2 py-0.5 rounded text-[10px] font-bold ${
+                              isConfirmed
+                                ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                                : isPending
+                                ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                                : isCompleted
+                                ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                                : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
+                            }`}
+                          >
+                            {booking.status}
+                          </span>
+                        </td>
+                        <td className="py-3 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isCompleted && (
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  window.dispatchEvent(
+                                    new CustomEvent('autoping_open_bill', {
+                                      detail: { bookingId: booking.id, invoice: booking.invoice },
+                                    })
+                                  );
+                                }}
+                                className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-[11px] flex items-center gap-1 cursor-pointer"
+                              >
+                                <FileText className="w-3 h-3" />
+                                <span>Bill</span>
+                              </button>
+                            )}
+                            {isConfirmed && (
+                              <>
+                                <button
+                                  onClick={() => {
+                                    setReschedulingBooking(booking);
+                                    setRescheduleDate(booking.serviceDate);
+                                  }}
+                                  className="px-2.5 py-1 rounded border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-[11px] font-medium text-slate-700 dark:text-slate-300 transition-colors"
+                                >
+                                  Reschedule
+                                </button>
+                                <button
+                                  onClick={() => {
+                                    setCancellingBooking(booking);
+                                    setCancelReason('');
+                                    setCancelError('');
+                                  }}
+                                  className="px-2 py-1 rounded text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-[11px] font-medium transition-colors"
+                                >
+                                  Cancel
+                                </button>
+                              </>
+                            )}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
+          /* GRID VIEW (TILES) */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {filteredBookings.map((booking) => {
+              const isConfirmed = booking.status === 'CONFIRMED';
+              const isPending = booking.status === 'PENDING';
+              const isCompleted = booking.status === 'COMPLETED';
+              const isCancelled = booking.status === 'CANCELLED';
+
+              return (
+                <div
+                  key={booking.id}
+                  className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:border-blue-400/50"
+                >
+                  <div className="space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="font-mono text-xs font-semibold text-blue-700 dark:text-blue-400 bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 px-2 py-0.5 rounded">
+                        {booking.bookingCode}
+                      </span>
+                      <span
+                        className={`px-2 py-0.5 rounded text-[11px] font-bold ${
+                          isConfirmed
+                            ? 'bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-400'
+                            : isPending
+                            ? 'bg-amber-100 dark:bg-amber-950/60 text-amber-700 dark:text-amber-400'
+                            : isCompleted
+                            ? 'bg-blue-100 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400'
+                            : 'bg-rose-100 dark:bg-rose-950/60 text-rose-700 dark:text-rose-400'
+                        }`}
+                      >
+                        {booking.status}
+                      </span>
+                    </div>
+
+                    <div>
+                      <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                        {booking.vehicleName}
+                      </h3>
+                      <p className="text-xs text-slate-400 font-mono mt-0.5">
+                        {booking.vehicleReg}
+                      </p>
+                    </div>
+
+                    <div className="space-y-1.5 text-xs text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800">
+                      <div className="flex items-center gap-1.5">
+                        <MapPin className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span className="truncate">{booking.centerName}</span>
+                      </div>
+                      <div className="flex items-center gap-1.5">
+                        <Calendar className="w-3.5 h-3.5 text-slate-400 shrink-0" />
+                        <span>{booking.serviceDate} at {booking.serviceTime}</span>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap gap-1">
+                      {booking.services.map((s, i) => (
+                        <span
+                          key={i}
+                          className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-medium"
+                        >
+                          {s}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                    <div>
+                      <span className="text-[10px] uppercase font-semibold text-slate-400 block">
+                        {isCompleted ? 'Final Total' : 'Est. Cost'}
+                      </span>
+                      <span className="text-sm font-bold text-slate-900 dark:text-white font-mono">
+                        {isCompleted && booking.finalCost
+                          ? `₹${booking.finalCost.toLocaleString()}`
+                          : `₹${booking.estimatedCostMin.toLocaleString()} – ₹${booking.estimatedCostMax.toLocaleString()}`}
+                      </span>
+                    </div>
+
+                    <div className="flex items-center gap-1.5">
+                      {isCompleted && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            window.dispatchEvent(
+                              new CustomEvent('autoping_open_bill', {
+                                detail: { bookingId: booking.id, invoice: booking.invoice },
+                              })
+                            );
+                          }}
+                          className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-xs font-bold text-white shadow-xs transition-all flex items-center gap-1 cursor-pointer"
+                        >
+                          <FileText className="w-3.5 h-3.5" />
+                          <span>View Bill</span>
+                        </button>
+                      )}
+                      {isConfirmed && (
+                        <>
+                          <button
+                            onClick={() => {
+                              setReschedulingBooking(booking);
+                              setRescheduleDate(booking.serviceDate);
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg border border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-xs font-medium text-slate-700 dark:text-slate-300 transition-colors"
+                          >
+                            Reschedule
+                          </button>
+                          <button
+                            onClick={() => {
+                              setCancellingBooking(booking);
+                              setCancelReason('');
+                              setCancelError('');
+                            }}
+                            className="px-2.5 py-1.5 rounded-lg text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/40 text-xs font-medium transition-colors"
+                          >
+                            Cancel
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         ) : (
+          /* LIST VIEW (ORIGINAL FULL CARDS) */
           <div className="space-y-3.5">
             {filteredBookings.map((booking) => {
               const isConfirmed = booking.status === 'CONFIRMED';

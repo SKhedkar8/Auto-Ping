@@ -317,7 +317,16 @@ export default function Navbar() {
             {/* Notifications */}
             <div className="relative">
               <button
-                onClick={() => { setShowNotifMenu(!showNotifMenu); setShowUserMenu(false); setShowMoreMenu(false); }}
+                onClick={() => {
+                  const next = !showNotifMenu;
+                  setShowNotifMenu(next);
+                  setShowUserMenu(false);
+                  setShowMoreMenu(false);
+                  // Toggle CSS-level class on <html> — CSS hides city selector reliably regardless of stacking context
+                  document.documentElement.classList.toggle('autoping-notif-open', next);
+                  // Also dispatch custom event for any JS listeners
+                  window.dispatchEvent(new CustomEvent('autoping_notif_state', { detail: { open: next } }));
+                }}
                 aria-label="Notifications"
                 className="relative p-2 rounded-full bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 transition-all duration-200 cursor-pointer"
               >
@@ -330,9 +339,23 @@ export default function Navbar() {
               </button>
 
               {showNotifMenu && (
-                <div className="absolute right-0 mt-2.5 w-80 sm:w-96 rounded-2xl bg-white/95 dark:bg-slate-900/95 backdrop-blur-2xl border border-slate-200 dark:border-slate-800 shadow-2xl z-50 overflow-hidden animate-in fade-in zoom-in-95">
+                <div className="fixed right-4 sm:right-6 lg:right-8 top-[58px] w-80 sm:w-96 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-2xl z-[9999] overflow-hidden animate-in fade-in zoom-in-95">
                   <div className="flex items-center justify-between px-4 py-3.5 border-b border-slate-200/80 dark:border-slate-800/80">
                     <div className="flex items-center gap-2">
+                      {/* Cross section on top-left to close notification menu */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setShowNotifMenu(false);
+                          document.documentElement.classList.remove('autoping-notif-open');
+                          window.dispatchEvent(new CustomEvent('autoping_notif_state', { detail: { open: false } }));
+                        }}
+                        aria-label="Close notifications"
+                        title="Close notifications"
+                        className="p-1 -ml-1 text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
                       <h4 className="font-semibold text-sm text-slate-900 dark:text-white">Notifications</h4>
                       {unreadCount > 0 && (
                         <span className="px-2 py-0.5 rounded-full text-[11px] font-semibold bg-blue-50 dark:bg-blue-950/50 text-blue-600 dark:text-blue-400">

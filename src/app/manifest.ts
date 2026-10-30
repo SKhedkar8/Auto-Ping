@@ -5,7 +5,7 @@ export default function manifest(): MetadataRoute.Manifest {
     name: 'AutoPing — Never Miss a Service',
     short_name: 'AutoPing',
     description: 'Track maintenance intervals, diagnose vehicle health, estimate service costs, and book verified service center slots.',
-    start_url: '/dashboard',
+    start_url: '/',
     scope: '/',
     display: 'standalone',
     background_color: '#F7F9FC',

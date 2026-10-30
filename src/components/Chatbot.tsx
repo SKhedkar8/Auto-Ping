@@ -47,7 +47,7 @@ interface ChatMessage {
   timestamp: string;
   chips?: { label: string; action: () => void | Promise<void> | any }[];
   card?: {
-    type: 'vehicle_health' | 'booking_summary' | 'booking_success' | 'center_pick';
+    type: 'vehicle_health' | 'booking_summary' | 'booking_success' | 'center_pick' | 'service_checkbox_picker';
     data: any;
   };
 }
@@ -59,6 +59,9 @@ export default function Chatbot() {
   const [isTyping, setIsTyping] = useState(false);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [centers, setCenters] = useState<ServiceCenter[]>([]);
+  const [selectedCheckboxServices, setSelectedCheckboxServices] = useState<
+    { name: string; price: number; icon: string }[]
+  >([]);
 
   // Token Limiter & Step Guardrail mode
   // 'OPTIONS_ONLY': User can ONLY select from available buttons/chips to avoid token wastage
@@ -381,13 +384,14 @@ END:VCALENDAR`;
   };
 
   const CHAT_SERVICE_CATALOG = [
-    { name: 'General Service', price: 1800, icon: '🔧' },
-    { name: 'Engine Oil & Filter', price: 1350, icon: '🛢️' },
-    { name: 'Brake Inspection & Pads', price: 950, icon: '🛑' },
-    { name: 'Periodic Maintenance', price: 2400, icon: '📋' },
-    { name: 'AC Gas & Cooling', price: 1450, icon: '❄️' },
-    { name: 'Battery Health Check', price: 650, icon: '🔋' },
-    { name: 'Tyre Rotation & Alignment', price: 850, icon: '🛞' },
+    { name: 'General Service', price: 1800, icon: '🔧', description: 'Full vehicle inspection, fluid top-ups, filters, and safety checks.', recommended: true },
+    { name: 'Engine Oil & Filter', price: 1350, icon: '🛢️', description: 'Premium oil flush and OEM-grade filter replacement for engine longevity.', recommended: true },
+    { name: 'Brake Inspection & Pads', price: 950, icon: '🛑', description: 'Pad wear check, rotor inspection, brake fluid top-up and safety test.', recommended: false },
+    { name: 'Periodic Maintenance', price: 2400, icon: '📋', description: 'Manufacturer-recommended scheduled maintenance per service interval.', recommended: false },
+    { name: 'AC Gas & Cooling', price: 1450, icon: '❄️', description: 'AC refrigerant refill, condenser cleaning, compressor health check.', recommended: false },
+    { name: 'Battery Health Check', price: 650, icon: '🔋', description: 'Battery load test, terminal cleaning, alternator output inspection.', recommended: false },
+    { name: 'Tyre Rotation & Alignment', price: 850, icon: '🛞', description: 'Tyre swap, wheel balancing, and computerised wheel alignment.', recommended: false },
+    { name: 'Washing & Detailing', price: 599, icon: '✨', description: 'Full exterior wash, interior vacuum, and dashboard polish.', recommended: false },
   ];
 
   const selectVehicleForBooking = (vehicle: Vehicle, preselectedCenter?: ServiceCenter) => {
@@ -422,99 +426,39 @@ END:VCALENDAR`;
     );
   };
 
-  const renderMultiServiceMenu = (
-    vehicle: Vehicle,
-    selected: { name: string; price: number; icon: string }[]
-  ) => {
-    const selectedCount = selected.length;
-    const totalPrice = selected.reduce((sum, s) => sum + s.price, 0);
-
-    const chips: { label: string; action: () => void | Promise<void> }[] = [];
-
-    // 1. Prominent NEXT STEP button when services are selected
-    if (selectedCount > 0) {
-      chips.push({
-        label: `➡️ Next Step: Proceed to Booking (${selectedCount} selected • ₹${totalPrice.toLocaleString()})`,
-        action: () => confirmMultipleServicesForBooking(selected),
+  const handleToggleCheckboxService = (item: { name: string; price: number; icon: string }) => {
+    setSelectedCheckboxServices((prev) => {
+      const exists = prev.some((s) => s.name === item.name);
+      const updated = exists ? prev.filter((s) => s.name !== item.name) : [...prev, item];
+      updateBookingState({
+        selectedServices: updated,
+        services: updated.map((s) => s.name),
+        servicePrice: updated.reduce((sum, s) => sum + s.price, 0),
       });
-    }
-
-    // 2. Option to add OTHER / CUSTOM service
-    chips.push({
-      label: '➕ Add Other Service (Custom/Unlisted)',
-      action: () => startAddOtherServiceFlow(vehicle),
+      return updated;
     });
-
-    // 3. Toggle chips for each available service in catalog
-    CHAT_SERVICE_CATALOG.forEach((s) => {
-      const isSelected = selected.some((item) => item.name === s.name);
-      chips.push({
-        label: isSelected
-          ? `✓ ${s.icon} ${s.name} (₹${s.price}) [Remove]`
-          : `+ ${s.icon} ${s.name} (₹${s.price})`,
-        action: () => toggleServiceInChat(vehicle, s),
-      });
-    });
-
-    // 4. Package shortcut
-    chips.push({
-      label: '⚡ Package: General + Oil + Brakes (₹4,100)',
-      action: () => {
-        const pkg = CHAT_SERVICE_CATALOG.filter(
-          (s) =>
-            s.name === 'General Service' ||
-            s.name === 'Engine Oil & Filter' ||
-            s.name === 'Brake Inspection & Pads'
-        );
-        confirmMultipleServicesForBooking(pkg);
-      },
-    });
-
-    if (selectedCount > 0) {
-      chips.push({
-        label: '🔄 Clear Selection',
-        action: () => {
-          updateBookingState({ selectedServices: [], services: [] });
-          renderMultiServiceMenu(vehicle, []);
-        },
-      });
-    }
-
-    chips.push({ label: '🏠 Main Menu', action: () => initMainMenu() });
-
-    let text = `Great choice! What services does your **${vehicle.brandName} ${vehicle.modelName}** require?\n\n✨ **Select one or multiple services below, or tap Add Other Service:**\n`;
-    if (selectedCount === 0) {
-      text += `(Tap any service to select it, or tap **Add Other Service** to type a custom repair.)`;
-    } else {
-      text +=
-        `\n🛒 **Selected Services (${selectedCount}):**\n` +
-        selected.map((s) => `  • ${s.icon} ${s.name} — ₹${s.price.toLocaleString()}`).join('\n') +
-        `\n\n💰 **Subtotal:** ₹${totalPrice.toLocaleString()}\n\n*Tap **Add Other Service** to add an unlisted repair, or tap **Next Step** to process your booking schedule.*`;
-    }
-
-    addBotMessage(text, chips);
   };
 
-  const toggleServiceInChat = (
+  const renderMultiServiceMenu = (
     vehicle: Vehicle,
-    serviceItem: { name: string; price: number; icon: string }
+    selected: { name: string; price: number; icon: string }[] = []
   ) => {
-    const current = chatBookingRef.current.selectedServices || [];
-    const exists = current.some((s) => s.name === serviceItem.name);
-    const updated = exists
-      ? current.filter((s) => s.name !== serviceItem.name)
-      : [...current, serviceItem];
-
+    setSelectedCheckboxServices(selected);
     updateBookingState({
-      selectedServices: updated,
-      services: updated.map((s) => s.name),
-      servicePrice: updated.reduce((sum, s) => sum + s.price, 0),
+      vehicle,
+      selectedServices: selected,
+      services: selected.map((s) => s.name),
+      servicePrice: selected.reduce((sum, s) => sum + s.price, 0),
     });
 
-    addUserMessage(
-      exists ? `Removed ${serviceItem.name}` : `Added ${serviceItem.name} (+₹${serviceItem.price})`
+    addBotMessage(
+      `Select one or more services for your **${vehicle.brandName} ${vehicle.modelName}** using the checkboxes below. You can select multiple services at the same time:`,
+      undefined,
+      {
+        type: 'service_checkbox_picker',
+        data: { vehicle },
+      }
     );
-    renderMultiServiceMenu(vehicle, updated);
   };
 
   const confirmMultipleServicesForBooking = (
@@ -1193,6 +1137,182 @@ END:VCALENDAR`;
                     ))}
                   </div>
                 )}
+
+                {m.card?.type === 'service_checkbox_picker' && (() => {
+                  const totalEst = selectedCheckboxServices.reduce((sum, s) => sum + s.price, 0);
+                  return (
+                    <div className="mt-3 w-full overflow-hidden rounded-2xl shadow-xl"
+                      style={{ background: 'linear-gradient(145deg, #0f0f13 0%, #16161e 50%, #0d1117 100%)', border: '1px solid rgba(255,255,255,0.08)' }}>
+
+                      {/* ── Premium gradient header ── */}
+                      <div className="relative px-4 pt-4 pb-3 overflow-hidden"
+                        style={{ background: 'linear-gradient(135deg, rgba(0,113,227,0.25) 0%, rgba(0,113,227,0.08) 60%, rgba(88,28,235,0.1) 100%)' }}>
+                        {/* Decorative glow orbs */}
+                        <div className="absolute -top-4 -right-4 w-20 h-20 rounded-full opacity-20 blur-2xl pointer-events-none"
+                          style={{ background: 'radial-gradient(circle, #0071E3, transparent)' }} />
+                        <div className="absolute top-0 left-8 w-12 h-12 rounded-full opacity-10 blur-xl pointer-events-none"
+                          style={{ background: 'radial-gradient(circle, #7c3aed, transparent)' }} />
+
+                        <div className="relative flex items-start justify-between gap-2">
+                          <div>
+                            <div className="flex items-center gap-2 mb-0.5">
+                              <div className="w-5 h-5 rounded-lg flex items-center justify-center text-[11px]"
+                                style={{ background: 'linear-gradient(135deg, #0071E3, #2997FF)' }}>⚙️</div>
+                              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400">AutoPing Services</span>
+                            </div>
+                            <h4 className="text-[15px] font-bold text-white leading-tight tracking-tight">Choose Your Services</h4>
+                            <p className="text-[11px] mt-0.5" style={{ color: 'rgba(255,255,255,0.45)' }}>Select everything you need — multi-select supported</p>
+                          </div>
+                          {selectedCheckboxServices.length > 0 && (
+                            <div className="shrink-0 flex flex-col items-end gap-1">
+                              <span className="px-2.5 py-1 rounded-full text-[11px] font-bold text-white"
+                                style={{ background: 'linear-gradient(135deg, #0071E3, #0077ED)', boxShadow: '0 0 12px rgba(0,113,227,0.5)' }}>
+                                {selectedCheckboxServices.length} selected
+                              </span>
+                              <span className="text-[10px] font-mono font-semibold text-emerald-400">
+                                ₹{totalEst.toLocaleString('en-IN')} est.
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* ── Divider ── */}
+                      <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.08), transparent)' }} />
+
+                      {/* ── Service Cards ── */}
+                      <div className="p-3 space-y-2 max-h-80 overflow-y-auto"
+                        style={{ scrollbarWidth: 'thin', scrollbarColor: 'rgba(255,255,255,0.12) transparent' }}>
+                        {CHAT_SERVICE_CATALOG.map((s) => {
+                          const isChecked = selectedCheckboxServices.some((item) => item.name === s.name);
+                          // Unique accent color per icon type for variety
+                          const iconBg = isChecked
+                            ? 'linear-gradient(135deg, rgba(0,113,227,0.35), rgba(0,113,227,0.15))'
+                            : 'rgba(255,255,255,0.06)';
+                          return (
+                            <button
+                              key={s.name}
+                              type="button"
+                              onClick={() => handleToggleCheckboxService(s)}
+                              className="group relative w-full text-left flex items-start gap-3 px-3 py-3 rounded-xl transition-all duration-200 cursor-pointer"
+                              style={isChecked ? {
+                                background: 'linear-gradient(135deg, rgba(0,113,227,0.18) 0%, rgba(0,113,227,0.06) 100%)',
+                                border: '1.5px solid rgba(0,113,227,0.5)',
+                                boxShadow: '0 0 20px rgba(0,113,227,0.12), inset 0 1px 0 rgba(255,255,255,0.06)'
+                              } : {
+                                background: 'rgba(255,255,255,0.03)',
+                                border: '1px solid rgba(255,255,255,0.07)',
+                              }}
+                            >
+                              {/* Recommended badge */}
+                              {s.recommended && (
+                                <div className="absolute -top-2 left-3 px-2 py-0.5 rounded-full text-[9px] font-bold text-white z-10"
+                                  style={{ background: 'linear-gradient(135deg, #FF9500, #FF6B00)', boxShadow: '0 2px 8px rgba(255,149,0,0.4)' }}>
+                                  ★ Recommended
+                                </div>
+                              )}
+
+                              {/* Icon box */}
+                              <div className="w-10 h-10 rounded-xl flex items-center justify-center text-xl shrink-0 transition-all duration-200"
+                                style={{ background: iconBg, border: isChecked ? '1px solid rgba(0,113,227,0.3)' : '1px solid rgba(255,255,255,0.08)',
+                                  boxShadow: isChecked ? '0 0 12px rgba(0,113,227,0.25)' : 'none' }}>
+                                {s.icon}
+                              </div>
+
+                              {/* Text content */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1.5">
+                                  <h5 className="font-semibold text-[12px] truncate" style={{ color: isChecked ? '#fff' : 'rgba(255,255,255,0.88)' }}>
+                                    {s.name}
+                                  </h5>
+                                </div>
+                                <p className="text-[10px] mt-0.5 leading-relaxed line-clamp-1" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                                  {s.description}
+                                </p>
+                                <p className="text-[11px] font-bold mt-1.5" style={{ color: isChecked ? '#2997FF' : 'rgba(255,255,255,0.6)', fontFamily: 'monospace' }}>
+                                  ₹{s.price.toLocaleString('en-IN')}
+                                  <span className="text-[9px] font-normal ml-1" style={{ color: 'rgba(255,255,255,0.3)', fontFamily: 'inherit' }}>est. base</span>
+                                </p>
+                              </div>
+
+                              {/* Premium ring checkbox */}
+                              <div className="shrink-0 w-5 h-5 rounded-full flex items-center justify-center transition-all duration-200 mt-1"
+                                style={isChecked ? {
+                                  background: 'linear-gradient(135deg, #0071E3, #2997FF)',
+                                  border: 'none',
+                                  boxShadow: '0 0 10px rgba(0,113,227,0.6)'
+                                } : {
+                                  background: 'transparent',
+                                  border: '2px solid rgba(255,255,255,0.2)'
+                                }}>
+                                {isChecked && (
+                                  <svg className="w-2.5 h-2.5 text-white" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                                    <path d="M2 6l3 3 5-5" />
+                                  </svg>
+                                )}
+                              </div>
+                            </button>
+                          );
+                        })}
+                      </div>
+
+                      {/* ── Footer: subtotal + custom + CTA ── */}
+                      <div className="px-3 pb-3 pt-0 space-y-2.5">
+                        {/* Divider */}
+                        <div className="h-px" style={{ background: 'linear-gradient(90deg, transparent, rgba(255,255,255,0.06), transparent)' }} />
+
+                        {/* Subtotal row */}
+                        <div className="flex items-center justify-between">
+                          <button
+                            type="button"
+                            onClick={() => startAddOtherServiceFlow(m.card?.data?.vehicle)}
+                            className="text-[10px] font-medium flex items-center gap-1 cursor-pointer transition-colors"
+                            style={{ color: 'rgba(255,255,255,0.35)' }}
+                            onMouseEnter={e => (e.currentTarget.style.color = '#2997FF')}
+                            onMouseLeave={e => (e.currentTarget.style.color = 'rgba(255,255,255,0.35)')}
+                          >
+                            <span>➕ Add custom repair</span>
+                          </button>
+                          <div className="text-right">
+                            <span className="text-[10px] mr-1" style={{ color: 'rgba(255,255,255,0.3)' }}>Estimated Total</span>
+                            <span className="font-mono font-bold text-[14px]"
+                              style={{ color: totalEst > 0 ? '#34C759' : 'rgba(255,255,255,0.4)' }}>
+                              {totalEst > 0 ? `₹${totalEst.toLocaleString('en-IN')}` : '—'}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* CTA button */}
+                        <button
+                          type="button"
+                          disabled={selectedCheckboxServices.length === 0}
+                          onClick={() => confirmMultipleServicesForBooking(selectedCheckboxServices)}
+                          className="w-full py-3 px-4 rounded-xl text-[13px] font-bold flex items-center justify-center gap-2.5 transition-all duration-200 relative overflow-hidden"
+                          style={selectedCheckboxServices.length > 0 ? {
+                            background: 'linear-gradient(135deg, #0071E3 0%, #2997FF 50%, #0071E3 100%)',
+                            backgroundSize: '200% 100%',
+                            color: 'white',
+                            cursor: 'pointer',
+                            boxShadow: '0 4px 20px rgba(0,113,227,0.45), 0 1px 0 rgba(255,255,255,0.15) inset'
+                          } : {
+                            background: 'rgba(255,255,255,0.06)',
+                            color: 'rgba(255,255,255,0.25)',
+                            cursor: 'not-allowed'
+                          }}
+                        >
+                          <span>Next Step: Proceed to Schedule</span>
+                          {selectedCheckboxServices.length > 0 && (
+                            <span className="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                              style={{ background: 'rgba(255,255,255,0.2)' }}>
+                              {selectedCheckboxServices.length} service{selectedCheckboxServices.length > 1 ? 's' : ''}
+                            </span>
+                          )}
+                          <ArrowRight className="w-4 h-4 shrink-0" />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Quick Action Chips */}
                 {m.chips && m.chips.length > 0 && (

@@ -210,7 +210,7 @@ if (fs.existsSync(DB_FILE)) {
 
   fs.writeFileSync(DB_FILE, JSON.stringify(db, null, 2), 'utf8');
   console.log('Updated autoping_db.json successfully with', db.models.length, 'models!');
-}
+}6
 
 // 2. Update SEED_MODELS in src/lib/data/seed.ts
 if (fs.existsSync(SEED_FILE)) {

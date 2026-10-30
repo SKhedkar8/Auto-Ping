@@ -24,7 +24,10 @@ import {
   Sparkles,
   TrendingUp,
   Wrench,
-  X
+  X,
+  LayoutGrid,
+  List,
+  Table
 } from 'lucide-react';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
@@ -37,6 +40,7 @@ export default function HistoryPage() {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicleId, setSelectedVehicleId] = useState<string>('all');
   const [isLoading, setIsLoading] = useState(true);
+  const [viewMode, setViewMode] = useState<'timeline' | 'grid' | 'content'>('timeline');
 
   // Invoice Inspection Modal
   const [activeInvoice, setActiveInvoice] = useState<ServiceRecord | null>(null);
@@ -464,16 +468,61 @@ export default function HistoryPage() {
         )}
 
         {/* Timeline Header */}
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2">
             <History className="w-5 h-5 text-blue-600 dark:text-blue-400" />
             <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
-              Chronological Service Timeline
+              Service Records History
             </h2>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              • {records.length} records logged
+            </span>
           </div>
-          <span className="text-xs text-slate-500 dark:text-slate-400">
-            {records.length} records logged
-          </span>
+
+          <div className="flex items-center gap-3">
+            {/* View Mode Toggle: Timeline, Grid, Content */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-slate-200/80 dark:bg-slate-800/80 border border-slate-300/60 dark:border-slate-700/80 shadow-2xs">
+              <button
+                type="button"
+                onClick={() => setViewMode('timeline')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'timeline'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Timeline List View"
+              >
+                <List className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Timeline</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('grid')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Grid Cards View"
+              >
+                <LayoutGrid className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Grid</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setViewMode('content')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  viewMode === 'content'
+                    ? 'bg-white dark:bg-slate-900 text-blue-600 dark:text-blue-400 shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                }`}
+                title="Compact Table View"
+              >
+                <Table className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Content</span>
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* History Timeline */}
@@ -493,7 +542,117 @@ export default function HistoryPage() {
               Add Older Service Record
             </button>
           </div>
+        ) : viewMode === 'content' ? (
+          /* CONTENT / COMPACT TABLE VIEW */
+          <div className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-xs overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-left text-xs">
+                <thead>
+                  <tr className="border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/60 text-slate-500 dark:text-slate-400 font-semibold">
+                    <th className="py-3 px-4">Date</th>
+                    <th className="py-3 px-4">Service Center</th>
+                    <th className="py-3 px-4">Odometer</th>
+                    <th className="py-3 px-4">Services Done</th>
+                    <th className="py-3 px-4">Total Cost</th>
+                    <th className="py-3 px-4 text-right">Invoice</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-slate-100 dark:divide-slate-800/80">
+                  {records.map((rec) => (
+                    <tr key={rec.id} className="hover:bg-slate-50/70 dark:hover:bg-slate-800/40 transition-colors">
+                      <td className="py-3 px-4 font-mono font-semibold text-slate-900 dark:text-white">
+                        {rec.date}
+                      </td>
+                      <td className="py-3 px-4 text-slate-700 dark:text-slate-300">
+                        {rec.centerName}
+                      </td>
+                      <td className="py-3 px-4 font-mono text-slate-600 dark:text-slate-400">
+                        {rec.km.toLocaleString()} KM
+                      </td>
+                      <td className="py-3 px-4 text-slate-600 dark:text-slate-300">
+                        {rec.servicesDone.join(', ')}
+                      </td>
+                      <td className="py-3 px-4 font-mono font-bold text-emerald-600 dark:text-emerald-400">
+                        ₹{rec.totalCost.toLocaleString()}
+                      </td>
+                      <td className="py-3 px-4 text-right">
+                        <button
+                          onClick={() => setActiveInvoice(rec)}
+                          className="px-2.5 py-1 rounded bg-blue-600 hover:bg-blue-700 text-white font-medium text-[11px] inline-flex items-center gap-1 cursor-pointer"
+                        >
+                          <Receipt className="w-3 h-3" />
+                          <span>Receipt</span>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        ) : viewMode === 'grid' ? (
+          /* GRID VIEW */
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {records.map((rec) => (
+              <div
+                key={rec.id}
+                className="bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 shadow-xs flex flex-col justify-between gap-4 transition-all hover:shadow-md hover:border-blue-400/50"
+              >
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-blue-50 dark:bg-blue-950/60 text-blue-700 dark:text-blue-400 font-semibold font-mono text-xs border border-blue-200/60 dark:border-blue-800/60">
+                      <Calendar className="w-3 h-3" />
+                      {rec.date}
+                    </span>
+                    <span className="font-mono font-bold text-xs text-slate-600 dark:text-slate-400">
+                      {rec.km.toLocaleString()} KM
+                    </span>
+                  </div>
+
+                  <div>
+                    <h3 className="font-bold text-base text-slate-900 dark:text-white">
+                      {rec.centerName}
+                    </h3>
+                  </div>
+
+                  <div className="flex flex-wrap gap-1">
+                    {rec.servicesDone.map((item, idx) => (
+                      <span
+                        key={idx}
+                        className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300"
+                      >
+                        ✓ {item}
+                      </span>
+                    ))}
+                  </div>
+
+                  {rec.notes && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 italic line-clamp-2">
+                      &ldquo;{rec.notes}&rdquo;
+                    </p>
+                  )}
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                  <div>
+                    <span className="text-[10px] uppercase font-semibold text-slate-400 block">Total Cost</span>
+                    <span className="text-base font-bold text-emerald-600 dark:text-emerald-400 font-mono">
+                      ₹{rec.totalCost.toLocaleString()}
+                    </span>
+                  </div>
+                  <button
+                    onClick={() => setActiveInvoice(rec)}
+                    className="px-3 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-semibold flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer"
+                  >
+                    <Receipt className="w-3.5 h-3.5" />
+                    <span>Receipt</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         ) : (
+          /* TIMELINE LIST VIEW (ORIGINAL) */
           <div className="relative pl-6 sm:pl-8 border-l-2 border-slate-200 dark:border-slate-800 space-y-6">
             {records.map((rec, index) => {
               const prevRec = records[index + 1];
@@ -639,7 +798,23 @@ export default function HistoryPage() {
 
               <button
                 onClick={() => {
-                  window.print();
+                  // Isolated iframe print — guarantees a single clean page (no duplicate pages)
+                  const inv = activeInvoice;
+                  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"/><title>Receipt INV-AP-${inv.id.slice(-6).toUpperCase()}</title><style>@page{size:A4 portrait;margin:12mm 14mm}body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;font-size:12px;color:#0f172a;background:#fff;-webkit-print-color-adjust:exact;print-color-adjust:exact;padding:0;margin:0}.header{border-bottom:2px solid #e2e8f0;padding-bottom:12px;margin-bottom:12px}.brand{font-size:18px;font-weight:800;color:#0f172a}.brand span{color:#2563eb}.inv-num{font-size:20px;font-weight:900;font-family:monospace;color:#2563eb;margin-top:4px}.meta{font-size:10px;color:#64748b;margin-top:2px}.section{display:flex;gap:12px;margin-bottom:12px}.card{flex:1;padding:10px;border-radius:8px;background:#f8fafc;border:1px solid #e2e8f0}.card-label{font-size:9px;font-weight:700;text-transform:uppercase;color:#94a3b8;margin-bottom:4px}.card-value{font-size:12px;font-weight:700;color:#0f172a}.items{border:1px solid #e2e8f0;border-radius:8px;overflow:hidden;margin-bottom:12px}table{width:100%;border-collapse:collapse}th{background:#f1f5f9;padding:5px 8px;font-size:9px;font-weight:700;text-transform:uppercase;color:#64748b;border-bottom:1px solid #e2e8f0;text-align:left}td{padding:6px 8px;font-size:10px;border-bottom:1px solid #f1f5f9;color:#0f172a}tr:last-child td{border-bottom:none}.total{font-size:22px;font-weight:900;color:#059669;font-family:monospace}.footer{text-align:center;font-size:9px;color:#94a3b8;margin-top:10px;padding-top:8px;border-top:1px solid #e2e8f0;}</style></head><body><div class="header"><div class="brand">Auto<span>Ping</span> <span style="font-size:10px;background:#dcfce7;color:#16a34a;padding:2px 8px;border-radius:999px;font-weight:700;">Paid Receipt</span></div><div class="inv-num">INV-AP-${inv.id.slice(-6).toUpperCase()}</div><div class="meta">Date: ${inv.date} &nbsp;|&nbsp; KM: ${inv.km.toLocaleString()}</div></div><div class="section"><div class="card"><div class="card-label">Service Center</div><div class="card-value">${inv.centerName}</div></div><div class="card"><div class="card-label">Odometer Reading</div><div class="card-value">${inv.km.toLocaleString()} km</div></div></div><div class="items"><table><thead><tr><th>#</th><th>Service Performed</th><th style="text-align:right">Status</th></tr></thead><tbody>${inv.servicesDone.map((s: string, i: number) => `<tr><td style="color:#94a3b8;font-family:monospace;">${i + 1}</td><td style="font-weight:600;">✓ ${s}</td><td style="text-align:right;color:#16a34a;font-weight:600;">Completed</td></tr>`).join('')}</tbody></table></div><div style="display:flex;justify-content:space-between;align-items:center;"><div><div style="font-size:10px;color:#64748b;">Total Paid (Incl. GST)</div><div class="total">₹${inv.totalCost.toLocaleString()}</div></div><div style="text-align:right;font-size:10px;color:#94a3b8;"><div style="font-weight:700;text-transform:uppercase;">Authorized</div><div style="font-style:italic;">AutoPing Workshop Manager</div></div></div><div class="footer">AutoPing Certified Service Receipt — All services completed by verified technicians.</div></body></html>`;
+                  const iframe = document.createElement('iframe');
+                  iframe.style.cssText = 'position:fixed;right:0;bottom:0;width:0;height:0;border:0;visibility:hidden;';
+                  document.body.appendChild(iframe);
+                  const doc = iframe.contentDocument || iframe.contentWindow?.document;
+                  if (doc) {
+                    doc.open(); doc.write(html); doc.close();
+                    iframe.contentWindow?.focus();
+                    setTimeout(() => {
+                      iframe.contentWindow?.print();
+                      setTimeout(() => document.body.removeChild(iframe), 1000);
+                    }, 400);
+                  } else {
+                    document.body.removeChild(iframe);
+                  }
                 }}
                 className="px-4 py-2.5 rounded-xl bg-slate-900 hover:bg-black dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-950 text-xs font-semibold flex items-center gap-2 shadow-xs transition-colors cursor-pointer"
               >

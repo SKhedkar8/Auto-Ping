@@ -55,6 +55,8 @@ export default function AutomotiveStartupIntro() {
     isTransitioningRef.current = false;
     notifySwitchingState(false);
     if (typeof document !== 'undefined') {
+      const curtain = document.getElementById('autoping-instant-curtain');
+      if (curtain) curtain.style.display = 'none';
       document.documentElement.classList.remove('autoping-intro-active');
     }
   }, [clearAllTimers, notifySwitchingState]);
@@ -86,6 +88,9 @@ export default function AutomotiveStartupIntro() {
 
     if (typeof document !== 'undefined') {
       document.documentElement.classList.add('autoping-intro-active');
+      // Instant curtain can now be hidden as the interactive React overlay is active
+      const curtain = document.getElementById('autoping-instant-curtain');
+      if (curtain) curtain.style.display = 'none';
     }
 
     // Phase 2: Automotive Light Trail (500ms)
@@ -103,12 +108,18 @@ export default function AutomotiveStartupIntro() {
       } catch {}
       const exit = setTimeout(() => {
         finishTransition();
+        // Item 2: Always open the default home page uploaded by user
+        try {
+          router.push('/');
+        } catch {
+          window.location.href = '/';
+        }
       }, 550);
       timersRef.current.push(exit);
     }, 3150);
 
     timersRef.current = [t1, t2, t3, t4];
-  }, [clearAllTimers, finishTransition]);
+  }, [clearAllTimers, finishTransition, router]);
 
   // Calibrated Role-Switch Intro sequence (~1.5 - 1.8s)
   const playRoleSwitchIntro = useCallback(
@@ -242,6 +253,11 @@ export default function AutomotiveStartupIntro() {
             sessionStorage.setItem('autoping_intro_played', '1');
           } catch {}
           finishTransition();
+          try {
+            router.push('/');
+          } catch {
+            window.location.href = '/';
+          }
         }
       }
     };
@@ -253,7 +269,7 @@ export default function AutomotiveStartupIntro() {
       window.removeEventListener('autoping_replay_intro', handleReplay);
       window.removeEventListener('autoping_role_switch_request', handleRoleSwitch);
     };
-  }, [playRoleSwitchIntro, playStartupIntro, applyRoleAndNavigate, finishTransition, clearAllTimers]);
+  }, [playRoleSwitchIntro, playStartupIntro, applyRoleAndNavigate, finishTransition, clearAllTimers, router]);
 
   if (!isOpen) {
     return null;
@@ -284,6 +300,11 @@ export default function AutomotiveStartupIntro() {
                 sessionStorage.setItem('autoping_intro_played', '1');
               } catch {}
               finishTransition();
+              try {
+                router.push('/');
+              } catch {
+                window.location.href = '/';
+              }
             }
           }}
           className="group flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-slate-900/60 hover:bg-slate-800/80 border border-white/10 hover:border-cyan-500/40 text-slate-300 hover:text-white text-xs font-medium tracking-wide backdrop-blur-md transition-all duration-200 cursor-pointer focus:outline-none focus:ring-2 focus:ring-cyan-400/50"

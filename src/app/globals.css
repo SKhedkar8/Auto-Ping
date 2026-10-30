@@ -42,6 +42,16 @@
     overflow: hidden !important;
   }
 
+  /* Hide city selector pill completely when notification menu is open.
+     Using CSS class on <html> guarantees hiding regardless of JS stacking contexts. */
+  html.autoping-notif-open .autoping-city-selector {
+    opacity: 0 !important;
+    visibility: hidden !important;
+    pointer-events: none !important;
+    transition: opacity 0.15s ease, visibility 0.15s ease;
+  }
+
+
   * {
     -webkit-tap-highlight-color: transparent;
   }

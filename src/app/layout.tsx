@@ -44,8 +44,56 @@ export default function RootLayout({
           href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Inter:wght@400;500;600;700&display=swap"
           rel="stylesheet"
         />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  // Guarantee light mode default on first open
+                  var storedDark = localStorage.getItem('autoping_dark_mode');
+                  if (storedDark === 'true') {
+                    document.documentElement.classList.add('dark');
+                  } else {
+                    document.documentElement.classList.remove('dark');
+                  }
+                  // Check if intro has played
+                  var introPlayed = sessionStorage.getItem('autoping_intro_played');
+                  if (!introPlayed) {
+                    document.documentElement.classList.add('autoping-intro-active');
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
       </head>
       <body className="min-h-screen flex flex-col font-sans antialiased" suppressHydrationWarning>
+        {/* Instant intro curtain: Prevents any fraction-of-a-second flash of the underlying dashboard */}
+        <div
+          id="autoping-instant-curtain"
+          style={{
+            position: 'fixed',
+            inset: 0,
+            zIndex: 99998,
+            backgroundColor: '#07111F',
+            display: 'none',
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              (function() {
+                try {
+                  var introPlayed = sessionStorage.getItem('autoping_intro_played');
+                  if (!introPlayed) {
+                    var curtain = document.getElementById('autoping-instant-curtain');
+                    if (curtain) curtain.style.display = 'block';
+                  }
+                } catch(e) {}
+              })();
+            `,
+          }}
+        />
         <DarkModeProvider>
           <AutomotiveStartupIntro />
           {children}

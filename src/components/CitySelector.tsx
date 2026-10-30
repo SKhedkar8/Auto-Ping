@@ -20,6 +20,8 @@ export default function CitySelector({
   const [pendingCity, setPendingCity] = useState<CityMeta | null>(null);
   const [hoveredCity, setHoveredCity] = useState<string | null>(null);
   const [dropdownPos, setDropdownPos] = useState({ top: 0, left: 0 });
+  // Hide the entire city selector when the notification menu is open
+  const [notifOpen, setNotifOpen] = useState(false);
 
   const triggerRef = useRef<HTMLButtonElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -86,6 +88,18 @@ export default function CitySelector({
     return () => document.removeEventListener("keydown", handler);
   }, []);
 
+  // Hide when notification dropdown opens (prevents floating city pill over notification card)
+  useEffect(() => {
+    const handleNotif = (e: Event) => {
+      const detail = (e as CustomEvent<{ open: boolean }>).detail;
+      setNotifOpen(detail?.open ?? false);
+      // Also close our own dropdown if it was open
+      if (detail?.open) close();
+    };
+    window.addEventListener('autoping_notif_state', handleNotif);
+    return () => window.removeEventListener('autoping_notif_state', handleNotif);
+  }, []);
+
   const handleCityClick = (city: CityMeta) => {
     setPendingCity(city);
     setStep("division");
@@ -102,7 +116,7 @@ export default function CitySelector({
   };
 
   return (
-    <div className="relative inline-flex">
+    <div className="autoping-city-selector relative inline-flex transition-all duration-150">
       {/* ── Trigger Button ── */}
       <button
         ref={triggerRef}

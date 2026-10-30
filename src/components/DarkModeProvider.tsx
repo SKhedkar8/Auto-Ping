@@ -29,9 +29,9 @@ export default function DarkModeProvider({ children }: { children: React.ReactNo
   const [colorTheme, setColorThemeState] = useState<ColorTheme>('blue');
 
   useEffect(() => {
+    // Always default to light theme on first visit unless explicitly saved
     const stored = localStorage.getItem('autoping_dark_mode');
-    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-    const enabled = stored !== null ? stored === 'true' : prefersDark;
+    const enabled = stored !== null ? stored === 'true' : false;
     setIsDark(enabled);
     if (enabled) {
       document.documentElement.classList.add('dark');
